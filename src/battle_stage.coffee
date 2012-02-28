@@ -20,9 +20,7 @@ class BattleStage
       [b, b, b, b, b, b, b, b, b, b, b, b, b, b, b],
     ]
 
-    @viewMap      = [[],[],[],[],[],[],[],[],[],[],[],[],[]]
-    @collisionMap = [[],[],[],[],[],[],[],[],[],[],[],[],[]]
-
+    @viewMap = [[],[],[],[],[],[],[],[],[],[],[],[],[]]
     @bomberman = new Bomberman(this, 16, 16)
 
     @updateMaps()
@@ -38,8 +36,13 @@ class BattleStage
 
     for i in [0...@dataMap.length]
       for j in [0...@dataMap[i].length]
-        @viewMap[i][j]      = @dataMap[i][j].id
-        @collisionMap[i][j] = if @dataMap[i][j].isBarrier then 0 else 1
+        @viewMap[i][j] = @dataMap[i][j].id
 
-  hitTest: ->
-    true
+  getIndex: (x, y) ->
+    if x < 0 or x >= @tileSize * @dataMap[0].length or
+        y < 0 or y >= @tileSize * @dataMap.length
+      return null
+
+    x = x / @tileSize | 0
+    y = y / @tileSize | 0
+    {x: x, y: y}

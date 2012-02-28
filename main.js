@@ -10,7 +10,6 @@
       f = new StageObject(0, false);
       this.dataMap = [[b, b, b, b, b, b, b, b, b, b, b, b, b, b, b], [b, f, f, f, f, f, f, f, f, f, f, f, f, f, b], [b, f, b, f, b, f, b, f, b, f, b, f, b, f, b], [b, f, f, f, f, f, f, f, f, f, f, f, f, f, b], [b, f, b, f, b, f, b, f, b, f, b, f, b, f, b], [b, f, f, f, f, f, f, f, f, f, f, f, f, f, b], [b, f, b, f, b, f, b, f, b, f, b, f, b, f, b], [b, f, f, f, f, f, f, f, f, f, f, f, f, f, b], [b, f, b, f, b, f, b, f, b, f, b, f, b, f, b], [b, f, f, f, f, f, f, f, f, f, f, f, f, f, b], [b, f, b, f, b, f, b, f, b, f, b, f, b, f, b], [b, f, f, f, f, f, f, f, f, f, f, f, f, f, b], [b, b, b, b, b, b, b, b, b, b, b, b, b, b, b]];
       this.viewMap = [[], [], [], [], [], [], [], [], [], [], [], [], []];
-      this.collisionMap = [[], [], [], [], [], [], [], [], [], [], [], [], []];
       this.bomberman = new Bomberman(this, 16, 16);
       this.updateMaps();
     }
@@ -33,8 +32,7 @@
           var _ref4, _results2;
           _results2 = [];
           for (j = 0, _ref4 = this.dataMap[i].length; 0 <= _ref4 ? j < _ref4 : j > _ref4; 0 <= _ref4 ? j++ : j--) {
-            this.viewMap[i][j] = this.dataMap[i][j].id;
-            _results2.push(this.collisionMap[i][j] = this.dataMap[i][j].isBarrier ? 0 : 1);
+            _results2.push(this.viewMap[i][j] = this.dataMap[i][j].id);
           }
           return _results2;
         }).call(this));
@@ -42,8 +40,16 @@
       return _results;
     };
 
-    BattleStage.prototype.hitTest = function() {
-      return true;
+    BattleStage.prototype.getIndex = function(x, y) {
+      if (x < 0 || x >= this.tileSize * this.dataMap[0].length || y < 0 || y >= this.tileSize * this.dataMap.length) {
+        return null;
+      }
+      x = x / this.tileSize | 0;
+      y = y / this.tileSize | 0;
+      return {
+        x: x,
+        y: y
+      };
     };
 
     return BattleStage;
@@ -64,7 +70,7 @@
     Bomberman.prototype.update = function(input) {
       var pos;
       pos = this.nextPosition(input);
-      if (this.stage.hitTest(pos)) return this.move(pos);
+      if (!this.hitTest(pos)) return this.move(pos);
     };
 
     Bomberman.prototype.nextPosition = function(input) {
@@ -92,6 +98,19 @@
       return this.y = pos.y;
     };
 
+    Bomberman.prototype.hitTest = function(other) {
+      var p;
+      p = this.stage.getIndex(other.x, other.y);
+      if (this.stage.dataMap[p.y][p.x].isBarrier) return true;
+      p = this.stage.getIndex(other.x + other.width - 1, other.y);
+      if (this.stage.dataMap[p.y][p.x].isBarrier) return true;
+      p = this.stage.getIndex(other.x, other.y + other.height - 1);
+      if (this.stage.dataMap[p.y][p.x].isBarrier) return true;
+      p = this.stage.getIndex(other.x + other.width - 1, other.y + other.height - 1);
+      if (this.stage.dataMap[p.y][p.x].isBarrier) return true;
+      return false;
+    };
+
     return Bomberman;
 
   })();
@@ -110,9 +129,10 @@
       stage = new enchant.Map(16, 16);
       stage.image = game.assets[ENCHANTJS_IMAGE_PATH + 'map0.gif'];
       stage.loadData(stageModel.viewMap);
-      stage.collisionData = stageModel.collisionMap;
       sprite = new enchant.Sprite(16, 16);
-      sprite.image = game.assets[ENCHANTJS_IMAGE_PATH + 'chara0.gif'];
+      sprite.image = game.assets[ENCHANTJS_IMAGE_PATH + 'map0.gif'];
+      sprite.x = sprite.y = 16;
+      sprite.frame = [2];
       game.addEventListener('enterframe', function() {
         stageModel.update(game.input);
         sprite.x = stageModel.bomberman.x;

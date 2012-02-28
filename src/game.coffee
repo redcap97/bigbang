@@ -11,10 +11,11 @@ window.onload = ->
     stage = new enchant.Map(16, 16)
     stage.image = game.assets[ENCHANTJS_IMAGE_PATH + 'map0.gif']
     stage.loadData(stageModel.viewMap)
-    stage.collisionData = stageModel.collisionMap
 
     sprite = new enchant.Sprite(16, 16)
-    sprite.image = game.assets[ENCHANTJS_IMAGE_PATH + 'chara0.gif']
+    sprite.image = game.assets[ENCHANTJS_IMAGE_PATH + 'map0.gif']
+    sprite.x = sprite.y = 16
+    sprite.frame = [2]
 
     game.addEventListener('enterframe', ->
       stageModel.update(game.input)

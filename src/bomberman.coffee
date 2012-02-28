@@ -6,7 +6,7 @@ class Bomberman
 
   update: (input) ->
     pos = @nextPosition(input)
-    if @stage.hitTest(pos)
+    if not @hitTest(pos)
       @move(pos)
 
   nextPosition: (input) ->
@@ -29,3 +29,22 @@ class Bomberman
   move: (pos) ->
     @x = pos.x
     @y = pos.y
+
+  hitTest: (other) ->
+    p = @stage.getIndex(other.x, other.y)
+    if @stage.dataMap[p.y][p.x].isBarrier
+      return true
+
+    p = @stage.getIndex(other.x + other.width - 1, other.y)
+    if @stage.dataMap[p.y][p.x].isBarrier
+      return true
+
+    p = @stage.getIndex(other.x, other.y + other.height - 1)
+    if @stage.dataMap[p.y][p.x].isBarrier
+      return true
+
+    p = @stage.getIndex(other.x + other.width - 1, other.y + other.height - 1)
+    if @stage.dataMap[p.y][p.x].isBarrier
+      return true
+
+    false
