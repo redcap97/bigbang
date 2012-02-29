@@ -8,8 +8,8 @@ class BattleStage
     f = new StageObject(0, false)
     @dataMap = [
       [b, b, b, b, b, b, b, b, b, b, b, b, b, b, b],
-      [b, b, f, f, f, f, f, f, f, f, f, f, f, f, b],
-      [b, f, b, f, b, f, b, f, b, f, b, f, b, f, b],
+      [b, b, b, f, f, f, f, f, f, f, f, f, f, f, b],
+      [b, f, b, b, b, f, b, f, b, f, b, f, b, f, b],
       [b, f, f, f, f, f, f, f, f, f, f, f, f, f, b],
       [b, f, b, f, b, f, b, f, b, f, b, f, b, f, b],
       [b, f, f, f, f, f, f, f, f, f, f, f, f, f, b],

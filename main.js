@@ -11,7 +11,7 @@
       this.tileSize = 16;
       b = new StageObject(4, true);
       f = new StageObject(0, false);
-      this.dataMap = [[b, b, b, b, b, b, b, b, b, b, b, b, b, b, b], [b, b, f, f, f, f, f, f, f, f, f, f, f, f, b], [b, f, b, f, b, f, b, f, b, f, b, f, b, f, b], [b, f, f, f, f, f, f, f, f, f, f, f, f, f, b], [b, f, b, f, b, f, b, f, b, f, b, f, b, f, b], [b, f, f, f, f, f, f, f, f, f, f, f, f, f, b], [b, f, b, f, b, f, b, f, b, f, b, f, b, f, b], [b, f, f, f, f, f, f, f, f, f, f, f, f, f, b], [b, f, b, f, b, f, b, f, b, f, b, f, b, f, b], [b, f, f, f, f, f, f, f, f, f, f, f, f, f, b], [b, f, b, f, b, f, b, f, b, f, b, f, b, f, b], [b, f, f, f, f, f, f, f, f, f, f, f, f, f, b], [b, b, b, b, b, b, b, b, b, b, b, b, b, b, b]];
+      this.dataMap = [[b, b, b, b, b, b, b, b, b, b, b, b, b, b, b], [b, b, b, f, f, f, f, f, f, f, f, f, f, f, b], [b, f, b, b, b, f, b, f, b, f, b, f, b, f, b], [b, f, f, f, f, f, f, f, f, f, f, f, f, f, b], [b, f, b, f, b, f, b, f, b, f, b, f, b, f, b], [b, f, f, f, f, f, f, f, f, f, f, f, f, f, b], [b, f, b, f, b, f, b, f, b, f, b, f, b, f, b], [b, f, f, f, f, f, f, f, f, f, f, f, f, f, b], [b, f, b, f, b, f, b, f, b, f, b, f, b, f, b], [b, f, f, f, f, f, f, f, f, f, f, f, f, f, b], [b, f, b, f, b, f, b, f, b, f, b, f, b, f, b], [b, f, f, f, f, f, f, f, f, f, f, f, f, f, b], [b, b, b, b, b, b, b, b, b, b, b, b, b, b, b]];
       this.viewMap = [[], [], [], [], [], [], [], [], [], [], [], [], []];
       this.bomberman = new Bomberman(this, this.tileSize, this.tileSize);
       this.updateMaps();
@@ -103,7 +103,7 @@
       this.stage = stage;
       this.x = x;
       this.y = y;
-      this.power = this.speed = this.bombCapacity = 1;
+      this.power = this.speed = this.bombCapacity = 2;
       this.canThrow = this.canKick = false;
       this.width = this.height = this.stage.tileSize;
     }
@@ -112,24 +112,12 @@
       if (input.right) {
         return this.moveRight();
       } else if (input.down) {
-        console.log("down");
-        return this.moveBottom();
-      }
-    };
-
-    Bomberman.prototype.nextPosition = function(input) {
-      var r;
-      r = this.getRect();
-      if (input.left) {
-        r.x -= this.speed;
-      } else if (input.right) {
-        r.x += this.speed;
+        return this.moveDown();
+      } else if (input.left) {
+        return this.moveLeft();
       } else if (input.up) {
-        r.y -= this.speed;
-      } else if (input.down) {
-        r.y += this.speed;
+        return this.moveUp();
       }
-      return r;
     };
 
     Bomberman.prototype.move = function(r) {
@@ -137,10 +125,16 @@
       return this.y = r.y;
     };
 
+    Bomberman.prototype.onBarrier = function(ni) {
+      var oi;
+      oi = this.getCurrentIndex();
+      return this.stage.isBarrier(oi.x, oi.y) && oi.equals(ni);
+    };
+
     Bomberman.prototype.moveRight = function() {
-      var ib, il, ir, it, lb, new_rect, ni, oi, old_rect, _ref, _ref2;
+      var b, ib, il, ir, it, new_rect, ni, oi, old_rect, _ref, _ref2;
       old_rect = this.getRect();
-      new_rect = this.getRect(1, 0);
+      new_rect = this.getRect(this.speed, 0);
       _ref = this.stage.getXIndexes(new_rect.getLeft(), new_rect.getRight()), il = _ref[0], ir = _ref[1];
       _ref2 = this.stage.getYIndexes(new_rect.getTop(), new_rect.getBottom()), it = _ref2[0], ib = _ref2[1];
       oi = this.getIndex(old_rect);
@@ -152,38 +146,171 @@
         this.move(new_rect);
         return true;
       }
-      if ((il === ir || it === ib) && this.stage.isBarrier(oi.x, oi.y) && oi.equals(ni)) {
+      if ((il === ir || it === ib) && this.onBarrier(ni)) {
         this.move(new_rect);
         return true;
       }
-      lb = ir * this.stage.tileSize - 1;
-      if (lb === old_rect.getRight()) {
-        new_rect = this.getRect(0, -1);
+      b = ir * this.stage.tileSize - 1;
+      if (b === old_rect.getRight()) {
+        new_rect = this.getRect(0, -this.speed);
         ni = this.getIndex(new_rect);
-        if (!this.stage.isBarrier(ir, it) && (!this.stage.isBarrier(il, it) || (this.stage.isBarrier(oi.x, oi.y) && oi.equals(ni)))) {
+        if (!this.stage.isBarrier(ir, it) && (!this.stage.isBarrier(il, it) || this.onBarrier(ni))) {
+          if (it * this.stage.tileSize > new_rect.getTop()) {
+            new_rect.y = it * this.stage.tileSize;
+          }
           this.move(new_rect);
           return true;
         }
-        new_rect = this.getRect(0, 1);
+        new_rect = this.getRect(0, this.speed);
         ni = this.getIndex(new_rect);
-        if (!this.stage.isBarrier(ir, ib) && (!this.stage.isBarrier(il, ib) || (this.stage.isBarrier(oi.x, oi.y) && oi.equals(ni)))) {
+        if (!this.stage.isBarrier(ir, ib) && (!this.stage.isBarrier(il, ib) || this.onBarrier(ni))) {
+          if (ib * this.stage.tileSize < new_rect.getTop()) {
+            new_rect.y = ib * this.stage.tileSize;
+          }
           this.move(new_rect);
           return true;
         }
-      } else if (lb > old_rect.getRight()) {
-        this.move(this.getRect(lb - old_rect.getRight(), 0));
+      } else if (b > old_rect.getRight()) {
+        this.move(this.getRect(b - old_rect.getRight(), 0));
         return true;
       }
       return false;
     };
 
-    Bomberman.prototype.hitTest = function(other) {
-      var i, p, ps, _i, _len;
-      ps = [other.getTopLeft(), other.getTopRight(), other.getBottomLeft(), other.getBottomRight()];
-      for (_i = 0, _len = ps.length; _i < _len; _i++) {
-        p = ps[_i];
-        i = this.stage.getIndex(p.x, p.y);
-        if (this.stage.isBarrier(i.x, i.y)) return true;
+    Bomberman.prototype.moveDown = function() {
+      var b, ib, il, ir, it, new_rect, ni, oi, old_rect, _ref, _ref2;
+      old_rect = this.getRect();
+      new_rect = this.getRect(0, this.speed);
+      _ref = this.stage.getXIndexes(new_rect.getLeft(), new_rect.getRight()), il = _ref[0], ir = _ref[1];
+      _ref2 = this.stage.getYIndexes(new_rect.getTop(), new_rect.getBottom()), it = _ref2[0], ib = _ref2[1];
+      oi = this.getIndex(old_rect);
+      ni = this.getIndex(new_rect);
+      if ((it !== ib) && this.stage.isBarrier(il, it) && this.stage.isBarrier(il, ib)) {
+        return false;
+      }
+      if (!this.stage.isBarrier(il, ib) && !this.stage.isBarrier(ir, ib)) {
+        this.move(new_rect);
+        return true;
+      }
+      if ((il === ir || it === ib) && this.onBarrier(ni)) {
+        this.move(new_rect);
+        return true;
+      }
+      b = ib * this.stage.tileSize - 1;
+      if (b === old_rect.getBottom()) {
+        new_rect = this.getRect(-this.speed, 0);
+        ni = this.getIndex(new_rect);
+        if (!this.stage.isBarrier(il, ib) && (!this.stage.isBarrier(il, it) || this.onBarrier(ni))) {
+          if (il * this.stage.tileSize > new_rect.getLeft()) {
+            new_rect.x = il * this.stage.tileSize;
+          }
+          this.move(new_rect);
+          return true;
+        }
+        new_rect = this.getRect(this.speed, 0);
+        ni = this.getIndex(new_rect);
+        if (!this.stage.isBarrier(ir, ib) && (!this.stage.isBarrier(ir, it) || this.onBarrier(ni))) {
+          if (ir * this.stage.tileSize < new_rect.getLeft()) {
+            new_rect.x = ir * this.stage.tileSize;
+          }
+          this.move(new_rect);
+          return true;
+        }
+      } else if (b > old_rect.getBottom()) {
+        this.move(this.getRect(0, b - old_rect.getBottom()));
+        return true;
+      }
+      return false;
+    };
+
+    Bomberman.prototype.moveLeft = function() {
+      var b, ib, il, ir, it, new_rect, ni, oi, old_rect, _ref, _ref2;
+      old_rect = this.getRect();
+      new_rect = this.getRect(-this.speed, 0);
+      _ref = this.stage.getXIndexes(new_rect.getLeft(), new_rect.getRight()), il = _ref[0], ir = _ref[1];
+      _ref2 = this.stage.getYIndexes(new_rect.getTop(), new_rect.getBottom()), it = _ref2[0], ib = _ref2[1];
+      oi = this.getIndex(old_rect);
+      ni = this.getIndex(new_rect);
+      if ((il !== ir) && this.stage.isBarrier(ir, it) && this.stage.isBarrier(il, it)) {
+        return false;
+      }
+      if (!this.stage.isBarrier(il, it) && !this.stage.isBarrier(il, ib)) {
+        this.move(new_rect);
+        return true;
+      }
+      if ((il === ir || it === ib) && this.onBarrier(ni)) {
+        this.move(new_rect);
+        return true;
+      }
+      b = ir * this.stage.tileSize;
+      if (b === old_rect.getLeft()) {
+        new_rect = this.getRect(0, -this.speed);
+        ni = this.getIndex(new_rect);
+        if (!this.stage.isBarrier(il, it) && (!this.stage.isBarrier(ir, it) || this.onBarrier(ni))) {
+          if (it * this.stage.tileSize > new_rect.getTop()) {
+            new_rect.y = it * this.stage.tileSize;
+          }
+          this.move(new_rect);
+          return true;
+        }
+        new_rect = this.getRect(0, this.speed);
+        ni = this.getIndex(new_rect);
+        if (!this.stage.isBarrier(il, ib) && (!this.stage.isBarrier(ir, ib) || this.onBarrier(ni))) {
+          if (ib * this.stage.tileSize < new_rect.getTop()) {
+            new_rect.y = ib * this.stage.tileSize;
+          }
+          this.move(new_rect);
+          return true;
+        }
+      } else if (b < old_rect.getLeft()) {
+        this.move(this.getRect(b - old_rect.getLeft(), 0));
+        return true;
+      }
+      return false;
+    };
+
+    Bomberman.prototype.moveUp = function() {
+      var b, ib, il, ir, it, new_rect, ni, oi, old_rect, _ref, _ref2;
+      old_rect = this.getRect();
+      new_rect = this.getRect(0, -this.speed);
+      _ref = this.stage.getXIndexes(new_rect.getLeft(), new_rect.getRight()), il = _ref[0], ir = _ref[1];
+      _ref2 = this.stage.getYIndexes(new_rect.getTop(), new_rect.getBottom()), it = _ref2[0], ib = _ref2[1];
+      oi = this.getIndex(old_rect);
+      ni = this.getIndex(new_rect);
+      if ((it !== ib) && this.stage.isBarrier(il, it) && this.stage.isBarrier(il, ib)) {
+        return false;
+      }
+      if (!this.stage.isBarrier(il, it) && !this.stage.isBarrier(ir, it)) {
+        this.move(new_rect);
+        return true;
+      }
+      if ((il === ir || it === ib) && this.onBarrier(ni)) {
+        this.move(new_rect);
+        return true;
+      }
+      b = ib * this.stage.tileSize;
+      if (b === old_rect.getTop()) {
+        new_rect = this.getRect(-this.speed, 0);
+        ni = this.getIndex(new_rect);
+        if (!this.stage.isBarrier(il, it) && (!this.stage.isBarrier(il, ib) || this.onBarrier(ni))) {
+          if (il * this.stage.tileSize > new_rect.getLeft()) {
+            new_rect.x = il * this.stage.tileSize;
+          }
+          this.move(new_rect);
+          return true;
+        }
+        new_rect = this.getRect(this.speed, 0);
+        ni = this.getIndex(new_rect);
+        if (!this.stage.isBarrier(ir, it) && (!this.stage.isBarrier(ir, ib) || this.onBarrier(ni))) {
+          if (ir * this.stage.tileSize < new_rect.getLeft()) {
+            new_rect.x = ir * this.stage.tileSize;
+          }
+          this.move(new_rect);
+          return true;
+        }
+      } else if (b < old_rect.getTop()) {
+        this.move(this.getRect(0, b - old_rect.getTop()));
+        return true;
       }
       return false;
     };
