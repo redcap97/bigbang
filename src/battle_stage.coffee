@@ -44,10 +44,7 @@ class BattleStage
     if x < 0 or x >= @tileSize * @dataMap[0].length or
         y < 0 or y >= @tileSize * @dataMap.length
       throw new Error(@OUTSIDE_OF_STAGE_ERROR)
-
-    x = x / @tileSize | 0
-    y = y / @tileSize | 0
-    {x: x, y: y}
+    new Point(x/@tileSize|0, y/@tileSize|0)
 
   getXIndexes: (xs...) ->
     rs = []
