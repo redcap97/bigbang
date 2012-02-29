@@ -23,13 +23,11 @@ class Bomberman
     @stage.isBarrier(oi.x, oi.y) and oi.equals(ni)
 
   moveRight: ->
-    old_rect = @getRect()
     new_rect = @getRect(@speed, 0)
 
     [il, ir] = @stage.getXIndexes(new_rect.getLeft(), new_rect.getRight())
     [it, ib] = @stage.getYIndexes(new_rect.getTop(), new_rect.getBottom())
 
-    oi = @getIndex(old_rect)
     ni = @getIndex(new_rect)
 
     if (il != ir) and @stage.isBarrier(ir, it) and @stage.isBarrier(il, it)
@@ -44,7 +42,7 @@ class Bomberman
       return true
 
     b = ir * @stage.tileSize - 1
-
+    old_rect = @getRect()
     if b == old_rect.getRight()
       new_rect = @getRect(0, -@speed)
       ni = @getIndex(new_rect)
@@ -67,13 +65,11 @@ class Bomberman
     false
 
   moveDown: ->
-    old_rect = @getRect()
     new_rect = @getRect(0, @speed)
 
     [il, ir] = @stage.getXIndexes(new_rect.getLeft(), new_rect.getRight())
     [it, ib] = @stage.getYIndexes(new_rect.getTop(), new_rect.getBottom())
 
-    oi = @getIndex(old_rect)
     ni = @getIndex(new_rect)
 
     if (it != ib) and @stage.isBarrier(il, it) and @stage.isBarrier(il, ib)
@@ -88,7 +84,7 @@ class Bomberman
       return true
 
     b = ib * @stage.tileSize - 1
-
+    old_rect = @getRect()
     if b == old_rect.getBottom()
       new_rect = @getRect(-@speed, 0)
       ni = @getIndex(new_rect)
@@ -111,13 +107,11 @@ class Bomberman
     false
 
   moveLeft: ->
-    old_rect = @getRect()
     new_rect = @getRect(-@speed, 0)
 
     [il, ir] = @stage.getXIndexes(new_rect.getLeft(), new_rect.getRight())
     [it, ib] = @stage.getYIndexes(new_rect.getTop(), new_rect.getBottom())
 
-    oi = @getIndex(old_rect)
     ni = @getIndex(new_rect)
 
     if (il != ir) and @stage.isBarrier(ir, it) and @stage.isBarrier(il, it)
@@ -132,7 +126,7 @@ class Bomberman
       return true
 
     b = ir * @stage.tileSize
-
+    old_rect = @getRect()
     if b == old_rect.getLeft()
       new_rect = @getRect(0, -@speed)
       ni = @getIndex(new_rect)
@@ -155,13 +149,10 @@ class Bomberman
     false
 
   moveUp: ->
-    old_rect = @getRect()
     new_rect = @getRect(0, -@speed)
 
     [il, ir] = @stage.getXIndexes(new_rect.getLeft(), new_rect.getRight())
     [it, ib] = @stage.getYIndexes(new_rect.getTop(), new_rect.getBottom())
-
-    oi = @getIndex(old_rect)
     ni = @getIndex(new_rect)
 
     if (it != ib) and @stage.isBarrier(il, it) and @stage.isBarrier(il, ib)
@@ -176,7 +167,7 @@ class Bomberman
       return true
 
     b = ib * @stage.tileSize
-
+    old_rect = @getRect()
     if b == old_rect.getTop()
       new_rect = @getRect(-@speed, 0)
       ni = @getIndex(new_rect)

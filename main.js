@@ -132,12 +132,10 @@
     };
 
     Bomberman.prototype.moveRight = function() {
-      var b, ib, il, ir, it, new_rect, ni, oi, old_rect, _ref, _ref2;
-      old_rect = this.getRect();
+      var b, ib, il, ir, it, new_rect, ni, old_rect, _ref, _ref2;
       new_rect = this.getRect(this.speed, 0);
       _ref = this.stage.getXIndexes(new_rect.getLeft(), new_rect.getRight()), il = _ref[0], ir = _ref[1];
       _ref2 = this.stage.getYIndexes(new_rect.getTop(), new_rect.getBottom()), it = _ref2[0], ib = _ref2[1];
-      oi = this.getIndex(old_rect);
       ni = this.getIndex(new_rect);
       if ((il !== ir) && this.stage.isBarrier(ir, it) && this.stage.isBarrier(il, it)) {
         return false;
@@ -151,6 +149,7 @@
         return true;
       }
       b = ir * this.stage.tileSize - 1;
+      old_rect = this.getRect();
       if (b === old_rect.getRight()) {
         new_rect = this.getRect(0, -this.speed);
         ni = this.getIndex(new_rect);
@@ -178,12 +177,10 @@
     };
 
     Bomberman.prototype.moveDown = function() {
-      var b, ib, il, ir, it, new_rect, ni, oi, old_rect, _ref, _ref2;
-      old_rect = this.getRect();
+      var b, ib, il, ir, it, new_rect, ni, old_rect, _ref, _ref2;
       new_rect = this.getRect(0, this.speed);
       _ref = this.stage.getXIndexes(new_rect.getLeft(), new_rect.getRight()), il = _ref[0], ir = _ref[1];
       _ref2 = this.stage.getYIndexes(new_rect.getTop(), new_rect.getBottom()), it = _ref2[0], ib = _ref2[1];
-      oi = this.getIndex(old_rect);
       ni = this.getIndex(new_rect);
       if ((it !== ib) && this.stage.isBarrier(il, it) && this.stage.isBarrier(il, ib)) {
         return false;
@@ -197,6 +194,7 @@
         return true;
       }
       b = ib * this.stage.tileSize - 1;
+      old_rect = this.getRect();
       if (b === old_rect.getBottom()) {
         new_rect = this.getRect(-this.speed, 0);
         ni = this.getIndex(new_rect);
@@ -224,12 +222,10 @@
     };
 
     Bomberman.prototype.moveLeft = function() {
-      var b, ib, il, ir, it, new_rect, ni, oi, old_rect, _ref, _ref2;
-      old_rect = this.getRect();
+      var b, ib, il, ir, it, new_rect, ni, old_rect, _ref, _ref2;
       new_rect = this.getRect(-this.speed, 0);
       _ref = this.stage.getXIndexes(new_rect.getLeft(), new_rect.getRight()), il = _ref[0], ir = _ref[1];
       _ref2 = this.stage.getYIndexes(new_rect.getTop(), new_rect.getBottom()), it = _ref2[0], ib = _ref2[1];
-      oi = this.getIndex(old_rect);
       ni = this.getIndex(new_rect);
       if ((il !== ir) && this.stage.isBarrier(ir, it) && this.stage.isBarrier(il, it)) {
         return false;
@@ -243,6 +239,7 @@
         return true;
       }
       b = ir * this.stage.tileSize;
+      old_rect = this.getRect();
       if (b === old_rect.getLeft()) {
         new_rect = this.getRect(0, -this.speed);
         ni = this.getIndex(new_rect);
@@ -270,12 +267,10 @@
     };
 
     Bomberman.prototype.moveUp = function() {
-      var b, ib, il, ir, it, new_rect, ni, oi, old_rect, _ref, _ref2;
-      old_rect = this.getRect();
+      var b, ib, il, ir, it, new_rect, ni, old_rect, _ref, _ref2;
       new_rect = this.getRect(0, -this.speed);
       _ref = this.stage.getXIndexes(new_rect.getLeft(), new_rect.getRight()), il = _ref[0], ir = _ref[1];
       _ref2 = this.stage.getYIndexes(new_rect.getTop(), new_rect.getBottom()), it = _ref2[0], ib = _ref2[1];
-      oi = this.getIndex(old_rect);
       ni = this.getIndex(new_rect);
       if ((it !== ib) && this.stage.isBarrier(il, it) && this.stage.isBarrier(il, ib)) {
         return false;
@@ -289,6 +284,7 @@
         return true;
       }
       b = ib * this.stage.tileSize;
+      old_rect = this.getRect();
       if (b === old_rect.getTop()) {
         new_rect = this.getRect(-this.speed, 0);
         ni = this.getIndex(new_rect);
