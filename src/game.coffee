@@ -1,6 +1,6 @@
-ENCHANTJS_IMAGE_PATH = "enchantjs/images/"
-
 window.onload = ->
+  ENCHANTJS_IMAGE_PATH = "enchantjs/images/"
+
   game = new enchant.Game(320, 320)
   game.scale = 3.0
   game.preload(ENCHANTJS_IMAGE_PATH + 'chara0.gif')

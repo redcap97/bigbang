@@ -14,163 +14,156 @@ class Bomberman
     else if input.up
       @moveUp()
 
-  move: (r) ->
+  changePosition: (r) ->
     @x = r.x
     @y = r.y
 
-  onBarrier: (ni) ->
+  canMoveOnBomb: (ni) ->
     oi = @getCurrentIndex()
     @stage.isBarrier(oi.x, oi.y) and oi.equals(ni)
 
   moveRight: ->
-    new_rect = @getRect(@speed, 0)
-    [il, ir] = @stage.getXIndexes(new_rect.getLeft(), new_rect.getRight())
-    [it, ib] = @stage.getYIndexes(new_rect.getTop(), new_rect.getBottom())
+    new_rect = @getRectangle(@speed, 0)
+    [il, it, ir, ib] = @stage.getRectangleIndex(new_rect)
 
     if (il != ir) and @stage.isBarrier(ir, it) and @stage.isBarrier(il, it)
       return false
 
     if (!@stage.isBarrier(ir, it) and !@stage.isBarrier(ir, ib)) or
-        ((il == ir or it == ib) and @onBarrier(@getIndex(new_rect)))
-      @move(new_rect)
+        ((il == ir or it == ib) and @canMoveOnBomb(@getIndex(new_rect)))
+      @changePosition(new_rect)
       return true
 
     bound = ir * @stage.tileSize - 1
-    old_rect = @getRect()
+    old_rect = @getRectangle()
     if bound == old_rect.getRight()
-      new_rect = @getRect(0, -@speed)
+      new_rect = @getRectangle(0, -@speed)
       if !@stage.isBarrier(ir, it) and
-          (!@stage.isBarrier(il, it) or @onBarrier(@getIndex(new_rect)))
+          (!@stage.isBarrier(il, it) or @canMoveOnBomb(@getIndex(new_rect)))
         if it * @stage.tileSize > new_rect.getTop()
           new_rect.y = it * @stage.tileSize
-        @move(new_rect)
+        @changePosition(new_rect)
         return true
 
-      new_rect = @getRect(0, @speed)
+      new_rect = @getRectangle(0, @speed)
       if !@stage.isBarrier(ir, ib) and
-          (!@stage.isBarrier(il, ib) or @onBarrier(@getIndex(new_rect)))
+          (!@stage.isBarrier(il, ib) or @canMoveOnBomb(@getIndex(new_rect)))
         if ib * @stage.tileSize < new_rect.getTop()
           new_rect.y = ib * @stage.tileSize
-        @move(new_rect)
+        @changePosition(new_rect)
         return true
     else if bound > old_rect.getRight()
-      @move(@getRect(bound - old_rect.getRight(), 0))
+      @changePosition(@getRectangle(bound - old_rect.getRight(), 0))
       return true
     false
 
   moveDown: ->
-    new_rect = @getRect(0, @speed)
-
-    [il, ir] = @stage.getXIndexes(new_rect.getLeft(), new_rect.getRight())
-    [it, ib] = @stage.getYIndexes(new_rect.getTop(), new_rect.getBottom())
+    new_rect = @getRectangle(0, @speed)
+    [il, it, ir, ib] = @stage.getRectangleIndex(new_rect)
 
     if (it != ib) and @stage.isBarrier(il, it) and @stage.isBarrier(il, ib)
       return false
 
     if (!@stage.isBarrier(il, ib) and !@stage.isBarrier(ir, ib)) or
-        ((il == ir or it == ib) and @onBarrier(@getIndex(new_rect)))
-      @move(new_rect)
+        ((il == ir or it == ib) and @canMoveOnBomb(@getIndex(new_rect)))
+      @changePosition(new_rect)
       return true
 
     bound = ib * @stage.tileSize - 1
-    old_rect = @getRect()
+    old_rect = @getRectangle()
     if bound == old_rect.getBottom()
-      new_rect = @getRect(-@speed, 0)
+      new_rect = @getRectangle(-@speed, 0)
       if !@stage.isBarrier(il, ib) and
-          (!@stage.isBarrier(il, it) or @onBarrier(@getIndex(new_rect)))
+          (!@stage.isBarrier(il, it) or @canMoveOnBomb(@getIndex(new_rect)))
         if il * @stage.tileSize > new_rect.getLeft()
           new_rect.x = il * @stage.tileSize
-        @move(new_rect)
+        @changePosition(new_rect)
         return true
 
-      new_rect = @getRect(@speed, 0)
+      new_rect = @getRectangle(@speed, 0)
       if !@stage.isBarrier(ir, ib) and
-          (!@stage.isBarrier(ir, it) or @onBarrier(@getIndex(new_rect)))
+          (!@stage.isBarrier(ir, it) or @canMoveOnBomb(@getIndex(new_rect)))
         if ir * @stage.tileSize < new_rect.getLeft()
           new_rect.x = ir * @stage.tileSize
-        @move(new_rect)
+        @changePosition(new_rect)
         return true
     else if bound > old_rect.getBottom()
-      @move(@getRect(0, bound - old_rect.getBottom()))
+      @changePosition(@getRectangle(0, bound - old_rect.getBottom()))
       return true
     false
 
   moveLeft: ->
-    new_rect = @getRect(-@speed, 0)
-
-    [il, ir] = @stage.getXIndexes(new_rect.getLeft(), new_rect.getRight())
-    [it, ib] = @stage.getYIndexes(new_rect.getTop(), new_rect.getBottom())
+    new_rect = @getRectangle(-@speed, 0)
+    [il, it, ir, ib] = @stage.getRectangleIndex(new_rect)
 
     if (il != ir) and @stage.isBarrier(ir, it) and @stage.isBarrier(il, it)
       return false
 
     if (!@stage.isBarrier(il, it) and !@stage.isBarrier(il, ib)) or
-        ((il == ir or it == ib) and @onBarrier(@getIndex(new_rect)))
-      @move(new_rect)
+        ((il == ir or it == ib) and @canMoveOnBomb(@getIndex(new_rect)))
+      @changePosition(new_rect)
       return true
 
     bound = ir * @stage.tileSize
-    old_rect = @getRect()
+    old_rect = @getRectangle()
     if bound == old_rect.getLeft()
-      new_rect = @getRect(0, -@speed)
+      new_rect = @getRectangle(0, -@speed)
       if !@stage.isBarrier(il, it) and
-          (!@stage.isBarrier(ir, it) or @onBarrier(@getIndex(new_rect)))
+          (!@stage.isBarrier(ir, it) or @canMoveOnBomb(@getIndex(new_rect)))
         if it * @stage.tileSize > new_rect.getTop()
           new_rect.y = it * @stage.tileSize
-        @move(new_rect)
+        @changePosition(new_rect)
         return true
 
-      new_rect = @getRect(0, @speed)
+      new_rect = @getRectangle(0, @speed)
       if !@stage.isBarrier(il, ib) and
-          (!@stage.isBarrier(ir, ib) or @onBarrier(@getIndex(new_rect)))
+          (!@stage.isBarrier(ir, ib) or @canMoveOnBomb(@getIndex(new_rect)))
         if ib * @stage.tileSize < new_rect.getTop()
           new_rect.y = ib * @stage.tileSize
-        @move(new_rect)
+        @changePosition(new_rect)
         return true
     else if bound < old_rect.getLeft()
-      @move(@getRect(bound - old_rect.getLeft(), 0))
+      @changePosition(@getRectangle(bound - old_rect.getLeft(), 0))
       return true
     false
 
   moveUp: ->
-    new_rect = @getRect(0, -@speed)
-
-    [il, ir] = @stage.getXIndexes(new_rect.getLeft(), new_rect.getRight())
-    [it, ib] = @stage.getYIndexes(new_rect.getTop(), new_rect.getBottom())
+    new_rect = @getRectangle(0, -@speed)
+    [il, it, ir, ib] = @stage.getRectangleIndex(new_rect)
 
     if (it != ib) and @stage.isBarrier(il, it) and @stage.isBarrier(il, ib)
       return false
 
     if (!@stage.isBarrier(il, it) and !@stage.isBarrier(ir, it)) or
-        ((il == ir or it == ib) and @onBarrier(@getIndex(new_rect)))
-      @move(new_rect)
+        ((il == ir or it == ib) and @canMoveOnBomb(@getIndex(new_rect)))
+      @changePosition(new_rect)
       return true
 
     bound = ib * @stage.tileSize
-    old_rect = @getRect()
+    old_rect = @getRectangle()
     if bound == old_rect.getTop()
-      new_rect = @getRect(-@speed, 0)
+      new_rect = @getRectangle(-@speed, 0)
       if !@stage.isBarrier(il, it) and
-          (!@stage.isBarrier(il, ib) or @onBarrier(@getIndex(new_rect)))
+          (!@stage.isBarrier(il, ib) or @canMoveOnBomb(@getIndex(new_rect)))
         if il * @stage.tileSize > new_rect.getLeft()
           new_rect.x = il * @stage.tileSize
-        @move(new_rect)
+        @changePosition(new_rect)
         return true
 
-      new_rect = @getRect(@speed, 0)
+      new_rect = @getRectangle(@speed, 0)
       if !@stage.isBarrier(ir, it) and
-          (!@stage.isBarrier(ir, ib) or @onBarrier(@getIndex(new_rect)))
+          (!@stage.isBarrier(ir, ib) or @canMoveOnBomb(@getIndex(new_rect)))
         if ir * @stage.tileSize < new_rect.getLeft()
           new_rect.x = ir * @stage.tileSize
-        @move(new_rect)
+        @changePosition(new_rect)
         return true
     else if bound < old_rect.getTop()
-      @move(@getRect(0, bound - old_rect.getTop()))
+      @changePosition(@getRectangle(0, bound - old_rect.getTop()))
       return true
     false
 
-  getRect: (dx = 0, dy = 0) ->
-    new Rect(@x + dx, @y + dy, @width, @height)
+  getRectangle: (dx = 0, dy = 0) ->
+    new Rectangle(@x + dx, @y + dy, @width, @height)
 
   getIndex: (r) ->
     i = new Point()
@@ -195,4 +188,4 @@ class Bomberman
     i
 
   getCurrentIndex: ->
-    @getIndex(@getRect())
+    @getIndex(@getRectangle())

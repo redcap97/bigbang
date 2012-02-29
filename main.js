@@ -1,5 +1,5 @@
 (function() {
-  var BattleStage, Bomberman, ENCHANTJS_IMAGE_PATH, Point, Rect, StageObject,
+  var BattleStage, Bomberman, Point, Rectangle, StageObject,
     __slice = Array.prototype.slice;
 
   BattleStage = (function() {
@@ -11,7 +11,7 @@
       this.tileSize = 16;
       b = new StageObject(4, true);
       f = new StageObject(0, false);
-      this.dataMap = [[b, b, b, b, b, b, b, b, b, b, b, b, b, b, b], [b, b, b, f, f, f, f, f, f, f, f, f, f, f, b], [b, f, b, b, b, f, b, f, b, f, b, f, b, f, b], [b, f, f, f, f, f, f, f, f, f, f, f, f, f, b], [b, f, b, f, b, f, b, f, b, f, b, f, b, f, b], [b, f, f, f, f, f, f, f, f, f, f, f, f, f, b], [b, f, b, f, b, f, b, f, b, f, b, f, b, f, b], [b, f, f, f, f, f, f, f, f, f, f, f, f, f, b], [b, f, b, f, b, f, b, f, b, f, b, f, b, f, b], [b, f, f, f, f, f, f, f, f, f, f, f, f, f, b], [b, f, b, f, b, f, b, f, b, f, b, f, b, f, b], [b, f, f, f, f, f, f, f, f, f, f, f, f, f, b], [b, b, b, b, b, b, b, b, b, b, b, b, b, b, b]];
+      this.dataMap = [[b, b, b, b, b, b, b, b, b, b, b, b, b, b, b], [b, b, f, f, f, f, f, f, f, f, f, f, f, f, b], [b, f, b, b, b, f, b, f, b, f, b, f, b, f, b], [b, f, f, f, f, f, f, f, f, f, f, f, f, f, b], [b, f, b, f, b, f, b, f, b, f, b, f, b, f, b], [b, f, f, f, f, f, f, f, f, f, f, f, f, f, b], [b, f, b, f, b, f, b, f, b, f, b, f, b, f, b], [b, f, f, f, f, f, f, f, f, f, f, f, f, f, b], [b, f, b, f, b, f, b, f, b, f, b, f, b, f, b], [b, f, f, f, f, f, f, f, f, f, f, f, f, f, b], [b, f, b, f, b, f, b, f, b, f, b, f, b, f, b], [b, f, f, f, f, f, f, f, f, f, f, f, f, f, b], [b, b, b, b, b, b, b, b, b, b, b, b, b, b, b]];
       this.viewMap = [[], [], [], [], [], [], [], [], [], [], [], [], []];
       this.bomberman = new Bomberman(this, this.tileSize, this.tileSize);
       this.updateMaps();
@@ -78,6 +78,13 @@
       return rs;
     };
 
+    BattleStage.prototype.getRectangleIndex = function(r) {
+      var ib, il, ir, it, _ref, _ref2;
+      _ref = this.getXIndexes(r.getLeft(), r.getRight()), il = _ref[0], ir = _ref[1];
+      _ref2 = this.getYIndexes(r.getTop(), r.getBottom()), it = _ref2[0], ib = _ref2[1];
+      return [il, it, ir, ib];
+    };
+
     BattleStage.prototype.isBarrier = function(ix, iy) {
       return this.dataMap[iy][ix].isBarrier;
     };
@@ -115,173 +122,169 @@
       }
     };
 
-    Bomberman.prototype.move = function(r) {
+    Bomberman.prototype.changePosition = function(r) {
       this.x = r.x;
       return this.y = r.y;
     };
 
-    Bomberman.prototype.onBarrier = function(ni) {
+    Bomberman.prototype.canMoveOnBomb = function(ni) {
       var oi;
       oi = this.getCurrentIndex();
       return this.stage.isBarrier(oi.x, oi.y) && oi.equals(ni);
     };
 
     Bomberman.prototype.moveRight = function() {
-      var bound, ib, il, ir, it, new_rect, old_rect, _ref, _ref2;
-      new_rect = this.getRect(this.speed, 0);
-      _ref = this.stage.getXIndexes(new_rect.getLeft(), new_rect.getRight()), il = _ref[0], ir = _ref[1];
-      _ref2 = this.stage.getYIndexes(new_rect.getTop(), new_rect.getBottom()), it = _ref2[0], ib = _ref2[1];
+      var bound, ib, il, ir, it, new_rect, old_rect, _ref;
+      new_rect = this.getRectangle(this.speed, 0);
+      _ref = this.stage.getRectangleIndex(new_rect), il = _ref[0], it = _ref[1], ir = _ref[2], ib = _ref[3];
       if ((il !== ir) && this.stage.isBarrier(ir, it) && this.stage.isBarrier(il, it)) {
         return false;
       }
-      if ((!this.stage.isBarrier(ir, it) && !this.stage.isBarrier(ir, ib)) || ((il === ir || it === ib) && this.onBarrier(this.getIndex(new_rect)))) {
-        this.move(new_rect);
+      if ((!this.stage.isBarrier(ir, it) && !this.stage.isBarrier(ir, ib)) || ((il === ir || it === ib) && this.canMoveOnBomb(this.getIndex(new_rect)))) {
+        this.changePosition(new_rect);
         return true;
       }
       bound = ir * this.stage.tileSize - 1;
-      old_rect = this.getRect();
+      old_rect = this.getRectangle();
       if (bound === old_rect.getRight()) {
-        new_rect = this.getRect(0, -this.speed);
-        if (!this.stage.isBarrier(ir, it) && (!this.stage.isBarrier(il, it) || this.onBarrier(this.getIndex(new_rect)))) {
+        new_rect = this.getRectangle(0, -this.speed);
+        if (!this.stage.isBarrier(ir, it) && (!this.stage.isBarrier(il, it) || this.canMoveOnBomb(this.getIndex(new_rect)))) {
           if (it * this.stage.tileSize > new_rect.getTop()) {
             new_rect.y = it * this.stage.tileSize;
           }
-          this.move(new_rect);
+          this.changePosition(new_rect);
           return true;
         }
-        new_rect = this.getRect(0, this.speed);
-        if (!this.stage.isBarrier(ir, ib) && (!this.stage.isBarrier(il, ib) || this.onBarrier(this.getIndex(new_rect)))) {
+        new_rect = this.getRectangle(0, this.speed);
+        if (!this.stage.isBarrier(ir, ib) && (!this.stage.isBarrier(il, ib) || this.canMoveOnBomb(this.getIndex(new_rect)))) {
           if (ib * this.stage.tileSize < new_rect.getTop()) {
             new_rect.y = ib * this.stage.tileSize;
           }
-          this.move(new_rect);
+          this.changePosition(new_rect);
           return true;
         }
       } else if (bound > old_rect.getRight()) {
-        this.move(this.getRect(bound - old_rect.getRight(), 0));
+        this.changePosition(this.getRectangle(bound - old_rect.getRight(), 0));
         return true;
       }
       return false;
     };
 
     Bomberman.prototype.moveDown = function() {
-      var bound, ib, il, ir, it, new_rect, old_rect, _ref, _ref2;
-      new_rect = this.getRect(0, this.speed);
-      _ref = this.stage.getXIndexes(new_rect.getLeft(), new_rect.getRight()), il = _ref[0], ir = _ref[1];
-      _ref2 = this.stage.getYIndexes(new_rect.getTop(), new_rect.getBottom()), it = _ref2[0], ib = _ref2[1];
+      var bound, ib, il, ir, it, new_rect, old_rect, _ref;
+      new_rect = this.getRectangle(0, this.speed);
+      _ref = this.stage.getRectangleIndex(new_rect), il = _ref[0], it = _ref[1], ir = _ref[2], ib = _ref[3];
       if ((it !== ib) && this.stage.isBarrier(il, it) && this.stage.isBarrier(il, ib)) {
         return false;
       }
-      if ((!this.stage.isBarrier(il, ib) && !this.stage.isBarrier(ir, ib)) || ((il === ir || it === ib) && this.onBarrier(this.getIndex(new_rect)))) {
-        this.move(new_rect);
+      if ((!this.stage.isBarrier(il, ib) && !this.stage.isBarrier(ir, ib)) || ((il === ir || it === ib) && this.canMoveOnBomb(this.getIndex(new_rect)))) {
+        this.changePosition(new_rect);
         return true;
       }
       bound = ib * this.stage.tileSize - 1;
-      old_rect = this.getRect();
+      old_rect = this.getRectangle();
       if (bound === old_rect.getBottom()) {
-        new_rect = this.getRect(-this.speed, 0);
-        if (!this.stage.isBarrier(il, ib) && (!this.stage.isBarrier(il, it) || this.onBarrier(this.getIndex(new_rect)))) {
+        new_rect = this.getRectangle(-this.speed, 0);
+        if (!this.stage.isBarrier(il, ib) && (!this.stage.isBarrier(il, it) || this.canMoveOnBomb(this.getIndex(new_rect)))) {
           if (il * this.stage.tileSize > new_rect.getLeft()) {
             new_rect.x = il * this.stage.tileSize;
           }
-          this.move(new_rect);
+          this.changePosition(new_rect);
           return true;
         }
-        new_rect = this.getRect(this.speed, 0);
-        if (!this.stage.isBarrier(ir, ib) && (!this.stage.isBarrier(ir, it) || this.onBarrier(this.getIndex(new_rect)))) {
+        new_rect = this.getRectangle(this.speed, 0);
+        if (!this.stage.isBarrier(ir, ib) && (!this.stage.isBarrier(ir, it) || this.canMoveOnBomb(this.getIndex(new_rect)))) {
           if (ir * this.stage.tileSize < new_rect.getLeft()) {
             new_rect.x = ir * this.stage.tileSize;
           }
-          this.move(new_rect);
+          this.changePosition(new_rect);
           return true;
         }
       } else if (bound > old_rect.getBottom()) {
-        this.move(this.getRect(0, bound - old_rect.getBottom()));
+        this.changePosition(this.getRectangle(0, bound - old_rect.getBottom()));
         return true;
       }
       return false;
     };
 
     Bomberman.prototype.moveLeft = function() {
-      var bound, ib, il, ir, it, new_rect, old_rect, _ref, _ref2;
-      new_rect = this.getRect(-this.speed, 0);
-      _ref = this.stage.getXIndexes(new_rect.getLeft(), new_rect.getRight()), il = _ref[0], ir = _ref[1];
-      _ref2 = this.stage.getYIndexes(new_rect.getTop(), new_rect.getBottom()), it = _ref2[0], ib = _ref2[1];
+      var bound, ib, il, ir, it, new_rect, old_rect, _ref;
+      new_rect = this.getRectangle(-this.speed, 0);
+      _ref = this.stage.getRectangleIndex(new_rect), il = _ref[0], it = _ref[1], ir = _ref[2], ib = _ref[3];
       if ((il !== ir) && this.stage.isBarrier(ir, it) && this.stage.isBarrier(il, it)) {
         return false;
       }
-      if ((!this.stage.isBarrier(il, it) && !this.stage.isBarrier(il, ib)) || ((il === ir || it === ib) && this.onBarrier(this.getIndex(new_rect)))) {
-        this.move(new_rect);
+      if ((!this.stage.isBarrier(il, it) && !this.stage.isBarrier(il, ib)) || ((il === ir || it === ib) && this.canMoveOnBomb(this.getIndex(new_rect)))) {
+        this.changePosition(new_rect);
         return true;
       }
       bound = ir * this.stage.tileSize;
-      old_rect = this.getRect();
+      old_rect = this.getRectangle();
       if (bound === old_rect.getLeft()) {
-        new_rect = this.getRect(0, -this.speed);
-        if (!this.stage.isBarrier(il, it) && (!this.stage.isBarrier(ir, it) || this.onBarrier(this.getIndex(new_rect)))) {
+        new_rect = this.getRectangle(0, -this.speed);
+        if (!this.stage.isBarrier(il, it) && (!this.stage.isBarrier(ir, it) || this.canMoveOnBomb(this.getIndex(new_rect)))) {
           if (it * this.stage.tileSize > new_rect.getTop()) {
             new_rect.y = it * this.stage.tileSize;
           }
-          this.move(new_rect);
+          this.changePosition(new_rect);
           return true;
         }
-        new_rect = this.getRect(0, this.speed);
-        if (!this.stage.isBarrier(il, ib) && (!this.stage.isBarrier(ir, ib) || this.onBarrier(this.getIndex(new_rect)))) {
+        new_rect = this.getRectangle(0, this.speed);
+        if (!this.stage.isBarrier(il, ib) && (!this.stage.isBarrier(ir, ib) || this.canMoveOnBomb(this.getIndex(new_rect)))) {
           if (ib * this.stage.tileSize < new_rect.getTop()) {
             new_rect.y = ib * this.stage.tileSize;
           }
-          this.move(new_rect);
+          this.changePosition(new_rect);
           return true;
         }
       } else if (bound < old_rect.getLeft()) {
-        this.move(this.getRect(bound - old_rect.getLeft(), 0));
+        this.changePosition(this.getRectangle(bound - old_rect.getLeft(), 0));
         return true;
       }
       return false;
     };
 
     Bomberman.prototype.moveUp = function() {
-      var bound, ib, il, ir, it, new_rect, old_rect, _ref, _ref2;
-      new_rect = this.getRect(0, -this.speed);
-      _ref = this.stage.getXIndexes(new_rect.getLeft(), new_rect.getRight()), il = _ref[0], ir = _ref[1];
-      _ref2 = this.stage.getYIndexes(new_rect.getTop(), new_rect.getBottom()), it = _ref2[0], ib = _ref2[1];
+      var bound, ib, il, ir, it, new_rect, old_rect, _ref;
+      new_rect = this.getRectangle(0, -this.speed);
+      _ref = this.stage.getRectangleIndex(new_rect), il = _ref[0], it = _ref[1], ir = _ref[2], ib = _ref[3];
       if ((it !== ib) && this.stage.isBarrier(il, it) && this.stage.isBarrier(il, ib)) {
         return false;
       }
-      if ((!this.stage.isBarrier(il, it) && !this.stage.isBarrier(ir, it)) || ((il === ir || it === ib) && this.onBarrier(this.getIndex(new_rect)))) {
-        this.move(new_rect);
+      if ((!this.stage.isBarrier(il, it) && !this.stage.isBarrier(ir, it)) || ((il === ir || it === ib) && this.canMoveOnBomb(this.getIndex(new_rect)))) {
+        this.changePosition(new_rect);
         return true;
       }
       bound = ib * this.stage.tileSize;
-      old_rect = this.getRect();
+      old_rect = this.getRectangle();
       if (bound === old_rect.getTop()) {
-        new_rect = this.getRect(-this.speed, 0);
-        if (!this.stage.isBarrier(il, it) && (!this.stage.isBarrier(il, ib) || this.onBarrier(this.getIndex(new_rect)))) {
+        new_rect = this.getRectangle(-this.speed, 0);
+        if (!this.stage.isBarrier(il, it) && (!this.stage.isBarrier(il, ib) || this.canMoveOnBomb(this.getIndex(new_rect)))) {
           if (il * this.stage.tileSize > new_rect.getLeft()) {
             new_rect.x = il * this.stage.tileSize;
           }
-          this.move(new_rect);
+          this.changePosition(new_rect);
           return true;
         }
-        new_rect = this.getRect(this.speed, 0);
-        if (!this.stage.isBarrier(ir, it) && (!this.stage.isBarrier(ir, ib) || this.onBarrier(this.getIndex(new_rect)))) {
+        new_rect = this.getRectangle(this.speed, 0);
+        if (!this.stage.isBarrier(ir, it) && (!this.stage.isBarrier(ir, ib) || this.canMoveOnBomb(this.getIndex(new_rect)))) {
           if (ir * this.stage.tileSize < new_rect.getLeft()) {
             new_rect.x = ir * this.stage.tileSize;
           }
-          this.move(new_rect);
+          this.changePosition(new_rect);
           return true;
         }
       } else if (bound < old_rect.getTop()) {
-        this.move(this.getRect(0, bound - old_rect.getTop()));
+        this.changePosition(this.getRectangle(0, bound - old_rect.getTop()));
         return true;
       }
       return false;
     };
 
-    Bomberman.prototype.getRect = function(dx, dy) {
+    Bomberman.prototype.getRectangle = function(dx, dy) {
       if (dx == null) dx = 0;
       if (dy == null) dy = 0;
-      return new Rect(this.x + dx, this.y + dy, this.width, this.height);
+      return new Rectangle(this.x + dx, this.y + dy, this.width, this.height);
     };
 
     Bomberman.prototype.getIndex = function(r) {
@@ -311,17 +314,16 @@
     };
 
     Bomberman.prototype.getCurrentIndex = function() {
-      return this.getIndex(this.getRect());
+      return this.getIndex(this.getRectangle());
     };
 
     return Bomberman;
 
   })();
 
-  ENCHANTJS_IMAGE_PATH = "enchantjs/images/";
-
   window.onload = function() {
-    var game;
+    var ENCHANTJS_IMAGE_PATH, game;
+    ENCHANTJS_IMAGE_PATH = "enchantjs/images/";
     game = new enchant.Game(320, 320);
     game.scale = 3.0;
     game.preload(ENCHANTJS_IMAGE_PATH + 'chara0.gif');
@@ -369,60 +371,48 @@
 
   })();
 
-  Rect = (function() {
+  Rectangle = (function() {
 
-    function Rect(x, y, width, height) {
+    function Rectangle(x, y, width, height) {
       this.x = x;
       this.y = y;
       this.width = width;
       this.height = height;
     }
 
-    Rect.prototype.getLeft = function() {
+    Rectangle.prototype.getLeft = function() {
       return this.x;
     };
 
-    Rect.prototype.getRight = function() {
+    Rectangle.prototype.getRight = function() {
       return this.x + this.width - 1;
     };
 
-    Rect.prototype.getTop = function() {
+    Rectangle.prototype.getTop = function() {
       return this.y;
     };
 
-    Rect.prototype.getBottom = function() {
+    Rectangle.prototype.getBottom = function() {
       return this.y + this.height - 1;
     };
 
-    Rect.prototype.getTopLeft = function() {
-      return {
-        x: this.getLeft(),
-        y: this.getTop()
-      };
+    Rectangle.prototype.getTopLeft = function() {
+      return new Point(this.getLeft(), this.getTop());
     };
 
-    Rect.prototype.getTopRight = function() {
-      return {
-        x: this.getRight(),
-        y: this.getTop()
-      };
+    Rectangle.prototype.getTopRight = function() {
+      return new Point(this.getRight(), this.getTop());
     };
 
-    Rect.prototype.getBottomLeft = function() {
-      return {
-        x: this.getLeft(),
-        y: this.getBottom()
-      };
+    Rectangle.prototype.getBottomLeft = function() {
+      return new Point(this.getLeft(), this.getBottom());
     };
 
-    Rect.prototype.getBottomRight = function() {
-      return {
-        x: this.getRight(),
-        y: this.getBottom()
-      };
+    Rectangle.prototype.getBottomRight = function() {
+      return new Point(this.getRight(), this.getBottom());
     };
 
-    return Rect;
+    return Rectangle;
 
   })();
 

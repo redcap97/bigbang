@@ -1,4 +1,4 @@
-class Rect
+class Rectangle
   constructor: (@x, @y, @width, @height) ->
 
   getLeft: ->
@@ -14,13 +14,13 @@ class Rect
     @y + @height - 1
 
   getTopLeft: ->
-    {x: @getLeft(), y: @getTop()}
+    new Point(@getLeft(), @getTop())
 
   getTopRight: ->
-    {x: @getRight(), y: @getTop()}
+    new Point(@getRight(), @getTop())
 
   getBottomLeft: ->
-    {x: @getLeft(), y: @getBottom()}
+    new Point(@getLeft(), @getBottom())
 
   getBottomRight: ->
-    {x: @getRight(), y: @getBottom()}
+    new Point(@getRight(), @getBottom())

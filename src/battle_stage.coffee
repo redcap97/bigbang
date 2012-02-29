@@ -8,7 +8,7 @@ class BattleStage
     f = new StageObject(0, false)
     @dataMap = [
       [b, b, b, b, b, b, b, b, b, b, b, b, b, b, b],
-      [b, b, b, f, f, f, f, f, f, f, f, f, f, f, b],
+      [b, b, f, f, f, f, f, f, f, f, f, f, f, f, b],
       [b, f, b, b, b, f, b, f, b, f, b, f, b, f, b],
       [b, f, f, f, f, f, f, f, f, f, f, f, f, f, b],
       [b, f, b, f, b, f, b, f, b, f, b, f, b, f, b],
@@ -61,6 +61,11 @@ class BattleStage
         throw new Error(@OUTSIDE_OF_STAGE_ERROR)
       rs.push(y / @tileSize | 0)
     rs
+
+  getRectangleIndex: (r) ->
+    [il, ir] = @getXIndexes(r.getLeft(), r.getRight())
+    [it, ib] = @getYIndexes(r.getTop(), r.getBottom())
+    [il, it, ir, ib]
 
   isBarrier: (ix, iy) ->
     @dataMap[iy][ix].isBarrier
