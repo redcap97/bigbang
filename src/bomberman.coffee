@@ -5,46 +5,38 @@ class Bomberman
     @width = @height = @stage.tileSize
 
   update: (input) ->
-    pos = @nextPosition(input)
-    if not @hitTest(pos)
-      @move(pos)
+    r = @nextPosition(input)
+    if not @hitTest(r)
+      @move(r)
 
   nextPosition: (input) ->
-    pos =
-      x:      @x
-      y:      @y
-      width:  @width
-      height: @height
+    r = new Rect(@x, @y, @width, @height)
 
     if input.left
-      pos.x -= @speed
+      r.x -= @speed
     else if input.right
-      pos.x += @speed
+      r.x += @speed
     else if input.up
-      pos.y -= @speed
+      r.y -= @speed
     else if input.down
-      pos.y += @speed
-    return pos
+      r.y += @speed
+    return r
 
-  move: (pos) ->
-    @x = pos.x
-    @y = pos.y
+  move: (r) ->
+    @x = r.x
+    @y = r.y
 
   hitTest: (other) ->
-    p = @stage.getIndex(other.x, other.y)
-    if @stage.dataMap[p.y][p.x].isBarrier
-      return true
+    ps = [
+      other.getTopLeft(),
+      other.getTopRight(),
+      other.getBottomLeft(),
+      other.getBottomRight()
+    ]
 
-    p = @stage.getIndex(other.x + other.width - 1, other.y)
-    if @stage.dataMap[p.y][p.x].isBarrier
-      return true
-
-    p = @stage.getIndex(other.x, other.y + other.height - 1)
-    if @stage.dataMap[p.y][p.x].isBarrier
-      return true
-
-    p = @stage.getIndex(other.x + other.width - 1, other.y + other.height - 1)
-    if @stage.dataMap[p.y][p.x].isBarrier
-      return true
+    for p in ps
+      i = @stage.getIndex(p.x, p.y)
+      if @stage.dataMap[i.y][i.x].isBarrier
+        return true
 
     false

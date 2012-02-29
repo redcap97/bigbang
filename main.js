@@ -1,5 +1,5 @@
 (function() {
-  var BattleStage, Bomberman, ENCHANTJS_IMAGE_PATH, StageObject;
+  var BattleStage, Bomberman, ENCHANTJS_IMAGE_PATH, Rect, StageObject;
 
   BattleStage = (function() {
 
@@ -68,46 +68,39 @@
     }
 
     Bomberman.prototype.update = function(input) {
-      var pos;
-      pos = this.nextPosition(input);
-      if (!this.hitTest(pos)) return this.move(pos);
+      var r;
+      r = this.nextPosition(input);
+      if (!this.hitTest(r)) return this.move(r);
     };
 
     Bomberman.prototype.nextPosition = function(input) {
-      var pos;
-      pos = {
-        x: this.x,
-        y: this.y,
-        width: this.width,
-        height: this.height
-      };
+      var r;
+      r = new Rect(this.x, this.y, this.width, this.height);
       if (input.left) {
-        pos.x -= this.speed;
+        r.x -= this.speed;
       } else if (input.right) {
-        pos.x += this.speed;
+        r.x += this.speed;
       } else if (input.up) {
-        pos.y -= this.speed;
+        r.y -= this.speed;
       } else if (input.down) {
-        pos.y += this.speed;
+        r.y += this.speed;
       }
-      return pos;
+      return r;
     };
 
-    Bomberman.prototype.move = function(pos) {
-      this.x = pos.x;
-      return this.y = pos.y;
+    Bomberman.prototype.move = function(r) {
+      this.x = r.x;
+      return this.y = r.y;
     };
 
     Bomberman.prototype.hitTest = function(other) {
-      var p;
-      p = this.stage.getIndex(other.x, other.y);
-      if (this.stage.dataMap[p.y][p.x].isBarrier) return true;
-      p = this.stage.getIndex(other.x + other.width - 1, other.y);
-      if (this.stage.dataMap[p.y][p.x].isBarrier) return true;
-      p = this.stage.getIndex(other.x, other.y + other.height - 1);
-      if (this.stage.dataMap[p.y][p.x].isBarrier) return true;
-      p = this.stage.getIndex(other.x + other.width - 1, other.y + other.height - 1);
-      if (this.stage.dataMap[p.y][p.x].isBarrier) return true;
+      var i, p, ps, _i, _len;
+      ps = [other.getTopLeft(), other.getTopRight(), other.getBottomLeft(), other.getBottomRight()];
+      for (_i = 0, _len = ps.length; _i < _len; _i++) {
+        p = ps[_i];
+        i = this.stage.getIndex(p.x, p.y);
+        if (this.stage.dataMap[i.y][i.x].isBarrier) return true;
+      }
       return false;
     };
 
@@ -145,6 +138,63 @@
     };
     return game.start();
   };
+
+  Rect = (function() {
+
+    function Rect(x, y, width, height) {
+      this.x = x;
+      this.y = y;
+      this.width = width;
+      this.height = height;
+    }
+
+    Rect.prototype.getLeft = function() {
+      return this.x;
+    };
+
+    Rect.prototype.getRight = function() {
+      return this.x + this.width - 1;
+    };
+
+    Rect.prototype.getTop = function() {
+      return this.y;
+    };
+
+    Rect.prototype.getBottom = function() {
+      return this.y + this.height - 1;
+    };
+
+    Rect.prototype.getTopLeft = function() {
+      return {
+        x: this.getLeft(),
+        y: this.getTop()
+      };
+    };
+
+    Rect.prototype.getTopRight = function() {
+      return {
+        x: this.getRight(),
+        y: this.getTop()
+      };
+    };
+
+    Rect.prototype.getBottomLeft = function() {
+      return {
+        x: this.getLeft(),
+        y: this.getBottom()
+      };
+    };
+
+    Rect.prototype.getBottomRight = function() {
+      return {
+        x: this.getRight(),
+        y: this.getBottom()
+      };
+    };
+
+    return Rect;
+
+  })();
 
   StageObject = (function() {
 
