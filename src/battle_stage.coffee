@@ -8,7 +8,7 @@ class BattleStage
     f = new StageObject(0, false)
     @dataMap = [
       [b, b, b, b, b, b, b, b, b, b, b, b, b, b, b],
-      [b, f, f, f, f, f, f, f, f, f, f, f, f, f, b],
+      [b, b, f, f, f, f, f, f, f, f, f, f, f, f, b],
       [b, f, b, f, b, f, b, f, b, f, b, f, b, f, b],
       [b, f, f, f, f, f, f, f, f, f, f, f, f, f, b],
       [b, f, b, f, b, f, b, f, b, f, b, f, b, f, b],
@@ -64,6 +64,9 @@ class BattleStage
         throw new Error(@OUTSIDE_OF_STAGE_ERROR)
       rs.push(y / @tileSize | 0)
     rs
+
+  isBarrier: (ix, iy) ->
+    @dataMap[iy][ix].isBarrier
 
   toString: ->
     ix = @bomberman.getCurrentIndex()
