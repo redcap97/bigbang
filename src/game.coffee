@@ -17,15 +17,22 @@ window.onload = ->
     sprite.x = sprite.y = 16
     sprite.frame = [2]
 
+    label = new enchant.Label()
+    label.color = "white"
+    label.x = 4
+
     game.addEventListener('enterframe', ->
       stageModel.update(game.input)
       sprite.x = stageModel.bomberman.x
       sprite.y = stageModel.bomberman.y
+
+      label.text = stageModel.toString()
     )
 
     scene = new enchant.Scene()
     scene.addChild(stage)
     scene.addChild(sprite)
+    scene.addChild(label)
     game.pushScene(scene)
 
   game.start()

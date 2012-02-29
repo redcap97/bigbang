@@ -1,4 +1,6 @@
 class BattleStage
+  OUTSIDE_OF_STAGE_ERROR: "Point is outside of the stage"
+
   constructor: ->
     @tileSize = 16
 
@@ -21,7 +23,7 @@ class BattleStage
     ]
 
     @viewMap = [[],[],[],[],[],[],[],[],[],[],[],[],[]]
-    @bomberman = new Bomberman(this, 16, 16)
+    @bomberman = new Bomberman(this, @tileSize, @tileSize)
 
     @updateMaps()
 
@@ -41,8 +43,28 @@ class BattleStage
   getIndex: (x, y) ->
     if x < 0 or x >= @tileSize * @dataMap[0].length or
         y < 0 or y >= @tileSize * @dataMap.length
-      return null
+      throw new Error(@OUTSIDE_OF_STAGE_ERROR)
 
     x = x / @tileSize | 0
     y = y / @tileSize | 0
     {x: x, y: y}
+
+  getXIndexes: (xs...) ->
+    rs = []
+    for x in xs
+      if x < 0 or x >= @tileSize * @dataMap[0].length
+        throw new Error(@OUTSIDE_OF_STAGE_ERROR)
+      rs.push(x / @tileSize | 0)
+    rs
+
+  getYIndexes: (ys...) ->
+    rs = []
+    for y in ys
+      if y < 0 or y >= @tileSize * @dataMap.length
+        throw new Error(@OUTSIDE_OF_STAGE_ERROR)
+      rs.push(y / @tileSize | 0)
+    rs
+
+  toString: ->
+    ix = @bomberman.getCurrentIndex()
+    "Index of Bomberman: #{ix.y}, #{ix.x}"

@@ -1,7 +1,10 @@
 (function() {
-  var BattleStage, Bomberman, ENCHANTJS_IMAGE_PATH, Rect, StageObject;
+  var BattleStage, Bomberman, ENCHANTJS_IMAGE_PATH, Rect, StageObject,
+    __slice = Array.prototype.slice;
 
   BattleStage = (function() {
+
+    BattleStage.prototype.OUTSIDE_OF_STAGE_ERROR = "Point is outside of the stage";
 
     function BattleStage() {
       var b, f;
@@ -10,7 +13,7 @@
       f = new StageObject(0, false);
       this.dataMap = [[b, b, b, b, b, b, b, b, b, b, b, b, b, b, b], [b, f, f, f, f, f, f, f, f, f, f, f, f, f, b], [b, f, b, f, b, f, b, f, b, f, b, f, b, f, b], [b, f, f, f, f, f, f, f, f, f, f, f, f, f, b], [b, f, b, f, b, f, b, f, b, f, b, f, b, f, b], [b, f, f, f, f, f, f, f, f, f, f, f, f, f, b], [b, f, b, f, b, f, b, f, b, f, b, f, b, f, b], [b, f, f, f, f, f, f, f, f, f, f, f, f, f, b], [b, f, b, f, b, f, b, f, b, f, b, f, b, f, b], [b, f, f, f, f, f, f, f, f, f, f, f, f, f, b], [b, f, b, f, b, f, b, f, b, f, b, f, b, f, b], [b, f, f, f, f, f, f, f, f, f, f, f, f, f, b], [b, b, b, b, b, b, b, b, b, b, b, b, b, b, b]];
       this.viewMap = [[], [], [], [], [], [], [], [], [], [], [], [], []];
-      this.bomberman = new Bomberman(this, 16, 16);
+      this.bomberman = new Bomberman(this, this.tileSize, this.tileSize);
       this.updateMaps();
     }
 
@@ -42,7 +45,7 @@
 
     BattleStage.prototype.getIndex = function(x, y) {
       if (x < 0 || x >= this.tileSize * this.dataMap[0].length || y < 0 || y >= this.tileSize * this.dataMap.length) {
-        return null;
+        throw new Error(this.OUTSIDE_OF_STAGE_ERROR);
       }
       x = x / this.tileSize | 0;
       y = y / this.tileSize | 0;
@@ -50,6 +53,40 @@
         x: x,
         y: y
       };
+    };
+
+    BattleStage.prototype.getXIndexes = function() {
+      var rs, x, xs, _i, _len;
+      xs = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
+      rs = [];
+      for (_i = 0, _len = xs.length; _i < _len; _i++) {
+        x = xs[_i];
+        if (x < 0 || x >= this.tileSize * this.dataMap[0].length) {
+          throw new Error(this.OUTSIDE_OF_STAGE_ERROR);
+        }
+        rs.push(x / this.tileSize | 0);
+      }
+      return rs;
+    };
+
+    BattleStage.prototype.getYIndexes = function() {
+      var rs, y, ys, _i, _len;
+      ys = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
+      rs = [];
+      for (_i = 0, _len = ys.length; _i < _len; _i++) {
+        y = ys[_i];
+        if (y < 0 || y >= this.tileSize * this.dataMap.length) {
+          throw new Error(this.OUTSIDE_OF_STAGE_ERROR);
+        }
+        rs.push(y / this.tileSize | 0);
+      }
+      return rs;
+    };
+
+    BattleStage.prototype.toString = function() {
+      var ix;
+      ix = this.bomberman.getCurrentIndex();
+      return "Index of Bomberman: " + ix.y + ", " + ix.x;
     };
 
     return BattleStage;
@@ -75,7 +112,7 @@
 
     Bomberman.prototype.nextPosition = function(input) {
       var r;
-      r = new Rect(this.x, this.y, this.width, this.height);
+      r = this.getRect();
       if (input.left) {
         r.x -= this.speed;
       } else if (input.right) {
@@ -104,6 +141,37 @@
       return false;
     };
 
+    Bomberman.prototype.getRect = function() {
+      return new Rect(this.x, this.y, this.width, this.height);
+    };
+
+    Bomberman.prototype.getCurrentIndex = function() {
+      var i, r, xis, yis;
+      i = {};
+      r = this.getRect();
+      xis = this.stage.getXIndexes(r.getLeft(), r.getRight());
+      if (xis[0] === xis[1]) {
+        i.x = xis[0];
+      } else {
+        if (((xis[1] * this.stage.tileSize) - this.x) > (this.width / 2 | 0)) {
+          i.x = xis[0];
+        } else {
+          i.x = xis[1];
+        }
+      }
+      yis = this.stage.getYIndexes(r.getTop(), r.getBottom());
+      if (yis[0] === yis[1]) {
+        i.y = yis[0];
+      } else {
+        if (((yis[1] * this.stage.tileSize) - this.y) > (this.height / 2 | 0)) {
+          i.y = yis[0];
+        } else {
+          i.y = yis[1];
+        }
+      }
+      return i;
+    };
+
     return Bomberman;
 
   })();
@@ -117,7 +185,7 @@
     game.preload(ENCHANTJS_IMAGE_PATH + 'chara0.gif');
     game.preload(ENCHANTJS_IMAGE_PATH + 'map0.gif');
     game.onload = function() {
-      var scene, sprite, stage, stageModel;
+      var label, scene, sprite, stage, stageModel;
       stageModel = new BattleStage();
       stage = new enchant.Map(16, 16);
       stage.image = game.assets[ENCHANTJS_IMAGE_PATH + 'map0.gif'];
@@ -126,14 +194,19 @@
       sprite.image = game.assets[ENCHANTJS_IMAGE_PATH + 'map0.gif'];
       sprite.x = sprite.y = 16;
       sprite.frame = [2];
+      label = new enchant.Label();
+      label.color = "white";
+      label.x = 4;
       game.addEventListener('enterframe', function() {
         stageModel.update(game.input);
         sprite.x = stageModel.bomberman.x;
-        return sprite.y = stageModel.bomberman.y;
+        sprite.y = stageModel.bomberman.y;
+        return label.text = stageModel.toString();
       });
       scene = new enchant.Scene();
       scene.addChild(stage);
       scene.addChild(sprite);
+      scene.addChild(label);
       return game.pushScene(scene);
     };
     return game.start();
