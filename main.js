@@ -111,14 +111,23 @@
     }
 
     Bomberman.prototype.update = function(input) {
+      var b, i;
       if (input.right) {
-        return this.moveRight();
+        this.moveRight();
       } else if (input.down) {
-        return this.moveDown();
+        this.moveDown();
       } else if (input.left) {
-        return this.moveLeft();
+        this.moveLeft();
       } else if (input.up) {
-        return this.moveUp();
+        this.moveUp();
+      }
+      if (input.a) {
+        if (this.canPlaceBomb()) {
+          i = this.getCurrentIndex();
+          b = new StageObject(4, true);
+          this.stage.dataMap[i.y][i.x] = b;
+          return this.stage.updateMaps();
+        }
       }
     };
 
@@ -133,11 +142,23 @@
       return this.stage.isBarrier(oi.x, oi.y) && oi.equals(ni);
     };
 
+    Bomberman.prototype.canPlaceBomb = function() {
+      var ib, il, ir, it, ix, _ref;
+      ix = this.getCurrentIndex();
+      if (this.stage.isBarrier(ix.x, ix.y)) return false;
+      _ref = this.stage.getRectangleIndex(this.getRectangle()), il = _ref[0], it = _ref[1], ir = _ref[2], ib = _ref[3];
+      if (il === ir && it === ib) return true;
+      if ((ix.equals(new Point(il, it)) && !this.stage.isBarrier(ir, ib)) || (ix.equals(new Point(ir, ib)) && !this.stage.isBarrier(il, it))) {
+        return true;
+      }
+      return false;
+    };
+
     Bomberman.prototype.moveRight = function() {
       var bound, ib, il, ir, it, new_rect, old_rect, _ref;
       new_rect = this.getRectangle(this.speed, 0);
       _ref = this.stage.getRectangleIndex(new_rect), il = _ref[0], it = _ref[1], ir = _ref[2], ib = _ref[3];
-      if ((il !== ir) && this.stage.isBarrier(ir, it) && this.stage.isBarrier(il, it)) {
+      if ((il !== ir) && this.stage.isBarrier(il, it) && this.stage.isBarrier(ir, ib)) {
         return false;
       }
       if ((!this.stage.isBarrier(ir, it) && !this.stage.isBarrier(ir, ib)) || ((il === ir || it === ib) && this.canMoveOnBomb(this.getIndex(new_rect)))) {
@@ -174,7 +195,7 @@
       var bound, ib, il, ir, it, new_rect, old_rect, _ref;
       new_rect = this.getRectangle(0, this.speed);
       _ref = this.stage.getRectangleIndex(new_rect), il = _ref[0], it = _ref[1], ir = _ref[2], ib = _ref[3];
-      if ((it !== ib) && this.stage.isBarrier(il, it) && this.stage.isBarrier(il, ib)) {
+      if ((it !== ib) && this.stage.isBarrier(il, it) && this.stage.isBarrier(ir, ib)) {
         return false;
       }
       if ((!this.stage.isBarrier(il, ib) && !this.stage.isBarrier(ir, ib)) || ((il === ir || it === ib) && this.canMoveOnBomb(this.getIndex(new_rect)))) {
@@ -211,7 +232,7 @@
       var bound, ib, il, ir, it, new_rect, old_rect, _ref;
       new_rect = this.getRectangle(-this.speed, 0);
       _ref = this.stage.getRectangleIndex(new_rect), il = _ref[0], it = _ref[1], ir = _ref[2], ib = _ref[3];
-      if ((il !== ir) && this.stage.isBarrier(ir, it) && this.stage.isBarrier(il, it)) {
+      if ((il !== ir) && this.stage.isBarrier(il, it) && this.stage.isBarrier(ir, ib)) {
         return false;
       }
       if ((!this.stage.isBarrier(il, it) && !this.stage.isBarrier(il, ib)) || ((il === ir || it === ib) && this.canMoveOnBomb(this.getIndex(new_rect)))) {
@@ -248,7 +269,7 @@
       var bound, ib, il, ir, it, new_rect, old_rect, _ref;
       new_rect = this.getRectangle(0, -this.speed);
       _ref = this.stage.getRectangleIndex(new_rect), il = _ref[0], it = _ref[1], ir = _ref[2], ib = _ref[3];
-      if ((it !== ib) && this.stage.isBarrier(il, it) && this.stage.isBarrier(il, ib)) {
+      if ((it !== ib) && this.stage.isBarrier(il, it) && this.stage.isBarrier(ir, ib)) {
         return false;
       }
       if ((!this.stage.isBarrier(il, it) && !this.stage.isBarrier(ir, it)) || ((il === ir || it === ib) && this.canMoveOnBomb(this.getIndex(new_rect)))) {
@@ -328,6 +349,8 @@
     game.scale = 3.0;
     game.preload(ENCHANTJS_IMAGE_PATH + 'chara0.gif');
     game.preload(ENCHANTJS_IMAGE_PATH + 'map0.gif');
+    game.keybind("Z".charCodeAt(0), 'a');
+    game.keybind("X".charCodeAt(0), 'b');
     game.onload = function() {
       var label, scene, sprite, stage, stageModel;
       stageModel = new BattleStage();
@@ -345,6 +368,7 @@
         stageModel.update(game.input);
         sprite.x = stageModel.bomberman.x;
         sprite.y = stageModel.bomberman.y;
+        stage.loadData(stageModel.viewMap);
         return label.text = stageModel.toString();
       });
       scene = new enchant.Scene();

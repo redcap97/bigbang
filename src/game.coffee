@@ -5,6 +5,10 @@ window.onload = ->
   game.scale = 3.0
   game.preload(ENCHANTJS_IMAGE_PATH + 'chara0.gif')
   game.preload(ENCHANTJS_IMAGE_PATH + 'map0.gif')
+
+  game.keybind("Z".charCodeAt(0), 'a')
+  game.keybind("X".charCodeAt(0), 'b')
+
   game.onload = ->
     stageModel = new BattleStage()
 
@@ -25,6 +29,7 @@ window.onload = ->
       stageModel.update(game.input)
       sprite.x = stageModel.bomberman.x
       sprite.y = stageModel.bomberman.y
+      stage.loadData(stageModel.viewMap)
 
       label.text = stageModel.toString()
     )

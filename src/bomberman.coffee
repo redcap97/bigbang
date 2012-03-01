@@ -14,6 +14,13 @@ class Bomberman
     else if input.up
       @moveUp()
 
+    if input.a
+      if @canPlaceBomb()
+        i = @getCurrentIndex()
+        b = new StageObject(4, true)
+        @stage.dataMap[i.y][i.x] = b
+        @stage.updateMaps()
+
   changePosition: (r) ->
     @x = r.x
     @y = r.y
@@ -22,11 +29,26 @@ class Bomberman
     oi = @getCurrentIndex()
     @stage.isBarrier(oi.x, oi.y) and oi.equals(ni)
 
+  canPlaceBomb: ->
+    ix = @getCurrentIndex()
+    if @stage.isBarrier(ix.x, ix.y)
+      return false
+
+    [il, it, ir, ib] = @stage.getRectangleIndex(@getRectangle())
+    if il == ir and it == ib
+      return true
+
+    if (ix.equals(new Point(il, it)) and !@stage.isBarrier(ir, ib)) or
+        (ix.equals(new Point(ir, ib)) and !@stage.isBarrier(il, it))
+      return true
+
+    false
+
   moveRight: ->
     new_rect = @getRectangle(@speed, 0)
     [il, it, ir, ib] = @stage.getRectangleIndex(new_rect)
 
-    if (il != ir) and @stage.isBarrier(ir, it) and @stage.isBarrier(il, it)
+    if (il != ir) and @stage.isBarrier(il, it) and @stage.isBarrier(ir, ib)
       return false
 
     if (!@stage.isBarrier(ir, it) and !@stage.isBarrier(ir, ib)) or
@@ -61,7 +83,7 @@ class Bomberman
     new_rect = @getRectangle(0, @speed)
     [il, it, ir, ib] = @stage.getRectangleIndex(new_rect)
 
-    if (it != ib) and @stage.isBarrier(il, it) and @stage.isBarrier(il, ib)
+    if (it != ib) and @stage.isBarrier(il, it) and @stage.isBarrier(ir, ib)
       return false
 
     if (!@stage.isBarrier(il, ib) and !@stage.isBarrier(ir, ib)) or
@@ -96,7 +118,7 @@ class Bomberman
     new_rect = @getRectangle(-@speed, 0)
     [il, it, ir, ib] = @stage.getRectangleIndex(new_rect)
 
-    if (il != ir) and @stage.isBarrier(ir, it) and @stage.isBarrier(il, it)
+    if (il != ir) and @stage.isBarrier(il, it) and @stage.isBarrier(ir, ib)
       return false
 
     if (!@stage.isBarrier(il, it) and !@stage.isBarrier(il, ib)) or
@@ -131,7 +153,7 @@ class Bomberman
     new_rect = @getRectangle(0, -@speed)
     [il, it, ir, ib] = @stage.getRectangleIndex(new_rect)
 
-    if (it != ib) and @stage.isBarrier(il, it) and @stage.isBarrier(il, ib)
+    if (it != ib) and @stage.isBarrier(il, it) and @stage.isBarrier(ir, ib)
       return false
 
     if (!@stage.isBarrier(il, it) and !@stage.isBarrier(ir, it)) or
