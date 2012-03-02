@@ -111,7 +111,6 @@
     }
 
     Bomberman.prototype.update = function(input) {
-      var b, i;
       if (input.right) {
         this.moveRight();
       } else if (input.down) {
@@ -121,19 +120,20 @@
       } else if (input.up) {
         this.moveUp();
       }
-      if (input.a) {
-        if (this.canPlaceBomb()) {
-          i = this.getCurrentIndex();
-          b = new StageObject(4, true);
-          this.stage.dataMap[i.y][i.x] = b;
-          return this.stage.updateMaps();
-        }
-      }
+      if (input.a) return this.putBomb();
     };
 
     Bomberman.prototype.changePosition = function(r) {
       this.x = r.x;
       return this.y = r.y;
+    };
+
+    Bomberman.prototype.putBomb = function() {
+      var ix;
+      if (this.canPutBomb()) {
+        ix = this.getCurrentIndex();
+        return this.stage.dataMap[ix.y][ix.x] = new StageObject(4, true);
+      }
     };
 
     Bomberman.prototype.canMoveOnBomb = function(ni) {
@@ -142,7 +142,7 @@
       return this.stage.isBarrier(oi.x, oi.y) && oi.equals(ni);
     };
 
-    Bomberman.prototype.canPlaceBomb = function() {
+    Bomberman.prototype.canPutBomb = function() {
       var ib, il, ir, it, ix, _ref;
       ix = this.getCurrentIndex();
       if (this.stage.isBarrier(ix.x, ix.y)) return false;

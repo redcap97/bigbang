@@ -15,21 +15,22 @@ class Bomberman
       @moveUp()
 
     if input.a
-      if @canPlaceBomb()
-        i = @getCurrentIndex()
-        b = new StageObject(4, true)
-        @stage.dataMap[i.y][i.x] = b
-        @stage.updateMaps()
+      @putBomb()
 
   changePosition: (r) ->
     @x = r.x
     @y = r.y
 
+  putBomb: ->
+    if @canPutBomb()
+      ix = @getCurrentIndex()
+      @stage.dataMap[ix.y][ix.x] = new StageObject(4, true)
+
   canMoveOnBomb: (ni) ->
     oi = @getCurrentIndex()
     @stage.isBarrier(oi.x, oi.y) and oi.equals(ni)
 
-  canPlaceBomb: ->
+  canPutBomb: ->
     ix = @getCurrentIndex()
     if @stage.isBarrier(ix.x, ix.y)
       return false
@@ -77,6 +78,7 @@ class Bomberman
     else if bound > old_rect.getRight()
       @changePosition(@getRectangle(bound - old_rect.getRight(), 0))
       return true
+
     false
 
   moveDown: ->
@@ -112,6 +114,7 @@ class Bomberman
     else if bound > old_rect.getBottom()
       @changePosition(@getRectangle(0, bound - old_rect.getBottom()))
       return true
+
     false
 
   moveLeft: ->
@@ -147,6 +150,7 @@ class Bomberman
     else if bound < old_rect.getLeft()
       @changePosition(@getRectangle(bound - old_rect.getLeft(), 0))
       return true
+
     false
 
   moveUp: ->
@@ -182,6 +186,7 @@ class Bomberman
     else if bound < old_rect.getTop()
       @changePosition(@getRectangle(0, bound - old_rect.getTop()))
       return true
+
     false
 
   getRectangle: (dx = 0, dy = 0) ->
