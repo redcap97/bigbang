@@ -158,7 +158,7 @@
       var bound, ib, il, ir, it, new_rect, old_rect, _ref;
       new_rect = this.getRectangle(this.speed, 0);
       _ref = this.stage.getRectangleIndex(new_rect), il = _ref[0], it = _ref[1], ir = _ref[2], ib = _ref[3];
-      if ((il !== ir) && this.stage.isBarrier(il, it) && this.stage.isBarrier(ir, ib)) {
+      if (il !== ir && it === ib && this.stage.isBarrier(il, it) && this.stage.isBarrier(ir, ib)) {
         return false;
       }
       if ((!this.stage.isBarrier(ir, it) && !this.stage.isBarrier(ir, ib)) || ((il === ir || it === ib) && this.canMoveOnBomb(this.getIndex(new_rect)))) {
@@ -195,7 +195,7 @@
       var bound, ib, il, ir, it, new_rect, old_rect, _ref;
       new_rect = this.getRectangle(0, this.speed);
       _ref = this.stage.getRectangleIndex(new_rect), il = _ref[0], it = _ref[1], ir = _ref[2], ib = _ref[3];
-      if ((it !== ib) && this.stage.isBarrier(il, it) && this.stage.isBarrier(ir, ib)) {
+      if (it !== ib && il === ir && this.stage.isBarrier(il, it) && this.stage.isBarrier(ir, ib)) {
         return false;
       }
       if ((!this.stage.isBarrier(il, ib) && !this.stage.isBarrier(ir, ib)) || ((il === ir || it === ib) && this.canMoveOnBomb(this.getIndex(new_rect)))) {
@@ -232,7 +232,7 @@
       var bound, ib, il, ir, it, new_rect, old_rect, _ref;
       new_rect = this.getRectangle(-this.speed, 0);
       _ref = this.stage.getRectangleIndex(new_rect), il = _ref[0], it = _ref[1], ir = _ref[2], ib = _ref[3];
-      if ((il !== ir) && this.stage.isBarrier(il, it) && this.stage.isBarrier(ir, ib)) {
+      if (il !== ir && it === ib && this.stage.isBarrier(il, it) && this.stage.isBarrier(ir, ib)) {
         return false;
       }
       if ((!this.stage.isBarrier(il, it) && !this.stage.isBarrier(il, ib)) || ((il === ir || it === ib) && this.canMoveOnBomb(this.getIndex(new_rect)))) {
@@ -269,7 +269,7 @@
       var bound, ib, il, ir, it, new_rect, old_rect, _ref;
       new_rect = this.getRectangle(0, -this.speed);
       _ref = this.stage.getRectangleIndex(new_rect), il = _ref[0], it = _ref[1], ir = _ref[2], ib = _ref[3];
-      if ((it !== ib) && this.stage.isBarrier(il, it) && this.stage.isBarrier(ir, ib)) {
+      if (it !== ib && il === ir && this.stage.isBarrier(il, it) && this.stage.isBarrier(ir, ib)) {
         return false;
       }
       if ((!this.stage.isBarrier(il, it) && !this.stage.isBarrier(ir, it)) || ((il === ir || it === ib) && this.canMoveOnBomb(this.getIndex(new_rect)))) {
@@ -309,29 +309,29 @@
     };
 
     Bomberman.prototype.getIndex = function(r) {
-      var i, xis, yis;
-      i = new Point();
-      xis = this.stage.getXIndexes(r.getLeft(), r.getRight());
-      if (xis[0] === xis[1]) {
-        i.x = xis[0];
+      var ib, il, ir, it, ix, _ref, _ref2;
+      ix = new Point();
+      _ref = this.stage.getXIndexes(r.getLeft(), r.getRight()), il = _ref[0], ir = _ref[1];
+      if (il === ir) {
+        ix.x = il;
       } else {
-        if (((xis[1] * this.stage.tileSize) - r.x) > (r.width / 2 | 0)) {
-          i.x = xis[0];
+        if (((ir * this.stage.tileSize) - r.x) > (r.width / 2 | 0)) {
+          ix.x = il;
         } else {
-          i.x = xis[1];
+          ix.x = ir;
         }
       }
-      yis = this.stage.getYIndexes(r.getTop(), r.getBottom());
-      if (yis[0] === yis[1]) {
-        i.y = yis[0];
+      _ref2 = this.stage.getYIndexes(r.getTop(), r.getBottom()), it = _ref2[0], ib = _ref2[1];
+      if (it === ib) {
+        ix.y = it;
       } else {
-        if (((yis[1] * this.stage.tileSize) - r.y) > (r.height / 2 | 0)) {
-          i.y = yis[0];
+        if (((ib * this.stage.tileSize) - r.y) > (r.height / 2 | 0)) {
+          ix.y = it;
         } else {
-          i.y = yis[1];
+          ix.y = ib;
         }
       }
-      return i;
+      return ix;
     };
 
     Bomberman.prototype.getCurrentIndex = function() {

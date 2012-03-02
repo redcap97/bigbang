@@ -48,7 +48,7 @@ class Bomberman
     new_rect = @getRectangle(@speed, 0)
     [il, it, ir, ib] = @stage.getRectangleIndex(new_rect)
 
-    if (il != ir) and @stage.isBarrier(il, it) and @stage.isBarrier(ir, ib)
+    if il != ir and it == ib and @stage.isBarrier(il, it) and @stage.isBarrier(ir, ib)
       return false
 
     if (!@stage.isBarrier(ir, it) and !@stage.isBarrier(ir, ib)) or
@@ -83,7 +83,7 @@ class Bomberman
     new_rect = @getRectangle(0, @speed)
     [il, it, ir, ib] = @stage.getRectangleIndex(new_rect)
 
-    if (it != ib) and @stage.isBarrier(il, it) and @stage.isBarrier(ir, ib)
+    if it != ib and il == ir and @stage.isBarrier(il, it) and @stage.isBarrier(ir, ib)
       return false
 
     if (!@stage.isBarrier(il, ib) and !@stage.isBarrier(ir, ib)) or
@@ -118,7 +118,7 @@ class Bomberman
     new_rect = @getRectangle(-@speed, 0)
     [il, it, ir, ib] = @stage.getRectangleIndex(new_rect)
 
-    if (il != ir) and @stage.isBarrier(il, it) and @stage.isBarrier(ir, ib)
+    if il != ir and it == ib and @stage.isBarrier(il, it) and @stage.isBarrier(ir, ib)
       return false
 
     if (!@stage.isBarrier(il, it) and !@stage.isBarrier(il, ib)) or
@@ -153,7 +153,7 @@ class Bomberman
     new_rect = @getRectangle(0, -@speed)
     [il, it, ir, ib] = @stage.getRectangleIndex(new_rect)
 
-    if (it != ib) and @stage.isBarrier(il, it) and @stage.isBarrier(ir, ib)
+    if it != ib and il == ir and @stage.isBarrier(il, it) and @stage.isBarrier(ir, ib)
       return false
 
     if (!@stage.isBarrier(il, it) and !@stage.isBarrier(ir, it)) or
@@ -188,26 +188,27 @@ class Bomberman
     new Rectangle(@x + dx, @y + dy, @width, @height)
 
   getIndex: (r) ->
-    i = new Point()
+    ix = new Point()
 
-    xis = @stage.getXIndexes(r.getLeft(), r.getRight())
-    if xis[0] == xis[1]
-      i.x = xis[0]
+    [il, ir] = @stage.getXIndexes(r.getLeft(), r.getRight())
+    if il == ir
+      ix.x = il
     else
-      if ((xis[1] * @stage.tileSize) - r.x) > (r.width/2|0)
-        i.x = xis[0]
+      if ((ir * @stage.tileSize) - r.x) > (r.width/2|0)
+        ix.x = il
       else
-        i.x = xis[1]
+        ix.x = ir
 
-    yis = @stage.getYIndexes(r.getTop(), r.getBottom())
-    if yis[0] == yis[1]
-      i.y = yis[0]
+    [it, ib] = @stage.getYIndexes(r.getTop(), r.getBottom())
+    if it == ib
+      ix.y = it
     else
-      if ((yis[1] * @stage.tileSize) - r.y) > (r.height/2|0)
-        i.y = yis[0]
+      if ((ib * @stage.tileSize) - r.y) > (r.height/2|0)
+        ix.y = it
       else
-        i.y = yis[1]
-    i
+        ix.y = ib
+
+    ix
 
   getCurrentIndex: ->
     @getIndex(@getRectangle())
