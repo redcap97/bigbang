@@ -10,11 +10,11 @@ window.onload = ->
   game.keybind("X".charCodeAt(0), 'b')
 
   game.onload = ->
-    stageModel = new BattleStage()
+    field = new BattleField()
 
     stage = new enchant.Map(16, 16)
     stage.image = game.assets[ENCHANTJS_IMAGE_PATH + 'map0.gif']
-    stage.loadData(stageModel.viewMap)
+    stage.loadData(field.viewMap)
 
     sprite = new enchant.Sprite(16, 16)
     sprite.image = game.assets[ENCHANTJS_IMAGE_PATH + 'map0.gif']
@@ -26,12 +26,12 @@ window.onload = ->
     label.x = 4
 
     game.addEventListener('enterframe', ->
-      stageModel.update(game.input)
-      sprite.x = stageModel.bomberman.x
-      sprite.y = stageModel.bomberman.y
-      stage.loadData(stageModel.viewMap)
+      field.update(game.input)
+      sprite.x = field.bomberman.x
+      sprite.y = field.bomberman.y
+      stage.loadData(field.viewMap)
 
-      label.text = stageModel.toString()
+      label.text = field.toString()
     )
 
     scene = new enchant.Scene()

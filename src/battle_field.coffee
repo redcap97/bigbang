@@ -1,11 +1,11 @@
-class BattleStage
-  OUTSIDE_OF_STAGE_ERROR: "Point is outside of the stage"
+class BattleField
+  OUTSIDE_OF_FIELD_ERROR: "Point is outside of the field"
 
   constructor: ->
     @tileSize = 16
 
-    b = new StageObject(4, true)
-    f = new StageObject(0, false)
+    b = new FieldObject(4, true)
+    f = new FieldObject(0, false)
     @dataMap = [
       [b, b, b, b, b, b, b, b, b, b, b, b, b, b, b],
       [b, b, f, f, f, f, f, f, f, f, f, f, f, f, b],
@@ -43,14 +43,14 @@ class BattleStage
   getIndex: (x, y) ->
     if x < 0 or x >= @tileSize * @dataMap[0].length or
         y < 0 or y >= @tileSize * @dataMap.length
-      throw new Error(@OUTSIDE_OF_STAGE_ERROR)
+      throw new Error(@OUTSIDE_OF_FIELD_ERROR)
     new Point(x/@tileSize|0, y/@tileSize|0)
 
   getXIndexes: (xs...) ->
     rs = []
     for x in xs
       if x < 0 or x >= @tileSize * @dataMap[0].length
-        throw new Error(@OUTSIDE_OF_STAGE_ERROR)
+        throw new Error(@OUTSIDE_OF_FIELD_ERROR)
       rs.push(x / @tileSize | 0)
     rs
 
@@ -58,7 +58,7 @@ class BattleStage
     rs = []
     for y in ys
       if y < 0 or y >= @tileSize * @dataMap.length
-        throw new Error(@OUTSIDE_OF_STAGE_ERROR)
+        throw new Error(@OUTSIDE_OF_FIELD_ERROR)
       rs.push(y / @tileSize | 0)
     rs
 

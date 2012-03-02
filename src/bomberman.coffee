@@ -1,8 +1,8 @@
 class Bomberman
-  constructor: (@stage, @x, @y) ->
+  constructor: (@field, @x, @y) ->
     @power = @speed = @bombCapacity = 2
     @canThrow = @canKick = false
-    @width = @height = @stage.tileSize
+    @width = @height = @field.tileSize
 
   update: (input) ->
     if input.right
@@ -24,55 +24,55 @@ class Bomberman
   putBomb: ->
     if @canPutBomb()
       ix = @getCurrentIndex()
-      @stage.dataMap[ix.y][ix.x] = new StageObject(4, true)
+      @field.dataMap[ix.y][ix.x] = new FieldObject(4, true)
 
   canMoveOnBomb: (ni) ->
     oi = @getCurrentIndex()
-    @stage.isBarrier(oi.x, oi.y) and oi.equals(ni)
+    @field.isBarrier(oi.x, oi.y) and oi.equals(ni)
 
   canPutBomb: ->
     ix = @getCurrentIndex()
-    if @stage.isBarrier(ix.x, ix.y)
+    if @field.isBarrier(ix.x, ix.y)
       return false
 
-    [il, it, ir, ib] = @stage.getRectangleIndex(@getRectangle())
+    [il, it, ir, ib] = @field.getRectangleIndex(@getRectangle())
     if il == ir and it == ib
       return true
 
-    if (ix.equals(new Point(il, it)) and !@stage.isBarrier(ir, ib)) or
-        (ix.equals(new Point(ir, ib)) and !@stage.isBarrier(il, it))
+    if (ix.equals(new Point(il, it)) and !@field.isBarrier(ir, ib)) or
+        (ix.equals(new Point(ir, ib)) and !@field.isBarrier(il, it))
       return true
 
     false
 
   moveRight: ->
     new_rect = @getRectangle(@speed, 0)
-    [il, it, ir, ib] = @stage.getRectangleIndex(new_rect)
+    [il, it, ir, ib] = @field.getRectangleIndex(new_rect)
 
-    if il != ir and it == ib and @stage.isBarrier(il, it) and @stage.isBarrier(ir, ib)
+    if il != ir and it == ib and @field.isBarrier(il, it) and @field.isBarrier(ir, ib)
       return false
 
-    if (!@stage.isBarrier(ir, it) and !@stage.isBarrier(ir, ib)) or
+    if (!@field.isBarrier(ir, it) and !@field.isBarrier(ir, ib)) or
         ((il == ir or it == ib) and @canMoveOnBomb(@getIndex(new_rect)))
       @changePosition(new_rect)
       return true
 
-    bound = ir * @stage.tileSize - 1
+    bound = ir * @field.tileSize - 1
     old_rect = @getRectangle()
     if bound == old_rect.getRight()
       new_rect = @getRectangle(0, -@speed)
-      if !@stage.isBarrier(ir, it) and
-          (!@stage.isBarrier(il, it) or @canMoveOnBomb(@getIndex(new_rect)))
-        if it * @stage.tileSize > new_rect.getTop()
-          new_rect.y = it * @stage.tileSize
+      if !@field.isBarrier(ir, it) and
+          (!@field.isBarrier(il, it) or @canMoveOnBomb(@getIndex(new_rect)))
+        if it * @field.tileSize > new_rect.getTop()
+          new_rect.y = it * @field.tileSize
         @changePosition(new_rect)
         return true
 
       new_rect = @getRectangle(0, @speed)
-      if !@stage.isBarrier(ir, ib) and
-          (!@stage.isBarrier(il, ib) or @canMoveOnBomb(@getIndex(new_rect)))
-        if ib * @stage.tileSize < new_rect.getTop()
-          new_rect.y = ib * @stage.tileSize
+      if !@field.isBarrier(ir, ib) and
+          (!@field.isBarrier(il, ib) or @canMoveOnBomb(@getIndex(new_rect)))
+        if ib * @field.tileSize < new_rect.getTop()
+          new_rect.y = ib * @field.tileSize
         @changePosition(new_rect)
         return true
     else if bound > old_rect.getRight()
@@ -83,32 +83,32 @@ class Bomberman
 
   moveDown: ->
     new_rect = @getRectangle(0, @speed)
-    [il, it, ir, ib] = @stage.getRectangleIndex(new_rect)
+    [il, it, ir, ib] = @field.getRectangleIndex(new_rect)
 
-    if it != ib and il == ir and @stage.isBarrier(il, it) and @stage.isBarrier(ir, ib)
+    if it != ib and il == ir and @field.isBarrier(il, it) and @field.isBarrier(ir, ib)
       return false
 
-    if (!@stage.isBarrier(il, ib) and !@stage.isBarrier(ir, ib)) or
+    if (!@field.isBarrier(il, ib) and !@field.isBarrier(ir, ib)) or
         ((il == ir or it == ib) and @canMoveOnBomb(@getIndex(new_rect)))
       @changePosition(new_rect)
       return true
 
-    bound = ib * @stage.tileSize - 1
+    bound = ib * @field.tileSize - 1
     old_rect = @getRectangle()
     if bound == old_rect.getBottom()
       new_rect = @getRectangle(-@speed, 0)
-      if !@stage.isBarrier(il, ib) and
-          (!@stage.isBarrier(il, it) or @canMoveOnBomb(@getIndex(new_rect)))
-        if il * @stage.tileSize > new_rect.getLeft()
-          new_rect.x = il * @stage.tileSize
+      if !@field.isBarrier(il, ib) and
+          (!@field.isBarrier(il, it) or @canMoveOnBomb(@getIndex(new_rect)))
+        if il * @field.tileSize > new_rect.getLeft()
+          new_rect.x = il * @field.tileSize
         @changePosition(new_rect)
         return true
 
       new_rect = @getRectangle(@speed, 0)
-      if !@stage.isBarrier(ir, ib) and
-          (!@stage.isBarrier(ir, it) or @canMoveOnBomb(@getIndex(new_rect)))
-        if ir * @stage.tileSize < new_rect.getLeft()
-          new_rect.x = ir * @stage.tileSize
+      if !@field.isBarrier(ir, ib) and
+          (!@field.isBarrier(ir, it) or @canMoveOnBomb(@getIndex(new_rect)))
+        if ir * @field.tileSize < new_rect.getLeft()
+          new_rect.x = ir * @field.tileSize
         @changePosition(new_rect)
         return true
     else if bound > old_rect.getBottom()
@@ -119,32 +119,32 @@ class Bomberman
 
   moveLeft: ->
     new_rect = @getRectangle(-@speed, 0)
-    [il, it, ir, ib] = @stage.getRectangleIndex(new_rect)
+    [il, it, ir, ib] = @field.getRectangleIndex(new_rect)
 
-    if il != ir and it == ib and @stage.isBarrier(il, it) and @stage.isBarrier(ir, ib)
+    if il != ir and it == ib and @field.isBarrier(il, it) and @field.isBarrier(ir, ib)
       return false
 
-    if (!@stage.isBarrier(il, it) and !@stage.isBarrier(il, ib)) or
+    if (!@field.isBarrier(il, it) and !@field.isBarrier(il, ib)) or
         ((il == ir or it == ib) and @canMoveOnBomb(@getIndex(new_rect)))
       @changePosition(new_rect)
       return true
 
-    bound = ir * @stage.tileSize
+    bound = ir * @field.tileSize
     old_rect = @getRectangle()
     if bound == old_rect.getLeft()
       new_rect = @getRectangle(0, -@speed)
-      if !@stage.isBarrier(il, it) and
-          (!@stage.isBarrier(ir, it) or @canMoveOnBomb(@getIndex(new_rect)))
-        if it * @stage.tileSize > new_rect.getTop()
-          new_rect.y = it * @stage.tileSize
+      if !@field.isBarrier(il, it) and
+          (!@field.isBarrier(ir, it) or @canMoveOnBomb(@getIndex(new_rect)))
+        if it * @field.tileSize > new_rect.getTop()
+          new_rect.y = it * @field.tileSize
         @changePosition(new_rect)
         return true
 
       new_rect = @getRectangle(0, @speed)
-      if !@stage.isBarrier(il, ib) and
-          (!@stage.isBarrier(ir, ib) or @canMoveOnBomb(@getIndex(new_rect)))
-        if ib * @stage.tileSize < new_rect.getTop()
-          new_rect.y = ib * @stage.tileSize
+      if !@field.isBarrier(il, ib) and
+          (!@field.isBarrier(ir, ib) or @canMoveOnBomb(@getIndex(new_rect)))
+        if ib * @field.tileSize < new_rect.getTop()
+          new_rect.y = ib * @field.tileSize
         @changePosition(new_rect)
         return true
     else if bound < old_rect.getLeft()
@@ -155,32 +155,32 @@ class Bomberman
 
   moveUp: ->
     new_rect = @getRectangle(0, -@speed)
-    [il, it, ir, ib] = @stage.getRectangleIndex(new_rect)
+    [il, it, ir, ib] = @field.getRectangleIndex(new_rect)
 
-    if it != ib and il == ir and @stage.isBarrier(il, it) and @stage.isBarrier(ir, ib)
+    if it != ib and il == ir and @field.isBarrier(il, it) and @field.isBarrier(ir, ib)
       return false
 
-    if (!@stage.isBarrier(il, it) and !@stage.isBarrier(ir, it)) or
+    if (!@field.isBarrier(il, it) and !@field.isBarrier(ir, it)) or
         ((il == ir or it == ib) and @canMoveOnBomb(@getIndex(new_rect)))
       @changePosition(new_rect)
       return true
 
-    bound = ib * @stage.tileSize
+    bound = ib * @field.tileSize
     old_rect = @getRectangle()
     if bound == old_rect.getTop()
       new_rect = @getRectangle(-@speed, 0)
-      if !@stage.isBarrier(il, it) and
-          (!@stage.isBarrier(il, ib) or @canMoveOnBomb(@getIndex(new_rect)))
-        if il * @stage.tileSize > new_rect.getLeft()
-          new_rect.x = il * @stage.tileSize
+      if !@field.isBarrier(il, it) and
+          (!@field.isBarrier(il, ib) or @canMoveOnBomb(@getIndex(new_rect)))
+        if il * @field.tileSize > new_rect.getLeft()
+          new_rect.x = il * @field.tileSize
         @changePosition(new_rect)
         return true
 
       new_rect = @getRectangle(@speed, 0)
-      if !@stage.isBarrier(ir, it) and
-          (!@stage.isBarrier(ir, ib) or @canMoveOnBomb(@getIndex(new_rect)))
-        if ir * @stage.tileSize < new_rect.getLeft()
-          new_rect.x = ir * @stage.tileSize
+      if !@field.isBarrier(ir, it) and
+          (!@field.isBarrier(ir, ib) or @canMoveOnBomb(@getIndex(new_rect)))
+        if ir * @field.tileSize < new_rect.getLeft()
+          new_rect.x = ir * @field.tileSize
         @changePosition(new_rect)
         return true
     else if bound < old_rect.getTop()
@@ -195,20 +195,20 @@ class Bomberman
   getIndex: (r) ->
     ix = new Point()
 
-    [il, ir] = @stage.getXIndexes(r.getLeft(), r.getRight())
+    [il, ir] = @field.getXIndexes(r.getLeft(), r.getRight())
     if il == ir
       ix.x = il
     else
-      if ((ir * @stage.tileSize) - r.x) > (r.width/2|0)
+      if ((ir * @field.tileSize) - r.x) > (r.width/2|0)
         ix.x = il
       else
         ix.x = ir
 
-    [it, ib] = @stage.getYIndexes(r.getTop(), r.getBottom())
+    [it, ib] = @field.getYIndexes(r.getTop(), r.getBottom())
     if it == ib
       ix.y = it
     else
-      if ((ib * @stage.tileSize) - r.y) > (r.height/2|0)
+      if ((ib * @field.tileSize) - r.y) > (r.height/2|0)
         ix.y = it
       else
         ix.y = ib
