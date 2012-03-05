@@ -1,5 +1,5 @@
 (function() {
-  var BattleField, Bomberman, FieldObject, Point, Rectangle,
+  var BattleField, Bomb, Bomberman, FieldObject, Point, Rectangle,
     __slice = Array.prototype.slice;
 
   BattleField = (function() {
@@ -7,35 +7,61 @@
     BattleField.prototype.OUTSIDE_OF_FIELD_ERROR = "Point is outside of the field";
 
     function BattleField() {
-      var b, f;
+      var b, f, i, j, _ref, _ref2;
       this.tileSize = 16;
+      this.height = 13;
+      this.width = 15;
+      this.bomberman = new Bomberman(this, this.tileSize, this.tileSize);
       b = new FieldObject(4, true);
       f = new FieldObject(0, false);
-      this.dataMap = [[b, b, b, b, b, b, b, b, b, b, b, b, b, b, b], [b, b, f, f, f, f, f, f, f, f, f, f, f, f, b], [b, f, b, b, b, f, b, f, b, f, b, f, b, f, b], [b, f, f, f, f, f, f, f, f, f, f, f, f, f, b], [b, f, b, f, b, f, b, f, b, f, b, f, b, f, b], [b, f, f, f, f, f, f, f, f, f, f, f, f, f, b], [b, f, b, f, b, f, b, f, b, f, b, f, b, f, b], [b, f, f, f, f, f, f, f, f, f, f, f, f, f, b], [b, f, b, f, b, f, b, f, b, f, b, f, b, f, b], [b, f, f, f, f, f, f, f, f, f, f, f, f, f, b], [b, f, b, f, b, f, b, f, b, f, b, f, b, f, b], [b, f, f, f, f, f, f, f, f, f, f, f, f, f, b], [b, b, b, b, b, b, b, b, b, b, b, b, b, b, b]];
-      this.viewMap = [[], [], [], [], [], [], [], [], [], [], [], [], []];
-      this.bomberman = new Bomberman(this, this.tileSize, this.tileSize);
-      this.updateMaps();
+      this.staticDataMap = [[b, b, b, b, b, b, b, b, b, b, b, b, b, b, b], [b, b, f, f, f, f, f, f, f, f, f, f, f, f, b], [b, f, b, b, b, f, b, f, b, f, b, f, b, f, b], [b, f, f, f, f, f, f, f, f, f, f, f, f, f, b], [b, f, b, f, b, f, b, f, b, f, b, f, b, f, b], [b, f, f, f, f, f, f, f, f, f, f, f, f, f, b], [b, f, b, f, b, f, b, f, b, f, b, f, b, f, b], [b, f, f, f, f, f, f, f, f, f, f, f, f, f, b], [b, f, b, f, b, f, b, f, b, f, b, f, b, f, b], [b, f, f, f, f, f, f, f, f, f, f, f, f, f, b], [b, f, b, f, b, f, b, f, b, f, b, f, b, f, b], [b, f, f, f, f, f, f, f, f, f, f, f, f, f, b], [b, b, b, b, b, b, b, b, b, b, b, b, b, b, b]];
+      this.mutableDataMap = (function() {
+        var _ref, _results;
+        _results = [];
+        for (i = 0, _ref = this.height; 0 <= _ref ? i < _ref : i > _ref; 0 <= _ref ? i++ : i--) {
+          _results.push([]);
+        }
+        return _results;
+      }).call(this);
+      this.viewMap = (function() {
+        var _ref, _results;
+        _results = [];
+        for (i = 0, _ref = this.height; 0 <= _ref ? i < _ref : i > _ref; 0 <= _ref ? i++ : i--) {
+          _results.push([]);
+        }
+        return _results;
+      }).call(this);
+      for (i = 0, _ref = this.height; 0 <= _ref ? i < _ref : i > _ref; 0 <= _ref ? i++ : i--) {
+        for (j = 0, _ref2 = this.width; 0 <= _ref2 ? j < _ref2 : j > _ref2; 0 <= _ref2 ? j++ : j--) {
+          this.mutableDataMap[i][j] = null;
+          this.viewMap[i][j] = this.staticDataMap[i][j].id;
+        }
+      }
+      this.updateMap();
     }
 
+    BattleField.prototype.getMapData = function(x, y) {
+      return this.mutableDataMap[y][x] || this.staticDataMap[y][x];
+    };
+
+    BattleField.prototype.setMapData = function(x, y, data) {
+      return this.mutableDataMap[y][x] = data;
+    };
+
     BattleField.prototype.update = function(input) {
-      this.updateMaps();
+      this.updateMap();
       return this.bomberman.update(input);
     };
 
-    BattleField.prototype.updateMaps = function() {
-      var i, j, _ref, _ref2, _ref3, _results;
-      for (i = 0, _ref = this.dataMap.length; 0 <= _ref ? i < _ref : i > _ref; 0 <= _ref ? i++ : i--) {
-        for (j = 0, _ref2 = this.dataMap[i].length; 0 <= _ref2 ? j < _ref2 : j > _ref2; 0 <= _ref2 ? j++ : j--) {
-          this.dataMap[i][j].update();
-        }
-      }
+    BattleField.prototype.updateMap = function() {
+      var x, y, _ref, _results;
       _results = [];
-      for (i = 0, _ref3 = this.dataMap.length; 0 <= _ref3 ? i < _ref3 : i > _ref3; 0 <= _ref3 ? i++ : i--) {
+      for (y = 0, _ref = this.height; 0 <= _ref ? y < _ref : y > _ref; 0 <= _ref ? y++ : y--) {
         _results.push((function() {
-          var _ref4, _results2;
+          var _ref2, _results2;
           _results2 = [];
-          for (j = 0, _ref4 = this.dataMap[i].length; 0 <= _ref4 ? j < _ref4 : j > _ref4; 0 <= _ref4 ? j++ : j--) {
-            _results2.push(this.viewMap[i][j] = this.dataMap[i][j].id);
+          for (x = 0, _ref2 = this.width; 0 <= _ref2 ? x < _ref2 : x > _ref2; 0 <= _ref2 ? x++ : x--) {
+            _results2.push(this.getMapData(x, y).update());
           }
           return _results2;
         }).call(this));
@@ -44,7 +70,7 @@
     };
 
     BattleField.prototype.getIndex = function(x, y) {
-      if (x < 0 || x >= this.tileSize * this.dataMap[0].length || y < 0 || y >= this.tileSize * this.dataMap.length) {
+      if (x < 0 || x >= this.tileSize * this.width || y < 0 || y >= this.tileSize * this.height) {
         throw new Error(this.OUTSIDE_OF_FIELD_ERROR);
       }
       return new Point(x / this.tileSize | 0, y / this.tileSize | 0);
@@ -56,7 +82,7 @@
       rs = [];
       for (_i = 0, _len = xs.length; _i < _len; _i++) {
         x = xs[_i];
-        if (x < 0 || x >= this.tileSize * this.dataMap[0].length) {
+        if (x < 0 || x >= this.tileSize * this.width) {
           throw new Error(this.OUTSIDE_OF_FIELD_ERROR);
         }
         rs.push(x / this.tileSize | 0);
@@ -70,7 +96,7 @@
       rs = [];
       for (_i = 0, _len = ys.length; _i < _len; _i++) {
         y = ys[_i];
-        if (y < 0 || y >= this.tileSize * this.dataMap.length) {
+        if (y < 0 || y >= this.tileSize * this.height) {
           throw new Error(this.OUTSIDE_OF_FIELD_ERROR);
         }
         rs.push(y / this.tileSize | 0);
@@ -85,8 +111,8 @@
       return [il, it, ir, ib];
     };
 
-    BattleField.prototype.isBarrier = function(ix, iy) {
-      return this.dataMap[iy][ix].isBarrier;
+    BattleField.prototype.isBarrier = function(x, y) {
+      return this.getMapData(x, y).isBarrier;
     };
 
     BattleField.prototype.toString = function() {
@@ -96,6 +122,14 @@
     };
 
     return BattleField;
+
+  })();
+
+  Bomb = (function() {
+
+    function Bomb() {}
+
+    return Bomb;
 
   })();
 
@@ -132,7 +166,7 @@
       var ix;
       if (this.canPutBomb()) {
         ix = this.getCurrentIndex();
-        return this.field.dataMap[ix.y][ix.x] = new FieldObject(4, true);
+        return this.field.setMapData(ix.x, ix.y, new FieldObject(4, true));
       }
     };
 
@@ -381,7 +415,6 @@
         field.update(game.input);
         sprite.x = field.bomberman.x;
         sprite.y = field.bomberman.y;
-        stage.loadData(field.viewMap);
         return label.text = field.toString();
       });
       scene = new enchant.Scene();

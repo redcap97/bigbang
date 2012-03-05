@@ -29,7 +29,6 @@ window.onload = ->
       field.update(game.input)
       sprite.x = field.bomberman.x
       sprite.y = field.bomberman.y
-      stage.loadData(field.viewMap)
 
       label.text = field.toString()
     )

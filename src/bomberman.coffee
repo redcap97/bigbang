@@ -24,7 +24,7 @@ class Bomberman
   putBomb: ->
     if @canPutBomb()
       ix = @getCurrentIndex()
-      @field.dataMap[ix.y][ix.x] = new FieldObject(4, true)
+      @field.setMapData(ix.x, ix.y, new FieldObject(4, true))
 
   canMoveOnBomb: (ni) ->
     oi = @getCurrentIndex()
