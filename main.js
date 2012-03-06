@@ -1,6 +1,8 @@
 (function() {
-  var BattleField, Bomb, Bomberman, FieldObject, Point, Rectangle,
-    __slice = Array.prototype.slice;
+  var BattleField, Bomb, BombView, Bomberman, BombermanView, ENCHANTJS_IMAGE_PATH, FieldObject, Point, Rectangle, RenderingQueue, Utils, View,
+    __slice = Array.prototype.slice,
+    __hasProp = Object.prototype.hasOwnProperty,
+    __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor; child.__super__ = parent.prototype; return child; };
 
   BattleField = (function() {
 
@@ -127,7 +129,26 @@
 
   Bomb = (function() {
 
-    function Bomb() {}
+    function Bomb(bomberman, field, x, y) {
+      this.bomberman = bomberman;
+      this.field = field;
+      this.x = x;
+      this.y = y;
+      this.objectId = Utils.generateId();
+      this.isBarrier = true;
+      this.count = 0;
+      this.isDestroyed = false;
+    }
+
+    Bomb.prototype.update = function() {
+      this.count += 1;
+      if (this.count > 80) return this.destroy();
+    };
+
+    Bomb.prototype.destroy = function() {
+      this.isDestroyed = true;
+      return this.field.setMapData(this.x, this.y, null);
+    };
 
     return Bomb;
 
@@ -139,6 +160,7 @@
       this.field = field;
       this.x = x;
       this.y = y;
+      this.objectId = Utils.generateId();
       this.power = this.speed = this.bombCapacity = 2;
       this.canThrow = this.canKick = false;
       this.width = this.height = this.field.tileSize;
@@ -166,7 +188,7 @@
       var ix;
       if (this.canPutBomb()) {
         ix = this.getCurrentIndex();
-        return this.field.setMapData(ix.x, ix.y, new FieldObject(4, true));
+        return this.field.setMapData(ix.x, ix.y, new Bomb(this, this.field, ix.x, ix.y));
       }
     };
 
@@ -389,9 +411,125 @@
 
   })();
 
+  ENCHANTJS_IMAGE_PATH = "enchantjs/images/";
+
+  View = (function() {
+
+    function View(queue) {
+      this.queue = queue;
+      this.game = this.queue.getGame();
+      this.scene = this.queue.getScene();
+    }
+
+    return View;
+
+  })();
+
+  BombermanView = (function(_super) {
+
+    __extends(BombermanView, _super);
+
+    function BombermanView(queue, bomberman) {
+      this.queue = queue;
+      this.bomberman = bomberman;
+      BombermanView.__super__.constructor.call(this, this.queue);
+      this.sprite = new enchant.Sprite(16, 16);
+      this.sprite.image = this.game.assets[ENCHANTJS_IMAGE_PATH + 'map0.gif'];
+      this.sprite.x = this.sprite.y = 16;
+      this.sprite.frame = [2];
+      this.scene.addChild(this.sprite);
+    }
+
+    BombermanView.prototype.update = function() {
+      this.sprite.x = this.bomberman.x;
+      return this.sprite.y = this.bomberman.y;
+    };
+
+    return BombermanView;
+
+  })(View);
+
+  BombView = (function(_super) {
+
+    __extends(BombView, _super);
+
+    function BombView(queue, bomb) {
+      this.queue = queue;
+      this.bomb = bomb;
+      BombView.__super__.constructor.call(this, this.queue);
+      this.count = 0;
+      this.sprite = new enchant.Sprite(16, 16);
+      this.sprite.image = this.game.assets[ENCHANTJS_IMAGE_PATH + 'map0.gif'];
+      this.sprite.frame = [5];
+      this.sprite.x = this.bomb.field.tileSize * this.bomb.x;
+      this.sprite.y = this.bomb.field.tileSize * this.bomb.y;
+      this.scene.addChild(this.sprite);
+    }
+
+    BombView.prototype.update = function() {
+      this.count += 1;
+      if (this.count === 30) {
+        this.sprite.frame = [6];
+      } else if (this.count === 60) {
+        this.sprite.frame = [5];
+        this.count = 0;
+      }
+      if (this.bomb.isDestroyed) {
+        this.queue.remove(this.bomb.objectId);
+        return this.scene.removeChild(this.sprite);
+      }
+    };
+
+    return BombView;
+
+  })(View);
+
+  RenderingQueue = (function() {
+
+    function RenderingQueue(game, scene) {
+      this.game = game;
+      this.scene = scene;
+      this.table = {};
+    }
+
+    RenderingQueue.prototype.contains = function(key) {
+      return !!this.table[key];
+    };
+
+    RenderingQueue.prototype.store = function(id, view) {
+      return this.table[id] = view;
+    };
+
+    RenderingQueue.prototype.remove = function(id) {
+      return delete this.table[id];
+    };
+
+    RenderingQueue.prototype.update = function() {
+      var id, view, _ref, _results;
+      _ref = this.table;
+      _results = [];
+      for (id in _ref) {
+        if (!__hasProp.call(_ref, id)) continue;
+        view = _ref[id];
+        _results.push(view.update());
+      }
+      return _results;
+    };
+
+    RenderingQueue.prototype.getScene = function() {
+      return this.scene;
+    };
+
+    RenderingQueue.prototype.getGame = function() {
+      return this.game;
+    };
+
+    return RenderingQueue;
+
+  })();
+
   window.onload = function() {
-    var ENCHANTJS_IMAGE_PATH, game;
-    ENCHANTJS_IMAGE_PATH = "enchantjs/images/";
+    var game;
     game = new enchant.Game(320, 320);
     game.scale = 3.0;
     game.preload(ENCHANTJS_IMAGE_PATH + 'chara0.gif');
@@ -399,28 +537,43 @@
     game.keybind("Z".charCodeAt(0), 'a');
     game.keybind("X".charCodeAt(0), 'b');
     game.onload = function() {
-      var field, label, scene, sprite, stage;
+      var bomberman, field, label, queue, scene, stage;
       field = new BattleField();
+      bomberman = field.bomberman;
+      scene = new enchant.Scene();
       stage = new enchant.Map(16, 16);
       stage.image = game.assets[ENCHANTJS_IMAGE_PATH + 'map0.gif'];
       stage.loadData(field.viewMap);
-      sprite = new enchant.Sprite(16, 16);
-      sprite.image = game.assets[ENCHANTJS_IMAGE_PATH + 'map0.gif'];
-      sprite.x = sprite.y = 16;
-      sprite.frame = [2];
+      scene.addChild(stage);
       label = new enchant.Label();
       label.color = "white";
       label.x = 4;
-      game.addEventListener('enterframe', function() {
-        field.update(game.input);
-        sprite.x = field.bomberman.x;
-        sprite.y = field.bomberman.y;
-        return label.text = field.toString();
-      });
-      scene = new enchant.Scene();
-      scene.addChild(stage);
-      scene.addChild(sprite);
       scene.addChild(label);
+      queue = new RenderingQueue(game, scene);
+      queue.store(bomberman.objectId, new BombermanView(queue, bomberman));
+      game.addEventListener('enterframe', function() {
+        var data, i, j, _ref, _results;
+        field.update(game.input);
+        label.text = field.toString();
+        queue.update();
+        _results = [];
+        for (i = 0, _ref = field.height; 0 <= _ref ? i < _ref : i > _ref; 0 <= _ref ? i++ : i--) {
+          _results.push((function() {
+            var _ref2, _results2;
+            _results2 = [];
+            for (j = 0, _ref2 = field.width; 0 <= _ref2 ? j < _ref2 : j > _ref2; 0 <= _ref2 ? j++ : j--) {
+              data = field.mutableDataMap[i][j];
+              if (data && !queue.contains(data.objectId)) {
+                _results2.push(queue.store(data.objectId, new BombView(queue, data)));
+              } else {
+                _results2.push(void 0);
+              }
+            }
+            return _results2;
+          })());
+        }
+        return _results;
+      });
       return game.pushScene(scene);
     };
     return game.start();
@@ -485,5 +638,16 @@
     return Rectangle;
 
   })();
+
+  Utils = {
+    generateId: (function() {
+      var maxId;
+      maxId = 0;
+      return function() {
+        maxId += 1;
+        return maxId;
+      };
+    })()
+  };
 
 }).call(this);
