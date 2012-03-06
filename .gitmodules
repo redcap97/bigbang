@@ -1,3 +1,4 @@
 [submodule "enchantjs"]
 	path = enchantjs
 	url = git://github.com/wise9/enchant.js.git
+	ignore = dirty
