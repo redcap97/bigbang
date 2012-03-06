@@ -25,7 +25,7 @@ class Bomberman
   putBomb: ->
     if @canPutBomb()
       ix = @getCurrentIndex()
-      @field.setMapData(ix.x, ix.y, new Bomb(this, @field, ix.x, ix.y))
+      @field.setMapData(ix.x, ix.y, new Bomb(this, @field, ix))
 
   canMoveOnBomb: (ni) ->
     oi = @getCurrentIndex()
@@ -33,7 +33,8 @@ class Bomberman
 
   canPutBomb: ->
     ix = @getCurrentIndex()
-    if @field.isBarrier(ix.x, ix.y)
+    data = @field.getMapData(ix.x, ix.y)
+    if data.type != FieldObject.TYPE_GROUND
       return false
 
     [il, it, ir, ib] = @field.getRectangleIndex(@getRectangle())

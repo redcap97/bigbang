@@ -8,22 +8,22 @@ class BattleField
 
     @bomberman = new Bomberman(this, @tileSize, @tileSize)
 
-    b = new FieldObject(4, true)
-    f = new FieldObject(0, false)
+    b = new FieldObject(FieldObject.TYPE_WALL,   true)
+    g = new FieldObject(FieldObject.TYPE_GROUND, false)
 
     @staticDataMap = [
       [b, b, b, b, b, b, b, b, b, b, b, b, b, b, b],
-      [b, b, f, f, f, f, f, f, f, f, f, f, f, f, b],
-      [b, f, b, b, b, f, b, f, b, f, b, f, b, f, b],
-      [b, f, f, f, f, f, f, f, f, f, f, f, f, f, b],
-      [b, f, b, f, b, f, b, f, b, f, b, f, b, f, b],
-      [b, f, f, f, f, f, f, f, f, f, f, f, f, f, b],
-      [b, f, b, f, b, f, b, f, b, f, b, f, b, f, b],
-      [b, f, f, f, f, f, f, f, f, f, f, f, f, f, b],
-      [b, f, b, f, b, f, b, f, b, f, b, f, b, f, b],
-      [b, f, f, f, f, f, f, f, f, f, f, f, f, f, b],
-      [b, f, b, f, b, f, b, f, b, f, b, f, b, f, b],
-      [b, f, f, f, f, f, f, f, f, f, f, f, f, f, b],
+      [b, g, g, g, g, g, g, g, g, g, g, g, g, g, b],
+      [b, g, b, g, b, g, b, g, b, g, b, g, b, g, b],
+      [b, g, g, g, g, g, g, g, g, g, g, g, g, g, b],
+      [b, g, b, g, b, g, b, g, b, g, b, g, b, g, b],
+      [b, g, g, g, g, g, g, g, g, g, g, g, g, g, b],
+      [b, g, b, g, b, g, b, g, b, g, b, g, b, g, b],
+      [b, g, g, g, g, g, g, g, g, g, g, g, g, g, b],
+      [b, g, b, g, b, g, b, g, b, g, b, g, b, g, b],
+      [b, g, g, g, g, g, g, g, g, g, g, g, g, g, b],
+      [b, g, b, g, b, g, b, g, b, g, b, g, b, g, b],
+      [b, g, g, g, g, g, g, g, g, g, g, g, g, g, b],
       [b, b, b, b, b, b, b, b, b, b, b, b, b, b, b],
     ]
 
@@ -32,8 +32,11 @@ class BattleField
 
     for i in [0 ... @height]
       for j in [0 ... @width]
+        if @staticDataMap[i][j].type == FieldObject.TYPE_GROUND
+          @viewMap[i][j] = 0
+        else
+          @viewMap[i][j] = 4
         @mutableDataMap[i][j] = null
-        @viewMap[i][j] = @staticDataMap[i][j].id
 
     @updateMap()
 
@@ -42,6 +45,9 @@ class BattleField
 
   setMapData: (x, y, data) ->
     @mutableDataMap[y][x] = data
+
+  removeMapData: (x, y) ->
+    @setMapData(x, y, null)
 
   update: (input) ->
     @updateMap()

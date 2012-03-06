@@ -1,5 +1,5 @@
 (function() {
-  var BattleField, Bomb, BombView, Bomberman, BombermanView, ENCHANTJS_IMAGE_PATH, FieldObject, Point, Rectangle, RenderingQueue, Utils, View,
+  var BattleField, Blast, BlastView, Bomb, BombView, Bomberman, BombermanView, ENCHANTJS_IMAGE_PATH, FieldObject, FieldView, Point, Rectangle, RenderingQueue, Utils, View,
     __slice = Array.prototype.slice,
     __hasProp = Object.prototype.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor; child.__super__ = parent.prototype; return child; };
@@ -9,14 +9,14 @@
     BattleField.prototype.OUTSIDE_OF_FIELD_ERROR = "Point is outside of the field";
 
     function BattleField() {
-      var b, f, i, j, _ref, _ref2;
+      var b, g, i, j, _ref, _ref2;
       this.tileSize = 16;
       this.height = 13;
       this.width = 15;
       this.bomberman = new Bomberman(this, this.tileSize, this.tileSize);
-      b = new FieldObject(4, true);
-      f = new FieldObject(0, false);
-      this.staticDataMap = [[b, b, b, b, b, b, b, b, b, b, b, b, b, b, b], [b, b, f, f, f, f, f, f, f, f, f, f, f, f, b], [b, f, b, b, b, f, b, f, b, f, b, f, b, f, b], [b, f, f, f, f, f, f, f, f, f, f, f, f, f, b], [b, f, b, f, b, f, b, f, b, f, b, f, b, f, b], [b, f, f, f, f, f, f, f, f, f, f, f, f, f, b], [b, f, b, f, b, f, b, f, b, f, b, f, b, f, b], [b, f, f, f, f, f, f, f, f, f, f, f, f, f, b], [b, f, b, f, b, f, b, f, b, f, b, f, b, f, b], [b, f, f, f, f, f, f, f, f, f, f, f, f, f, b], [b, f, b, f, b, f, b, f, b, f, b, f, b, f, b], [b, f, f, f, f, f, f, f, f, f, f, f, f, f, b], [b, b, b, b, b, b, b, b, b, b, b, b, b, b, b]];
+      b = new FieldObject(FieldObject.TYPE_WALL, true);
+      g = new FieldObject(FieldObject.TYPE_GROUND, false);
+      this.staticDataMap = [[b, b, b, b, b, b, b, b, b, b, b, b, b, b, b], [b, g, g, g, g, g, g, g, g, g, g, g, g, g, b], [b, g, b, g, b, g, b, g, b, g, b, g, b, g, b], [b, g, g, g, g, g, g, g, g, g, g, g, g, g, b], [b, g, b, g, b, g, b, g, b, g, b, g, b, g, b], [b, g, g, g, g, g, g, g, g, g, g, g, g, g, b], [b, g, b, g, b, g, b, g, b, g, b, g, b, g, b], [b, g, g, g, g, g, g, g, g, g, g, g, g, g, b], [b, g, b, g, b, g, b, g, b, g, b, g, b, g, b], [b, g, g, g, g, g, g, g, g, g, g, g, g, g, b], [b, g, b, g, b, g, b, g, b, g, b, g, b, g, b], [b, g, g, g, g, g, g, g, g, g, g, g, g, g, b], [b, b, b, b, b, b, b, b, b, b, b, b, b, b, b]];
       this.mutableDataMap = (function() {
         var _ref, _results;
         _results = [];
@@ -35,8 +35,12 @@
       }).call(this);
       for (i = 0, _ref = this.height; 0 <= _ref ? i < _ref : i > _ref; 0 <= _ref ? i++ : i--) {
         for (j = 0, _ref2 = this.width; 0 <= _ref2 ? j < _ref2 : j > _ref2; 0 <= _ref2 ? j++ : j--) {
+          if (this.staticDataMap[i][j].type === FieldObject.TYPE_GROUND) {
+            this.viewMap[i][j] = 0;
+          } else {
+            this.viewMap[i][j] = 4;
+          }
           this.mutableDataMap[i][j] = null;
-          this.viewMap[i][j] = this.staticDataMap[i][j].id;
         }
       }
       this.updateMap();
@@ -48,6 +52,10 @@
 
     BattleField.prototype.setMapData = function(x, y, data) {
       return this.mutableDataMap[y][x] = data;
+    };
+
+    BattleField.prototype.removeMapData = function(x, y) {
+      return this.setMapData(x, y, null);
     };
 
     BattleField.prototype.update = function(input) {
@@ -127,33 +135,6 @@
 
   })();
 
-  Bomb = (function() {
-
-    function Bomb(bomberman, field, x, y) {
-      this.bomberman = bomberman;
-      this.field = field;
-      this.x = x;
-      this.y = y;
-      this.objectId = Utils.generateId();
-      this.isBarrier = true;
-      this.count = 0;
-      this.isDestroyed = false;
-    }
-
-    Bomb.prototype.update = function() {
-      this.count += 1;
-      if (this.count > 80) return this.destroy();
-    };
-
-    Bomb.prototype.destroy = function() {
-      this.isDestroyed = true;
-      return this.field.setMapData(this.x, this.y, null);
-    };
-
-    return Bomb;
-
-  })();
-
   Bomberman = (function() {
 
     function Bomberman(field, x, y) {
@@ -188,7 +169,7 @@
       var ix;
       if (this.canPutBomb()) {
         ix = this.getCurrentIndex();
-        return this.field.setMapData(ix.x, ix.y, new Bomb(this, this.field, ix.x, ix.y));
+        return this.field.setMapData(ix.x, ix.y, new Bomb(this, this.field, ix));
       }
     };
 
@@ -199,9 +180,10 @@
     };
 
     Bomberman.prototype.canPutBomb = function() {
-      var ib, il, ir, it, ix, _ref;
+      var data, ib, il, ir, it, ix, _ref;
       ix = this.getCurrentIndex();
-      if (this.field.isBarrier(ix.x, ix.y)) return false;
+      data = this.field.getMapData(ix.x, ix.y);
+      if (data.type !== FieldObject.TYPE_GROUND) return false;
       _ref = this.field.getRectangleIndex(this.getRectangle()), il = _ref[0], it = _ref[1], ir = _ref[2], ib = _ref[3];
       if (il === ir && it === ib) return true;
       if ((ix.equals(new Point(il, it)) && !this.field.isBarrier(ir, ib)) || (ix.equals(new Point(ir, ib)) && !this.field.isBarrier(il, it))) {
@@ -400,133 +382,113 @@
 
   FieldObject = (function() {
 
-    function FieldObject(id, isBarrier) {
-      this.id = id;
+    function FieldObject(type, isBarrier) {
+      this.type = type;
       this.isBarrier = isBarrier;
+      this.objectId = Utils.generateId();
+      this.isDestroyed = false;
     }
 
     FieldObject.prototype.update = function() {};
+
+    FieldObject.prototype.destroy = function() {};
 
     return FieldObject;
 
   })();
 
-  ENCHANTJS_IMAGE_PATH = "enchantjs/images/";
+  FieldObject.TYPE_WALL = 0;
 
-  View = (function() {
+  FieldObject.TYPE_GROUND = 1;
 
-    function View(queue) {
-      this.queue = queue;
-      this.game = this.queue.getGame();
-      this.scene = this.queue.getScene();
-    }
+  FieldObject.TYPE_BOMB = 2;
 
-    return View;
+  FieldObject.TYPE_BLAST = 3;
 
-  })();
+  Blast = (function(_super) {
 
-  BombermanView = (function(_super) {
+    __extends(Blast, _super);
 
-    __extends(BombermanView, _super);
-
-    function BombermanView(queue, bomberman) {
-      this.queue = queue;
+    function Blast(bomberman, field, index) {
       this.bomberman = bomberman;
-      BombermanView.__super__.constructor.call(this, this.queue);
-      this.sprite = new enchant.Sprite(16, 16);
-      this.sprite.image = this.game.assets[ENCHANTJS_IMAGE_PATH + 'map0.gif'];
-      this.sprite.x = this.sprite.y = 16;
-      this.sprite.frame = [2];
-      this.scene.addChild(this.sprite);
-    }
-
-    BombermanView.prototype.update = function() {
-      this.sprite.x = this.bomberman.x;
-      return this.sprite.y = this.bomberman.y;
-    };
-
-    return BombermanView;
-
-  })(View);
-
-  BombView = (function(_super) {
-
-    __extends(BombView, _super);
-
-    function BombView(queue, bomb) {
-      this.queue = queue;
-      this.bomb = bomb;
-      BombView.__super__.constructor.call(this, this.queue);
+      this.field = field;
+      this.index = index;
+      Blast.__super__.constructor.call(this, FieldObject.TYPE_BLAST, false);
       this.count = 0;
-      this.sprite = new enchant.Sprite(16, 16);
-      this.sprite.image = this.game.assets[ENCHANTJS_IMAGE_PATH + 'map0.gif'];
-      this.sprite.frame = [5];
-      this.sprite.x = this.bomb.field.tileSize * this.bomb.x;
-      this.sprite.y = this.bomb.field.tileSize * this.bomb.y;
-      this.scene.addChild(this.sprite);
     }
 
-    BombView.prototype.update = function() {
+    Blast.prototype.update = function() {
       this.count += 1;
-      if (this.count === 30) {
-        this.sprite.frame = [6];
-      } else if (this.count === 60) {
-        this.sprite.frame = [5];
-        this.count = 0;
-      }
-      if (this.bomb.isDestroyed) {
-        this.queue.remove(this.bomb.objectId);
-        return this.scene.removeChild(this.sprite);
+      if (this.count > 10) {
+        this.isDestroyed = true;
+        return this.field.removeMapData(this.index.x, this.index.y);
       }
     };
 
-    return BombView;
+    return Blast;
 
-  })(View);
+  })(FieldObject);
 
-  RenderingQueue = (function() {
+  Bomb = (function(_super) {
 
-    function RenderingQueue(game, scene) {
-      this.game = game;
-      this.scene = scene;
-      this.table = {};
+    __extends(Bomb, _super);
+
+    Bomb.prototype.TIME_LIMIT = 80;
+
+    function Bomb(bomberman, field, index) {
+      this.bomberman = bomberman;
+      this.field = field;
+      this.index = index;
+      Bomb.__super__.constructor.call(this, FieldObject.TYPE_BOMB, true);
+      this.count = 0;
     }
 
-    RenderingQueue.prototype.contains = function(key) {
-      return !!this.table[key];
+    Bomb.prototype.update = function() {
+      this.count += 1;
+      if (this.count > this.TIME_LIMIT) return this.destroy();
     };
 
-    RenderingQueue.prototype.store = function(id, view) {
-      return this.table[id] = view;
-    };
-
-    RenderingQueue.prototype.remove = function(id) {
-      return delete this.table[id];
-    };
-
-    RenderingQueue.prototype.update = function() {
-      var id, view, _ref, _results;
-      _ref = this.table;
+    Bomb.prototype.destroy = function() {
+      var data, i, ix, v, vs, _i, _len, _results;
+      this.isDestroyed = true;
+      this.setBlast(this.index);
+      vs = [new Point(1, 0), new Point(-1, 0), new Point(0, 1), new Point(0, -1)];
       _results = [];
-      for (id in _ref) {
-        if (!__hasProp.call(_ref, id)) continue;
-        view = _ref[id];
-        _results.push(view.update());
+      for (_i = 0, _len = vs.length; _i < _len; _i++) {
+        v = vs[_i];
+        ix = this.index.clone();
+        _results.push((function() {
+          var _ref, _results2;
+          _results2 = [];
+          for (i = 0, _ref = this.bomberman.power; 0 <= _ref ? i < _ref : i > _ref; 0 <= _ref ? i++ : i--) {
+            ix.x += v.x;
+            ix.y += v.y;
+            data = this.field.getMapData(ix.x, ix.y);
+            if (data.type === FieldObject.TYPE_BLAST) continue;
+            data.destroy();
+            if (data.type !== FieldObject.TYPE_GROUND) break;
+            _results2.push(this.setBlast(ix.clone()));
+          }
+          return _results2;
+        }).call(this));
       }
       return _results;
     };
 
-    RenderingQueue.prototype.getScene = function() {
-      return this.scene;
+    Bomb.prototype.setBlast = function(ix) {
+      var blast;
+      blast = new Blast(this.bomberman, this.field, ix);
+      if (this.count <= this.TIME_LIMIT || ix.x > this.index.x || ix.y > this.index.y) {
+        blast.count -= 1;
+      }
+      return this.field.setMapData(ix.x, ix.y, blast);
     };
 
-    RenderingQueue.prototype.getGame = function() {
-      return this.game;
-    };
+    return Bomb;
 
-    return RenderingQueue;
+  })(FieldObject);
 
-  })();
+  ENCHANTJS_IMAGE_PATH = "enchantjs/images/";
 
   window.onload = function() {
     var game;
@@ -537,22 +499,21 @@
     game.keybind("Z".charCodeAt(0), 'a');
     game.keybind("X".charCodeAt(0), 'b');
     game.onload = function() {
-      var bomberman, field, label, queue, scene, stage;
+      var bomberman, bombermanView, field, fieldView, label, queue, scene;
       field = new BattleField();
       bomberman = field.bomberman;
       scene = new enchant.Scene();
-      stage = new enchant.Map(16, 16);
-      stage.image = game.assets[ENCHANTJS_IMAGE_PATH + 'map0.gif'];
-      stage.loadData(field.viewMap);
-      scene.addChild(stage);
+      queue = new RenderingQueue(game, scene);
+      fieldView = new FieldView(queue, field);
+      fieldView.update();
+      bombermanView = new BombermanView(queue, bomberman);
+      queue.store(bomberman.objectId, bombermanView);
       label = new enchant.Label();
       label.color = "white";
       label.x = 4;
       scene.addChild(label);
-      queue = new RenderingQueue(game, scene);
-      queue.store(bomberman.objectId, new BombermanView(queue, bomberman));
       game.addEventListener('enterframe', function() {
-        var data, i, j, _ref, _results;
+        var data, i, j, view, _ref, _results;
         field.update(game.input);
         label.text = field.toString();
         queue.update();
@@ -564,7 +525,18 @@
             for (j = 0, _ref2 = field.width; 0 <= _ref2 ? j < _ref2 : j > _ref2; 0 <= _ref2 ? j++ : j--) {
               data = field.mutableDataMap[i][j];
               if (data && !queue.contains(data.objectId)) {
-                _results2.push(queue.store(data.objectId, new BombView(queue, data)));
+                view = null;
+                switch (data.type) {
+                  case FieldObject.TYPE_BOMB:
+                    view = new BombView(queue, data);
+                    break;
+                  case FieldObject.TYPE_BLAST:
+                    view = new BlastView(queue, data);
+                    break;
+                  default:
+                    throw Error("Unknown object");
+                }
+                _results2.push(queue.store(data.objectId, view));
               } else {
                 _results2.push(void 0);
               }
@@ -588,6 +560,10 @@
 
     Point.prototype.equals = function(other) {
       return this.x === other.x && this.y === other.y;
+    };
+
+    Point.prototype.clone = function() {
+      return new Point(this.x, this.y);
     };
 
     return Point;
@@ -639,6 +615,50 @@
 
   })();
 
+  RenderingQueue = (function() {
+
+    function RenderingQueue(game, scene) {
+      this.game = game;
+      this.scene = scene;
+      this.table = {};
+    }
+
+    RenderingQueue.prototype.contains = function(key) {
+      return !!this.table[key];
+    };
+
+    RenderingQueue.prototype.store = function(id, view) {
+      return this.table[id] = view;
+    };
+
+    RenderingQueue.prototype.remove = function(id) {
+      return delete this.table[id];
+    };
+
+    RenderingQueue.prototype.update = function() {
+      var id, view, _ref, _results;
+      _ref = this.table;
+      _results = [];
+      for (id in _ref) {
+        if (!__hasProp.call(_ref, id)) continue;
+        view = _ref[id];
+        _results.push(view.update());
+      }
+      return _results;
+    };
+
+    RenderingQueue.prototype.getScene = function() {
+      return this.scene;
+    };
+
+    RenderingQueue.prototype.getGame = function() {
+      return this.game;
+    };
+
+    return RenderingQueue;
+
+  })();
+
   Utils = {
     generateId: (function() {
       var maxId;
@@ -649,5 +669,126 @@
       };
     })()
   };
+
+  View = (function() {
+
+    function View(queue) {
+      this.queue = queue;
+      this.game = this.queue.getGame();
+      this.scene = this.queue.getScene();
+    }
+
+    View.prototype.update = function() {};
+
+    return View;
+
+  })();
+
+  FieldView = (function(_super) {
+
+    __extends(FieldView, _super);
+
+    function FieldView(queue, field) {
+      this.queue = queue;
+      this.field = field;
+      FieldView.__super__.constructor.call(this, this.queue);
+      this.map = new enchant.Map(16, 16);
+      this.map.image = this.game.assets[ENCHANTJS_IMAGE_PATH + 'map0.gif'];
+      this.scene.addChild(this.map);
+    }
+
+    FieldView.prototype.update = function() {
+      return this.map.loadData(this.field.viewMap);
+    };
+
+    return FieldView;
+
+  })(View);
+
+  BombermanView = (function(_super) {
+
+    __extends(BombermanView, _super);
+
+    function BombermanView(queue, bomberman) {
+      this.queue = queue;
+      this.bomberman = bomberman;
+      BombermanView.__super__.constructor.call(this, this.queue);
+      this.sprite = new enchant.Sprite(16, 16);
+      this.sprite.image = this.game.assets[ENCHANTJS_IMAGE_PATH + 'map0.gif'];
+      this.sprite.x = this.sprite.y = 16;
+      this.sprite.frame = [2];
+      this.scene.addChild(this.sprite);
+    }
+
+    BombermanView.prototype.update = function() {
+      this.sprite.x = this.bomberman.x;
+      return this.sprite.y = this.bomberman.y;
+    };
+
+    return BombermanView;
+
+  })(View);
+
+  BombView = (function(_super) {
+
+    __extends(BombView, _super);
+
+    function BombView(queue, bomb) {
+      this.queue = queue;
+      this.bomb = bomb;
+      BombView.__super__.constructor.call(this, this.queue);
+      this.count = 0;
+      this.sprite = new enchant.Sprite(16, 16);
+      this.sprite.image = this.game.assets[ENCHANTJS_IMAGE_PATH + 'map0.gif'];
+      this.sprite.frame = [5];
+      this.sprite.x = this.bomb.field.tileSize * this.bomb.index.x;
+      this.sprite.y = this.bomb.field.tileSize * this.bomb.index.y;
+      this.scene.addChild(this.sprite);
+    }
+
+    BombView.prototype.update = function() {
+      this.count += 1;
+      if (this.count === 10) {
+        this.sprite.frame = [6];
+      } else if (this.count === 20) {
+        this.sprite.frame = [5];
+        this.count = 0;
+      }
+      if (this.bomb.isDestroyed) {
+        this.queue.remove(this.bomb.objectId);
+        return this.scene.removeChild(this.sprite);
+      }
+    };
+
+    return BombView;
+
+  })(View);
+
+  BlastView = (function(_super) {
+
+    __extends(BlastView, _super);
+
+    function BlastView(queue, blast) {
+      this.queue = queue;
+      this.blast = blast;
+      BlastView.__super__.constructor.call(this, this.queue);
+      this.sprite = new enchant.Sprite(16, 16);
+      this.sprite.image = this.game.assets[ENCHANTJS_IMAGE_PATH + 'map0.gif'];
+      this.sprite.frame = [7];
+      this.sprite.x = this.blast.field.tileSize * this.blast.index.x;
+      this.sprite.y = this.blast.field.tileSize * this.blast.index.y;
+      this.scene.addChild(this.sprite);
+    }
+
+    BlastView.prototype.update = function() {
+      if (this.blast.isDestroyed) {
+        this.queue.remove(this.blast.objectId);
+        return this.scene.removeChild(this.sprite);
+      }
+    };
+
+    return BlastView;
+
+  })(View);
 
 }).call(this);
