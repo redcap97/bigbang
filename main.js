@@ -1,5 +1,5 @@
 (function() {
-  var BattleField, Blast, BlastView, Block, BlockView, Bomb, BombView, Bomberman, BombermanView, ENCHANTJS_IMAGE_PATH, FieldObject, FieldView, Point, Rectangle, RenderingQueue, Utils, View,
+  var BattleField, Blast, BlastView, Block, BlockView, Bomb, BombUp, BombView, Bomberman, BombermanView, ENCHANTJS_IMAGE_PATH, FieldObject, FieldView, Item, ItemView, Point, Rectangle, RenderingQueue, Utils, View,
     __slice = Array.prototype.slice,
     __hasProp = Object.prototype.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor; child.__super__ = parent.prototype; return child; };
@@ -35,6 +35,7 @@
       this.setMapData(4, 1, new Block(this, new Point(4, 1)));
       this.setMapData(5, 1, new Block(this, new Point(5, 1)));
       this.setMapData(5, 2, new Block(this, new Point(5, 2)));
+      this.setMapData(1, 2, new BombUp(this, new Point(1, 2)));
       this.updateMap();
     }
 
@@ -54,7 +55,14 @@
       var data, ix;
       ix = this.bomberman.getCurrentIndex();
       data = this.getMapData(ix.x, ix.y);
-      if (data.type === FieldObject.TYPE_BLAST) this.bomberman.destroy();
+      switch (data.type) {
+        case FieldObject.TYPE_BLAST:
+          this.bomberman.destroy();
+          break;
+        case FieldObject.TYPE_ITEM:
+          data.exertEffectOn(this.bomberman);
+          data.destroy();
+      }
       if (!this.bomberman.isDestroyed) this.bomberman.update(input);
       return this.updateMap();
     };
@@ -412,6 +420,8 @@
 
   FieldObject.TYPE_BLAST = 4;
 
+  FieldObject.TYPE_ITEM = 5;
+
   Blast = (function(_super) {
 
     __extends(Blast, _super);
@@ -522,6 +532,50 @@
 
   })(FieldObject);
 
+  Item = (function(_super) {
+
+    __extends(Item, _super);
+
+    function Item(field, index) {
+      this.field = field;
+      this.index = index;
+      Item.__super__.constructor.call(this, FieldObject.TYPE_ITEM, false);
+      this.x = this.field.tileSize * this.index.x;
+      this.y = this.field.tileSize * this.index.y;
+    }
+
+    Item.prototype.destroy = function() {
+      this.isDestroyed = true;
+      return this.field.removeMapData(this.index.x, this.index.y);
+    };
+
+    Item.prototype.exertEffectOn = function(bomberman) {
+      this.bomberman = bomberman;
+    };
+
+    return Item;
+
+  })(FieldObject);
+
+  BombUp = (function(_super) {
+
+    __extends(BombUp, _super);
+
+    function BombUp(field, index) {
+      this.field = field;
+      this.index = index;
+      BombUp.__super__.constructor.call(this, this.field, this.index);
+    }
+
+    BombUp.prototype.exertEffectOn = function(bomberman) {
+      this.bomberman = bomberman;
+      return this.bomberman.bombCapacity += 1;
+    };
+
+    return BombUp;
+
+  })(Item);
+
   ENCHANTJS_IMAGE_PATH = "enchantjs/images/";
 
   window.onload = function() {
@@ -569,6 +623,9 @@
                     break;
                   case FieldObject.TYPE_BLOCK:
                     view = new BlockView(queue, data);
+                    break;
+                  case FieldObject.TYPE_ITEM:
+                    view = new ItemView(queue, data);
                     break;
                   default:
                     throw Error("Unknown object");
@@ -877,7 +934,7 @@
       BlockView.__super__.constructor.call(this, this.queue);
       this.sprite = new enchant.Sprite(16, 16);
       this.sprite.image = this.game.assets[ENCHANTJS_IMAGE_PATH + 'map0.gif'];
-      this.sprite.frame = [7];
+      this.sprite.frame = [8];
       this.sprite.x = this.block.x;
       this.sprite.y = this.block.y;
       this.addNode(this.sprite);
@@ -891,6 +948,33 @@
     };
 
     return BlockView;
+
+  })(View);
+
+  ItemView = (function(_super) {
+
+    __extends(ItemView, _super);
+
+    function ItemView(queue, item) {
+      this.queue = queue;
+      this.item = item;
+      ItemView.__super__.constructor.call(this, this.queue);
+      this.sprite = new enchant.Sprite(16, 16);
+      this.sprite.image = this.game.assets[ENCHANTJS_IMAGE_PATH + 'map0.gif'];
+      this.sprite.frame = [1];
+      this.sprite.x = this.item.x;
+      this.sprite.y = this.item.y;
+      this.addNode(this.sprite);
+    }
+
+    ItemView.prototype.update = function() {
+      if (this.item.isDestroyed) {
+        this.stopUpdate(this.item.objectId);
+        return this.removeNode(this.sprite);
+      }
+    };
+
+    return ItemView;
 
   })(View);
 

@@ -46,6 +46,8 @@ window.onload = ->
                 view = new BlastView(queue, data)
               when FieldObject.TYPE_BLOCK
                 view = new BlockView(queue, data)
+              when FieldObject.TYPE_ITEM
+                view = new ItemView(queue,  data)
               else
                 throw Error("Unknown object")
             queue.store(data.objectId, view)

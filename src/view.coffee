@@ -107,7 +107,7 @@ class BlockView extends View
 
     @sprite = new enchant.Sprite(16, 16)
     @sprite.image = @game.assets[ENCHANTJS_IMAGE_PATH + 'map0.gif']
-    @sprite.frame = [7]
+    @sprite.frame = [8]
     @sprite.x = @block.x
     @sprite.y = @block.y
 
@@ -116,4 +116,21 @@ class BlockView extends View
   update: ->
     if @block.isDestroyed
       @stopUpdate(@block.objectId)
+      @removeNode(@sprite)
+
+class ItemView extends View
+  constructor: (@queue, @item) ->
+    super(@queue)
+
+    @sprite = new enchant.Sprite(16, 16)
+    @sprite.image = @game.assets[ENCHANTJS_IMAGE_PATH + 'map0.gif']
+    @sprite.frame = [1]
+    @sprite.x = @item.x
+    @sprite.y = @item.y
+
+    @addNode(@sprite)
+
+  update: ->
+    if @item.isDestroyed
+      @stopUpdate(@item.objectId)
       @removeNode(@sprite)

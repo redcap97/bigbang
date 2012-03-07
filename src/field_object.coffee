@@ -11,6 +11,7 @@ FieldObject.TYPE_GROUND = 1
 FieldObject.TYPE_BLOCK  = 2
 FieldObject.TYPE_BOMB   = 3
 FieldObject.TYPE_BLAST  = 4
+FieldObject.TYPE_ITEM   = 5
 
 class Blast extends FieldObject
   DURATION: 10
@@ -82,3 +83,22 @@ class Block extends FieldObject
   destroy: ->
     @isDestroyed = true
     @field.removeMapData(@index.x, @index.y)
+
+class Item extends FieldObject
+  constructor: (@field, @index) ->
+    super(FieldObject.TYPE_ITEM, false)
+    @x = @field.tileSize * @index.x
+    @y = @field.tileSize * @index.y
+
+  destroy: ->
+    @isDestroyed = true
+    @field.removeMapData(@index.x, @index.y)
+
+  exertEffectOn: (@bomberman) ->
+
+class BombUp extends Item
+  constructor: (@field, @index) ->
+    super(@field, @index)
+
+  exertEffectOn: (@bomberman) ->
+    @bomberman.bombCapacity += 1

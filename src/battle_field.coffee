@@ -32,6 +32,7 @@ class BattleField
     @setMapData(4, 1, new Block(this, new Point(4, 1)))
     @setMapData(5, 1, new Block(this, new Point(5, 1)))
     @setMapData(5, 2, new Block(this, new Point(5, 2)))
+    @setMapData(1, 2, new BombUp(this, new Point(1, 2)))
 
     @updateMap()
 
@@ -47,8 +48,13 @@ class BattleField
   update: (input) ->
     ix = @bomberman.getCurrentIndex()
     data = @getMapData(ix.x, ix.y)
-    if data.type == FieldObject.TYPE_BLAST
-      @bomberman.destroy()
+
+    switch data.type
+      when FieldObject.TYPE_BLAST
+        @bomberman.destroy()
+      when FieldObject.TYPE_ITEM
+        data.exertEffectOn(@bomberman)
+        data.destroy()
 
     unless @bomberman.isDestroyed
       @bomberman.update(input)

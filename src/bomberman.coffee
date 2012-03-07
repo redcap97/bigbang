@@ -219,7 +219,6 @@ class Bomberman
         ix.y = it
       else
         ix.y = ib
-
     ix
 
   getCurrentIndex: ->
