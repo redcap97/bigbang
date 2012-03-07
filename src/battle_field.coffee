@@ -27,16 +27,7 @@ class BattleField
       [b, b, b, b, b, b, b, b, b, b, b, b, b, b, b],
     ]
 
-    @mutableDataMap = ([] for i in [0 ... @height])
-    @viewMap        = ([] for i in [0 ... @height])
-
-    for i in [0 ... @height]
-      for j in [0 ... @width]
-        if @staticDataMap[i][j].type == FieldObject.TYPE_GROUND
-          @viewMap[i][j] = 0
-        else
-          @viewMap[i][j] = 4
-        @mutableDataMap[i][j] = null
+    @mutableDataMap = ((null for j in [0 ... @width]) for i in [0 ... @height])
 
     @updateMap()
 

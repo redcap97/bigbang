@@ -18,9 +18,11 @@ class Blast extends FieldObject
 
   update: ->
     @count += 1
-    if @count > 10
-      @isDestroyed = true
-      @field.removeMapData(@index.x, @index.y)
+    @destroy() if @count > 10
+
+  destroy: ->
+    @isDestroyed = true
+    @field.removeMapData(@index.x, @index.y)
 
 class Bomb extends FieldObject
   TIME_LIMIT: 80

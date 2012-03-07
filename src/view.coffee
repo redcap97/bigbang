@@ -14,8 +14,15 @@ class FieldView extends View
     @scene.addChild(@map)
 
   update: ->
-    @map.loadData(@field.viewMap)
+    @map.loadData(@getIdMap())
 
+  getIdMap: ->
+    for i in [0 ... @field.height]
+      for j in [0 ... @field.width]
+        if @field.staticDataMap[i][j].type == FieldObject.TYPE_GROUND
+          0
+        else
+          4
 
 class BombermanView extends View
   constructor: (@queue, @bomberman) ->

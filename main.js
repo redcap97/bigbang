@@ -9,7 +9,7 @@
     BattleField.prototype.OUTSIDE_OF_FIELD_ERROR = "Point is outside of the field";
 
     function BattleField() {
-      var b, g, i, j, _ref, _ref2;
+      var b, g, i, j;
       this.tileSize = 16;
       this.height = 13;
       this.width = 15;
@@ -21,28 +21,17 @@
         var _ref, _results;
         _results = [];
         for (i = 0, _ref = this.height; 0 <= _ref ? i < _ref : i > _ref; 0 <= _ref ? i++ : i--) {
-          _results.push([]);
+          _results.push((function() {
+            var _ref2, _results2;
+            _results2 = [];
+            for (j = 0, _ref2 = this.width; 0 <= _ref2 ? j < _ref2 : j > _ref2; 0 <= _ref2 ? j++ : j--) {
+              _results2.push(null);
+            }
+            return _results2;
+          }).call(this));
         }
         return _results;
       }).call(this);
-      this.viewMap = (function() {
-        var _ref, _results;
-        _results = [];
-        for (i = 0, _ref = this.height; 0 <= _ref ? i < _ref : i > _ref; 0 <= _ref ? i++ : i--) {
-          _results.push([]);
-        }
-        return _results;
-      }).call(this);
-      for (i = 0, _ref = this.height; 0 <= _ref ? i < _ref : i > _ref; 0 <= _ref ? i++ : i--) {
-        for (j = 0, _ref2 = this.width; 0 <= _ref2 ? j < _ref2 : j > _ref2; 0 <= _ref2 ? j++ : j--) {
-          if (this.staticDataMap[i][j].type === FieldObject.TYPE_GROUND) {
-            this.viewMap[i][j] = 0;
-          } else {
-            this.viewMap[i][j] = 4;
-          }
-          this.mutableDataMap[i][j] = null;
-        }
-      }
       this.updateMap();
     }
 
@@ -419,10 +408,12 @@
 
     Blast.prototype.update = function() {
       this.count += 1;
-      if (this.count > 10) {
-        this.isDestroyed = true;
-        return this.field.removeMapData(this.index.x, this.index.y);
-      }
+      if (this.count > 10) return this.destroy();
+    };
+
+    Blast.prototype.destroy = function() {
+      this.isDestroyed = true;
+      return this.field.removeMapData(this.index.x, this.index.y);
     };
 
     return Blast;
@@ -698,7 +689,27 @@
     }
 
     FieldView.prototype.update = function() {
-      return this.map.loadData(this.field.viewMap);
+      return this.map.loadData(this.getIdMap());
+    };
+
+    FieldView.prototype.getIdMap = function() {
+      var i, j, _ref, _results;
+      _results = [];
+      for (i = 0, _ref = this.field.height; 0 <= _ref ? i < _ref : i > _ref; 0 <= _ref ? i++ : i--) {
+        _results.push((function() {
+          var _ref2, _results2;
+          _results2 = [];
+          for (j = 0, _ref2 = this.field.width; 0 <= _ref2 ? j < _ref2 : j > _ref2; 0 <= _ref2 ? j++ : j--) {
+            if (this.field.staticDataMap[i][j].type === FieldObject.TYPE_GROUND) {
+              _results2.push(0);
+            } else {
+              _results2.push(4);
+            }
+          }
+          return _results2;
+        }).call(this));
+      }
+      return _results;
     };
 
     return FieldView;
