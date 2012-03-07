@@ -70,8 +70,8 @@ class BlastView extends View
     @sprite = new enchant.Sprite(16, 16)
     @sprite.image = @game.assets[ENCHANTJS_IMAGE_PATH + 'map0.gif']
     @sprite.frame = [7]
-    @sprite.x = @blast.field.tileSize * @blast.index.x
-    @sprite.y = @blast.field.tileSize * @blast.index.y
+    @sprite.x = @blast.x
+    @sprite.y = @blast.y
     @scene.addChild(@sprite)
 
   update: ->

@@ -14,6 +14,8 @@ FieldObject.TYPE_BLAST  = 3
 class Blast extends FieldObject
   constructor: (@bomberman, @field, @index) ->
     super(FieldObject.TYPE_BLAST, false)
+    @x = @field.tileSize * @index.x
+    @y = @field.tileSize * @index.y
     @count = 0
 
   update: ->
