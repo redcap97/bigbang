@@ -432,6 +432,8 @@
       this.index = index;
       Bomb.__super__.constructor.call(this, FieldObject.TYPE_BOMB, true);
       this.count = 0;
+      this.x = this.field.tileSize * this.index.x;
+      this.y = this.field.tileSize * this.index.y;
     }
 
     Bomb.prototype.update = function() {
@@ -752,8 +754,8 @@
       this.sprite = new enchant.Sprite(16, 16);
       this.sprite.image = this.game.assets[ENCHANTJS_IMAGE_PATH + 'map0.gif'];
       this.sprite.frame = [5];
-      this.sprite.x = this.bomb.field.tileSize * this.bomb.index.x;
-      this.sprite.y = this.bomb.field.tileSize * this.bomb.index.y;
+      this.sprite.x = this.bomb.x;
+      this.sprite.y = this.bomb.y;
       this.scene.addChild(this.sprite);
     }
 

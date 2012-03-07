@@ -46,8 +46,8 @@ class BombView extends View
     @sprite = new enchant.Sprite(16, 16)
     @sprite.image = @game.assets[ENCHANTJS_IMAGE_PATH + 'map0.gif']
     @sprite.frame = [5]
-    @sprite.x = @bomb.field.tileSize * @bomb.index.x
-    @sprite.y = @bomb.field.tileSize * @bomb.index.y
+    @sprite.x = @bomb.x
+    @sprite.y = @bomb.y
     @scene.addChild(@sprite)
 
   update: ->

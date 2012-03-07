@@ -30,6 +30,8 @@ class Bomb extends FieldObject
   constructor: (@bomberman, @field, @index) ->
     super(FieldObject.TYPE_BOMB, true)
     @count = 0
+    @x = @field.tileSize * @index.x
+    @y = @field.tileSize * @index.y
 
   update: ->
     @count += 1
