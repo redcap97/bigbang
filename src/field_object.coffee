@@ -82,7 +82,14 @@ class Block extends FieldObject
 
   destroy: ->
     @isDestroyed = true
-    @field.removeMapData(@index.x, @index.y)
+
+    if @hasItem()
+      @field.setMapData(@index.x, @index.y, new BombUp(@field, @index))
+    else
+      @field.removeMapData(@index.x, @index.y)
+
+  hasItem: ->
+     Math.floor(Math.random()*2) == 0
 
 class Item extends FieldObject
   constructor: (@field, @index) ->

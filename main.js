@@ -525,7 +525,15 @@
 
     Block.prototype.destroy = function() {
       this.isDestroyed = true;
-      return this.field.removeMapData(this.index.x, this.index.y);
+      if (this.hasItem()) {
+        return this.field.setMapData(this.index.x, this.index.y, new BombUp(this.field, this.index));
+      } else {
+        return this.field.removeMapData(this.index.x, this.index.y);
+      }
+    };
+
+    Block.prototype.hasItem = function() {
+      return Math.floor(Math.random() * 2) === 0;
     };
 
     return Block;
