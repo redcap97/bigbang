@@ -41,9 +41,11 @@ window.onload = ->
             view = null
             switch data.type
               when FieldObject.TYPE_BOMB
-                view = new BombView(queue, data)
+                view = new BombView(queue,  data)
               when FieldObject.TYPE_BLAST
                 view = new BlastView(queue, data)
+              when FieldObject.TYPE_BLOCK
+                view = new BlockView(queue, data)
               else
                 throw Error("Unknown object")
             queue.store(data.objectId, view)

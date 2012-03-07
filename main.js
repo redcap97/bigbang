@@ -1,5 +1,5 @@
 (function() {
-  var BattleField, Blast, BlastView, Bomb, BombView, Bomberman, BombermanView, ENCHANTJS_IMAGE_PATH, FieldObject, FieldView, Point, Rectangle, RenderingQueue, Utils, View,
+  var BattleField, Blast, BlastView, Block, BlockView, Bomb, BombView, Bomberman, BombermanView, ENCHANTJS_IMAGE_PATH, FieldObject, FieldView, Point, Rectangle, RenderingQueue, Utils, View,
     __slice = Array.prototype.slice,
     __hasProp = Object.prototype.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor; child.__super__ = parent.prototype; return child; };
@@ -32,6 +32,9 @@
         }
         return _results;
       }).call(this);
+      this.setMapData(4, 1, new Block(this, new Point(4, 1)));
+      this.setMapData(5, 1, new Block(this, new Point(5, 1)));
+      this.setMapData(5, 2, new Block(this, new Point(5, 2)));
       this.updateMap();
     }
 
@@ -390,13 +393,17 @@
 
   FieldObject.TYPE_GROUND = 1;
 
-  FieldObject.TYPE_BOMB = 2;
+  FieldObject.TYPE_BLOCK = 2;
 
-  FieldObject.TYPE_BLAST = 3;
+  FieldObject.TYPE_BOMB = 3;
+
+  FieldObject.TYPE_BLAST = 4;
 
   Blast = (function(_super) {
 
     __extends(Blast, _super);
+
+    Blast.prototype.DURATION = 10;
 
     function Blast(bomberman, field, index) {
       this.bomberman = bomberman;
@@ -410,7 +417,7 @@
 
     Blast.prototype.update = function() {
       this.count += 1;
-      if (this.count > 10) return this.destroy();
+      if (this.count > this.DURATION) return this.destroy();
     };
 
     Blast.prototype.destroy = function() {
@@ -473,13 +480,31 @@
     Bomb.prototype.setBlast = function(ix) {
       var blast;
       blast = new Blast(this.bomberman, this.field, ix);
-      if (this.count <= this.TIME_LIMIT || ix.x > this.index.x || ix.y > this.index.y) {
-        blast.count -= 1;
-      }
       return this.field.setMapData(ix.x, ix.y, blast);
     };
 
     return Bomb;
+
+  })(FieldObject);
+
+  Block = (function(_super) {
+
+    __extends(Block, _super);
+
+    function Block(field, index) {
+      this.field = field;
+      this.index = index;
+      Block.__super__.constructor.call(this, FieldObject.TYPE_BLOCK, true);
+      this.x = this.field.tileSize * this.index.x;
+      this.y = this.field.tileSize * this.index.y;
+    }
+
+    Block.prototype.destroy = function() {
+      this.isDestroyed = true;
+      return this.field.removeMapData(this.index.x, this.index.y);
+    };
+
+    return Block;
 
   })(FieldObject);
 
@@ -527,6 +552,9 @@
                     break;
                   case FieldObject.TYPE_BLAST:
                     view = new BlastView(queue, data);
+                    break;
+                  case FieldObject.TYPE_BLOCK:
+                    view = new BlockView(queue, data);
                     break;
                   default:
                     throw Error("Unknown object");
@@ -799,6 +827,7 @@
       this.queue = queue;
       this.blast = blast;
       BlastView.__super__.constructor.call(this, this.queue);
+      this.count = 0;
       this.sprite = new enchant.Sprite(16, 16);
       this.sprite.image = this.game.assets[ENCHANTJS_IMAGE_PATH + 'map0.gif'];
       this.sprite.frame = [7];
@@ -808,13 +837,41 @@
     }
 
     BlastView.prototype.update = function() {
-      if (this.blast.isDestroyed) {
+      this.count += 1;
+      if (this.count > this.blast.DURATION) {
         this.stopUpdate(this.blast.objectId);
         return this.removeNode(this.sprite);
       }
     };
 
     return BlastView;
+
+  })(View);
+
+  BlockView = (function(_super) {
+
+    __extends(BlockView, _super);
+
+    function BlockView(queue, block) {
+      this.queue = queue;
+      this.block = block;
+      BlockView.__super__.constructor.call(this, this.queue);
+      this.sprite = new enchant.Sprite(16, 16);
+      this.sprite.image = this.game.assets[ENCHANTJS_IMAGE_PATH + 'map0.gif'];
+      this.sprite.frame = [7];
+      this.sprite.x = this.block.x;
+      this.sprite.y = this.block.y;
+      this.addNode(this.sprite);
+    }
+
+    BlockView.prototype.update = function() {
+      if (this.block.isDestroyed) {
+        this.stopUpdate(this.block.objectId);
+        return this.removeNode(this.sprite);
+      }
+    };
+
+    return BlockView;
 
   })(View);
 

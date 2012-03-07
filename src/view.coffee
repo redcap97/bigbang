@@ -79,6 +79,8 @@ class BlastView extends View
   constructor: (@queue, @blast) ->
     super(@queue)
 
+    @count = 0
+
     @sprite = new enchant.Sprite(16, 16)
     @sprite.image = @game.assets[ENCHANTJS_IMAGE_PATH + 'map0.gif']
     @sprite.frame = [7]
@@ -88,7 +90,25 @@ class BlastView extends View
     @addNode(@sprite)
 
   update: ->
-    if @blast.isDestroyed
+    @count += 1
+    if @count > @blast.DURATION
       @stopUpdate(@blast.objectId)
       @removeNode(@sprite)
 
+
+class BlockView extends View
+  constructor: (@queue, @block) ->
+    super(@queue)
+
+    @sprite = new enchant.Sprite(16, 16)
+    @sprite.image = @game.assets[ENCHANTJS_IMAGE_PATH + 'map0.gif']
+    @sprite.frame = [7]
+    @sprite.x = @block.x
+    @sprite.y = @block.y
+
+    @addNode(@sprite)
+
+  update: ->
+    if @block.isDestroyed
+      @stopUpdate(@block.objectId)
+      @removeNode(@sprite)
