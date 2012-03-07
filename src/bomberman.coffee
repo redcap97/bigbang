@@ -1,10 +1,13 @@
 class Bomberman
   constructor: (@field, @x, @y) ->
     @objectId = Utils.generateId()
-    @isDestroyed = false
-    @power = @speed = @bombCapacity = 2
-    @canThrow = @canKick = false
     @width = @height = @field.tileSize
+    @power = 2
+    @speed = 2
+    @bombCapacity = 2
+    @usedBomb = 0
+    @canThrow = @canKick = false
+    @isDestroyed = false
 
   update: (input) ->
     if input.right
@@ -24,8 +27,9 @@ class Bomberman
     @y = r.y
 
   putBomb: ->
-    if @canPutBomb()
+    if @canPutBomb() and @usedBomb < @bombCapacity
       ix = @getCurrentIndex()
+      @usedBomb += 1
       @field.setMapData(ix.x, ix.y, new Bomb(this, @field, ix))
 
   canMoveOnBomb: (ni) ->

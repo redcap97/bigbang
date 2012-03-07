@@ -46,6 +46,8 @@ class Bomb extends FieldObject
 
   destroy: ->
     @isDestroyed = true
+    @bomberman.usedBomb -= 1
+
     @setBlast(@index)
 
     vs = [

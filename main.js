@@ -138,10 +138,13 @@
       this.x = x;
       this.y = y;
       this.objectId = Utils.generateId();
-      this.isDestroyed = false;
-      this.power = this.speed = this.bombCapacity = 2;
-      this.canThrow = this.canKick = false;
       this.width = this.height = this.field.tileSize;
+      this.power = 2;
+      this.speed = 2;
+      this.bombCapacity = 2;
+      this.usedBomb = 0;
+      this.canThrow = this.canKick = false;
+      this.isDestroyed = false;
     }
 
     Bomberman.prototype.update = function(input) {
@@ -164,8 +167,9 @@
 
     Bomberman.prototype.putBomb = function() {
       var ix;
-      if (this.canPutBomb()) {
+      if (this.canPutBomb() && this.usedBomb < this.bombCapacity) {
         ix = this.getCurrentIndex();
+        this.usedBomb += 1;
         return this.field.setMapData(ix.x, ix.y, new Bomb(this, this.field, ix));
       }
     };
@@ -462,6 +466,7 @@
     Bomb.prototype.destroy = function() {
       var data, i, ix, v, vs, _i, _len, _results;
       this.isDestroyed = true;
+      this.bomberman.usedBomb -= 1;
       this.setBlast(this.index);
       vs = [new Point(1, 0), new Point(-1, 0), new Point(0, 1), new Point(0, -1)];
       _results = [];
