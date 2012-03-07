@@ -51,8 +51,12 @@
     };
 
     BattleField.prototype.update = function(input) {
-      this.updateMap();
-      return this.bomberman.update(input);
+      var data, ix;
+      ix = this.bomberman.getCurrentIndex();
+      data = this.getMapData(ix.x, ix.y);
+      if (data.type === FieldObject.TYPE_BLAST) this.bomberman.destroy();
+      if (!this.bomberman.isDestroyed) this.bomberman.update(input);
+      return this.updateMap();
     };
 
     BattleField.prototype.updateMap = function() {
@@ -134,6 +138,7 @@
       this.x = x;
       this.y = y;
       this.objectId = Utils.generateId();
+      this.isDestroyed = false;
       this.power = this.speed = this.bombCapacity = 2;
       this.canThrow = this.canKick = false;
       this.width = this.height = this.field.tileSize;
@@ -366,6 +371,10 @@
 
     Bomberman.prototype.getCurrentIndex = function() {
       return this.getIndex(this.getRectangle());
+    };
+
+    Bomberman.prototype.destroy = function() {
+      return this.isDestroyed = true;
     };
 
     return Bomberman;
@@ -776,6 +785,11 @@
     }
 
     BombermanView.prototype.update = function() {
+      if (this.bomberman.isDestroyed) {
+        this.stopUpdate(this.bomberman.objectId);
+        this.removeNode(this.sprite);
+        return;
+      }
       this.sprite.x = this.bomberman.x;
       return this.sprite.y = this.bomberman.y;
     };

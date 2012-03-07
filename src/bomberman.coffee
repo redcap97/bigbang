@@ -1,6 +1,7 @@
 class Bomberman
   constructor: (@field, @x, @y) ->
     @objectId = Utils.generateId()
+    @isDestroyed = false
     @power = @speed = @bombCapacity = 2
     @canThrow = @canKick = false
     @width = @height = @field.tileSize
@@ -219,3 +220,6 @@ class Bomberman
 
   getCurrentIndex: ->
     @getIndex(@getRectangle())
+
+  destroy: ->
+    @isDestroyed = true

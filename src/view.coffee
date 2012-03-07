@@ -46,6 +46,11 @@ class BombermanView extends View
     @addNode(@sprite)
 
   update: ->
+    if @bomberman.isDestroyed
+      @stopUpdate(@bomberman.objectId)
+      @removeNode(@sprite)
+      return
+
     @sprite.x = @bomberman.x
     @sprite.y = @bomberman.y
 

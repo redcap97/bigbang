@@ -45,8 +45,15 @@ class BattleField
     @setMapData(x, y, null)
 
   update: (input) ->
+    ix = @bomberman.getCurrentIndex()
+    data = @getMapData(ix.x, ix.y)
+    if data.type == FieldObject.TYPE_BLAST
+      @bomberman.destroy()
+
+    unless @bomberman.isDestroyed
+      @bomberman.update(input)
+
     @updateMap()
-    @bomberman.update(input)
 
   updateMap: ->
     for y in [0...@height]
