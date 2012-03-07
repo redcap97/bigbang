@@ -1,5 +1,5 @@
 (function() {
-  var BattleField, Blast, BlastView, Block, BlockView, Bomb, BombUp, BombView, Bomberman, BombermanView, ENCHANTJS_IMAGE_PATH, FieldObject, FieldView, Item, ItemView, Point, Rectangle, RenderingQueue, Utils, View,
+  var BattleField, Blast, BlastView, Block, BlockView, Bomb, BombUp, BombView, Bomberman, BombermanView, ENCHANTJS_IMAGE_PATH, FieldObject, FieldView, FirePowerUp, Item, ItemView, Point, Rectangle, RenderingQueue, SpeedUp, Utils, View,
     __slice = Array.prototype.slice,
     __hasProp = Object.prototype.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor; child.__super__ = parent.prototype; return child; };
@@ -524,16 +524,25 @@
     }
 
     Block.prototype.destroy = function() {
+      var item;
       this.isDestroyed = true;
       if (this.hasItem()) {
-        return this.field.setMapData(this.index.x, this.index.y, new BombUp(this.field, this.index));
+        item = this.generateItem();
+        return this.field.setMapData(this.index.x, this.index.y, item);
       } else {
         return this.field.removeMapData(this.index.x, this.index.y);
       }
     };
 
     Block.prototype.hasItem = function() {
-      return Math.floor(Math.random() * 2) === 0;
+      return Utils.random(3) === 0;
+    };
+
+    Block.prototype.generateItem = function() {
+      var cs, klass;
+      cs = [BombUp, FirePowerUp, SpeedUp];
+      klass = cs[Utils.random(cs.length)];
+      return new klass(this.field, this.index);
     };
 
     return Block;
@@ -581,6 +590,44 @@
     };
 
     return BombUp;
+
+  })(Item);
+
+  FirePowerUp = (function(_super) {
+
+    __extends(FirePowerUp, _super);
+
+    function FirePowerUp(field, index) {
+      this.field = field;
+      this.index = index;
+      FirePowerUp.__super__.constructor.call(this, this.field, this.index);
+    }
+
+    FirePowerUp.prototype.exertEffectOn = function(bomberman) {
+      this.bomberman = bomberman;
+      return this.bomberman.power += 1;
+    };
+
+    return FirePowerUp;
+
+  })(Item);
+
+  SpeedUp = (function(_super) {
+
+    __extends(SpeedUp, _super);
+
+    function SpeedUp(field, index) {
+      this.field = field;
+      this.index = index;
+      SpeedUp.__super__.constructor.call(this, this.field, this.index);
+    }
+
+    SpeedUp.prototype.exertEffectOn = function(bomberman) {
+      this.bomberman = bomberman;
+      return this.bomberman.speed += 1;
+    };
+
+    return SpeedUp;
 
   })(Item);
 
@@ -769,7 +816,10 @@
         maxId += 1;
         return maxId;
       };
-    })()
+    })(),
+    random: function(max) {
+      return Math.floor(Math.random() * max);
+    }
   };
 
   View = (function() {

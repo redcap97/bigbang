@@ -84,12 +84,18 @@ class Block extends FieldObject
     @isDestroyed = true
 
     if @hasItem()
-      @field.setMapData(@index.x, @index.y, new BombUp(@field, @index))
+      item = @generateItem()
+      @field.setMapData(@index.x, @index.y, item)
     else
       @field.removeMapData(@index.x, @index.y)
 
   hasItem: ->
-     Math.floor(Math.random()*2) == 0
+    Utils.random(3) == 0
+
+  generateItem: ->
+    cs = [BombUp, FirePowerUp, SpeedUp]
+    klass = cs[Utils.random(cs.length)]
+    new klass(@field, @index)
 
 class Item extends FieldObject
   constructor: (@field, @index) ->
@@ -109,3 +115,17 @@ class BombUp extends Item
 
   exertEffectOn: (@bomberman) ->
     @bomberman.bombCapacity += 1
+
+class FirePowerUp extends Item
+  constructor: (@field, @index) ->
+    super(@field, @index)
+
+  exertEffectOn: (@bomberman) ->
+    @bomberman.power += 1
+
+class SpeedUp extends Item
+  constructor: (@field, @index) ->
+    super(@field, @index)
+
+  exertEffectOn: (@bomberman) ->
+    @bomberman.speed += 1
