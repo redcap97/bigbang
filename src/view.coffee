@@ -3,6 +3,15 @@ class View
     @game = @queue.getGame()
     @scene = @queue.getScene()
 
+  stopUpdate: (id)->
+    @queue.remove(id)
+
+  addNode: (node) ->
+    @scene.addChild(node)
+
+  removeNode: (node) ->
+    @scene.removeChild(node)
+
   update: ->
 
 class FieldView extends View
@@ -11,7 +20,8 @@ class FieldView extends View
 
     @map = new enchant.Map(16, 16)
     @map.image = @game.assets[ENCHANTJS_IMAGE_PATH + 'map0.gif']
-    @scene.addChild(@map)
+
+    @addNode(@map)
 
   update: ->
     @map.loadData(@getIdMap())
@@ -32,7 +42,8 @@ class BombermanView extends View
     @sprite.image = @game.assets[ENCHANTJS_IMAGE_PATH + 'map0.gif']
     @sprite.x = @sprite.y = 16
     @sprite.frame = [2]
-    @scene.addChild(@sprite)
+
+    @addNode(@sprite)
 
   update: ->
     @sprite.x = @bomberman.x
@@ -48,7 +59,8 @@ class BombView extends View
     @sprite.frame = [5]
     @sprite.x = @bomb.x
     @sprite.y = @bomb.y
-    @scene.addChild(@sprite)
+
+    @addNode(@sprite)
 
   update: ->
     @count += 1
@@ -60,8 +72,8 @@ class BombView extends View
       @count = 0
 
     if @bomb.isDestroyed
-      @queue.remove(@bomb.objectId)
-      @scene.removeChild(@sprite)
+      @stopUpdate(@bomb.objectId)
+      @removeNode(@sprite)
 
 class BlastView extends View
   constructor: (@queue, @blast) ->
@@ -72,10 +84,11 @@ class BlastView extends View
     @sprite.frame = [7]
     @sprite.x = @blast.x
     @sprite.y = @blast.y
-    @scene.addChild(@sprite)
+
+    @addNode(@sprite)
 
   update: ->
     if @blast.isDestroyed
-      @queue.remove(@blast.objectId)
-      @scene.removeChild(@sprite)
+      @stopUpdate(@blast.objectId)
+      @removeNode(@sprite)
 

@@ -673,6 +673,18 @@
       this.scene = this.queue.getScene();
     }
 
+    View.prototype.stopUpdate = function(id) {
+      return this.queue.remove(id);
+    };
+
+    View.prototype.addNode = function(node) {
+      return this.scene.addChild(node);
+    };
+
+    View.prototype.removeNode = function(node) {
+      return this.scene.removeChild(node);
+    };
+
     View.prototype.update = function() {};
 
     return View;
@@ -689,7 +701,7 @@
       FieldView.__super__.constructor.call(this, this.queue);
       this.map = new enchant.Map(16, 16);
       this.map.image = this.game.assets[ENCHANTJS_IMAGE_PATH + 'map0.gif'];
-      this.scene.addChild(this.map);
+      this.addNode(this.map);
     }
 
     FieldView.prototype.update = function() {
@@ -732,7 +744,7 @@
       this.sprite.image = this.game.assets[ENCHANTJS_IMAGE_PATH + 'map0.gif'];
       this.sprite.x = this.sprite.y = 16;
       this.sprite.frame = [2];
-      this.scene.addChild(this.sprite);
+      this.addNode(this.sprite);
     }
 
     BombermanView.prototype.update = function() {
@@ -758,7 +770,7 @@
       this.sprite.frame = [5];
       this.sprite.x = this.bomb.x;
       this.sprite.y = this.bomb.y;
-      this.scene.addChild(this.sprite);
+      this.addNode(this.sprite);
     }
 
     BombView.prototype.update = function() {
@@ -770,8 +782,8 @@
         this.count = 0;
       }
       if (this.bomb.isDestroyed) {
-        this.queue.remove(this.bomb.objectId);
-        return this.scene.removeChild(this.sprite);
+        this.stopUpdate(this.bomb.objectId);
+        return this.removeNode(this.sprite);
       }
     };
 
@@ -792,13 +804,13 @@
       this.sprite.frame = [7];
       this.sprite.x = this.blast.x;
       this.sprite.y = this.blast.y;
-      this.scene.addChild(this.sprite);
+      this.addNode(this.sprite);
     }
 
     BlastView.prototype.update = function() {
       if (this.blast.isDestroyed) {
-        this.queue.remove(this.blast.objectId);
-        return this.scene.removeChild(this.sprite);
+        this.stopUpdate(this.blast.objectId);
+        return this.removeNode(this.sprite);
       }
     };
 
