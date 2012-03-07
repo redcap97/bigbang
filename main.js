@@ -9,14 +9,14 @@
     BattleField.prototype.OUTSIDE_OF_FIELD_ERROR = "Point is outside of the field";
 
     function BattleField() {
-      var b, g, i, j;
+      var g, i, j, w;
       this.tileSize = 16;
       this.height = 13;
       this.width = 15;
       this.bomberman = new Bomberman(this, this.tileSize, this.tileSize);
-      b = new FieldObject(FieldObject.TYPE_WALL, true);
+      w = new FieldObject(FieldObject.TYPE_WALL, true);
       g = new FieldObject(FieldObject.TYPE_GROUND, false);
-      this.staticDataMap = [[b, b, b, b, b, b, b, b, b, b, b, b, b, b, b], [b, g, g, g, g, g, g, g, g, g, g, g, g, g, b], [b, g, b, g, b, g, b, g, b, g, b, g, b, g, b], [b, g, g, g, g, g, g, g, g, g, g, g, g, g, b], [b, g, b, g, b, g, b, g, b, g, b, g, b, g, b], [b, g, g, g, g, g, g, g, g, g, g, g, g, g, b], [b, g, b, g, b, g, b, g, b, g, b, g, b, g, b], [b, g, g, g, g, g, g, g, g, g, g, g, g, g, b], [b, g, b, g, b, g, b, g, b, g, b, g, b, g, b], [b, g, g, g, g, g, g, g, g, g, g, g, g, g, b], [b, g, b, g, b, g, b, g, b, g, b, g, b, g, b], [b, g, g, g, g, g, g, g, g, g, g, g, g, g, b], [b, b, b, b, b, b, b, b, b, b, b, b, b, b, b]];
+      this.staticDataMap = [[w, w, w, w, w, w, w, w, w, w, w, w, w, w, w], [w, g, g, g, g, g, g, g, g, g, g, g, g, g, w], [w, g, w, g, w, g, w, g, w, g, w, g, w, g, w], [w, g, g, g, g, g, g, g, g, g, g, g, g, g, w], [w, g, w, g, w, g, w, g, w, g, w, g, w, g, w], [w, g, g, g, g, g, g, g, g, g, g, g, g, g, w], [w, g, w, g, w, g, w, g, w, g, w, g, w, g, w], [w, g, g, g, g, g, g, g, g, g, g, g, g, g, w], [w, g, w, g, w, g, w, g, w, g, w, g, w, g, w], [w, g, g, g, g, g, g, g, g, g, g, g, g, g, w], [w, g, w, g, w, g, w, g, w, g, w, g, w, g, w], [w, g, g, g, g, g, g, g, g, g, g, g, g, g, w], [w, w, w, w, w, w, w, w, w, w, w, w, w, w, w]];
       this.mutableDataMap = (function() {
         var _ref, _results;
         _results = [];

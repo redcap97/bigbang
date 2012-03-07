@@ -8,23 +8,23 @@ class BattleField
 
     @bomberman = new Bomberman(this, @tileSize, @tileSize)
 
-    b = new FieldObject(FieldObject.TYPE_WALL,   true)
+    w = new FieldObject(FieldObject.TYPE_WALL,   true)
     g = new FieldObject(FieldObject.TYPE_GROUND, false)
 
     @staticDataMap = [
-      [b, b, b, b, b, b, b, b, b, b, b, b, b, b, b],
-      [b, g, g, g, g, g, g, g, g, g, g, g, g, g, b],
-      [b, g, b, g, b, g, b, g, b, g, b, g, b, g, b],
-      [b, g, g, g, g, g, g, g, g, g, g, g, g, g, b],
-      [b, g, b, g, b, g, b, g, b, g, b, g, b, g, b],
-      [b, g, g, g, g, g, g, g, g, g, g, g, g, g, b],
-      [b, g, b, g, b, g, b, g, b, g, b, g, b, g, b],
-      [b, g, g, g, g, g, g, g, g, g, g, g, g, g, b],
-      [b, g, b, g, b, g, b, g, b, g, b, g, b, g, b],
-      [b, g, g, g, g, g, g, g, g, g, g, g, g, g, b],
-      [b, g, b, g, b, g, b, g, b, g, b, g, b, g, b],
-      [b, g, g, g, g, g, g, g, g, g, g, g, g, g, b],
-      [b, b, b, b, b, b, b, b, b, b, b, b, b, b, b],
+      [w, w, w, w, w, w, w, w, w, w, w, w, w, w, w],
+      [w, g, g, g, g, g, g, g, g, g, g, g, g, g, w],
+      [w, g, w, g, w, g, w, g, w, g, w, g, w, g, w],
+      [w, g, g, g, g, g, g, g, g, g, g, g, g, g, w],
+      [w, g, w, g, w, g, w, g, w, g, w, g, w, g, w],
+      [w, g, g, g, g, g, g, g, g, g, g, g, g, g, w],
+      [w, g, w, g, w, g, w, g, w, g, w, g, w, g, w],
+      [w, g, g, g, g, g, g, g, g, g, g, g, g, g, w],
+      [w, g, w, g, w, g, w, g, w, g, w, g, w, g, w],
+      [w, g, g, g, g, g, g, g, g, g, g, g, g, g, w],
+      [w, g, w, g, w, g, w, g, w, g, w, g, w, g, w],
+      [w, g, g, g, g, g, g, g, g, g, g, g, g, g, w],
+      [w, w, w, w, w, w, w, w, w, w, w, w, w, w, w],
     ]
 
     @mutableDataMap = ((null for j in [0 ... @width]) for i in [0 ... @height])
