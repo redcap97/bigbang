@@ -642,14 +642,16 @@
     game.keybind("Z".charCodeAt(0), 'a');
     game.keybind("X".charCodeAt(0), 'b');
     game.onload = function() {
-      var bomberman, bombermanView, field, fieldView, label, queue, scene;
+      var bomberman, bombermanView, field, fieldView, label, queue, queue2, scene, scene2;
       field = new BattleField();
       bomberman = field.bomberman;
       scene = new enchant.Scene();
       queue = new RenderingQueue(game, scene);
       fieldView = new FieldView(queue, field);
       fieldView.update();
-      bombermanView = new BombermanView(queue, bomberman);
+      scene2 = new enchant.Scene();
+      queue2 = new RenderingQueue(game, scene2);
+      bombermanView = new BombermanView(queue2, bomberman);
       queue.store(bomberman.objectId, bombermanView);
       label = new enchant.Label();
       label.color = "white";
@@ -660,6 +662,7 @@
         field.update(game.input);
         label.text = field.toString();
         queue.update();
+        queue2.update();
         _results = [];
         for (i = 0, _ref = field.height; 0 <= _ref ? i < _ref : i > _ref; 0 <= _ref ? i++ : i--) {
           _results.push((function() {
@@ -695,7 +698,8 @@
         }
         return _results;
       });
-      return game.pushScene(scene);
+      game.pushScene(scene);
+      return game.pushScene(scene2);
     };
     return game.start();
   };

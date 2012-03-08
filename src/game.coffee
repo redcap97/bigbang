@@ -14,13 +14,15 @@ window.onload = ->
     bomberman = field.bomberman
 
     scene = new enchant.Scene()
-
     queue = new RenderingQueue(game, scene)
 
     fieldView = new FieldView(queue, field)
     fieldView.update()
 
-    bombermanView = new BombermanView(queue, bomberman)
+    scene2 = new enchant.Scene()
+    queue2 = new RenderingQueue(game, scene2)
+
+    bombermanView = new BombermanView(queue2, bomberman)
     queue.store(bomberman.objectId, bombermanView)
 
     label = new enchant.Label()
@@ -33,6 +35,7 @@ window.onload = ->
       label.text = field.toString()
 
       queue.update()
+      queue2.update()
 
       for i in [0 ... field.height]
         for j in [ 0 ... field.width]
@@ -53,5 +56,6 @@ window.onload = ->
             queue.store(data.objectId, view)
     )
     game.pushScene(scene)
+    game.pushScene(scene2)
 
   game.start()
