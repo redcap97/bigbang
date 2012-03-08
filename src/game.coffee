@@ -11,7 +11,6 @@ window.onload = ->
 
   game.onload = ->
     field = new BattleField()
-    bomberman = field.bomberman
 
     scene = new enchant.Scene()
     queue = new RenderingQueue(game, scene)
@@ -22,8 +21,9 @@ window.onload = ->
     scene2 = new enchant.Scene()
     queue2 = new RenderingQueue(game, scene2)
 
-    bombermanView = new BombermanView(queue2, bomberman)
-    queue2.store(bomberman.objectId, bombermanView)
+    for bomberman in field.bombermans
+      bombermanView = new BombermanView(queue2, bomberman)
+      queue2.store(bomberman.objectId, bombermanView)
 
     label = new enchant.Label()
     label.color = "white"

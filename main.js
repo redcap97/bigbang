@@ -13,7 +13,7 @@
       this.tileSize = 16;
       this.height = 13;
       this.width = 15;
-      this.bomberman = new Bomberman(this, this.tileSize, this.tileSize);
+      this.bombermans = [new Bomberman(this, this.tileSize, this.tileSize), new Bomberman(this, this.tileSize * 13, this.tileSize), new Bomberman(this, this.tileSize, this.tileSize * 11), new Bomberman(this, this.tileSize * 13, this.tileSize * 11)];
       w = new FieldObject(FieldObject.TYPE_WALL, true);
       g = new FieldObject(FieldObject.TYPE_GROUND, false);
       this.staticDataMap = [[w, w, w, w, w, w, w, w, w, w, w, w, w, w, w], [w, g, g, g, g, g, g, g, g, g, g, g, g, g, w], [w, g, w, g, w, g, w, g, w, g, w, g, w, g, w], [w, g, g, g, g, g, g, g, g, g, g, g, g, g, w], [w, g, w, g, w, g, w, g, w, g, w, g, w, g, w], [w, g, g, g, g, g, g, g, g, g, g, g, g, g, w], [w, g, w, g, w, g, w, g, w, g, w, g, w, g, w], [w, g, g, g, g, g, g, g, g, g, g, g, g, g, w], [w, g, w, g, w, g, w, g, w, g, w, g, w, g, w], [w, g, g, g, g, g, g, g, g, g, g, g, g, g, w], [w, g, w, g, w, g, w, g, w, g, w, g, w, g, w], [w, g, g, g, g, g, g, g, g, g, g, g, g, g, w], [w, w, w, w, w, w, w, w, w, w, w, w, w, w, w]];
@@ -52,18 +52,22 @@
     };
 
     BattleField.prototype.update = function(input) {
-      var data, ix;
-      ix = this.bomberman.getCurrentIndex();
-      data = this.getMapData(ix.x, ix.y);
-      switch (data.type) {
-        case FieldObject.TYPE_BLAST:
-          this.bomberman.destroy();
-          break;
-        case FieldObject.TYPE_ITEM:
-          data.exertEffectOn(this.bomberman);
-          data.destroy();
+      var bomberman, data, ix, _i, _len, _ref;
+      _ref = this.bombermans;
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        bomberman = _ref[_i];
+        ix = bomberman.getCurrentIndex();
+        data = this.getMapData(ix.x, ix.y);
+        switch (data.type) {
+          case FieldObject.TYPE_BLAST:
+            bomberman.destroy();
+            break;
+          case FieldObject.TYPE_ITEM:
+            data.exertEffectOn(bomberman);
+            data.destroy();
+        }
       }
-      if (!this.bomberman.isDestroyed) this.bomberman.update(input);
+      if (!this.bombermans[0].isDestroyed) this.bombermans[0].update(input);
       return this.updateMap();
     };
 
@@ -130,9 +134,7 @@
     };
 
     BattleField.prototype.toString = function() {
-      var ix;
-      ix = this.bomberman.getCurrentIndex();
-      return "Index of Bomberman: " + ix.y + ", " + ix.x;
+      return "undefined";
     };
 
     return BattleField;
@@ -649,33 +651,36 @@
     game.keybind("Z".charCodeAt(0), 'a');
     game.keybind("X".charCodeAt(0), 'b');
     game.onload = function() {
-      var bomberman, bombermanView, field, fieldView, label, queue, queue2, scene, scene2;
+      var bomberman, bombermanView, field, fieldView, label, queue, queue2, scene, scene2, _i, _len, _ref;
       field = new BattleField();
-      bomberman = field.bomberman;
       scene = new enchant.Scene();
       queue = new RenderingQueue(game, scene);
       fieldView = new FieldView(queue, field);
       fieldView.update();
       scene2 = new enchant.Scene();
       queue2 = new RenderingQueue(game, scene2);
-      bombermanView = new BombermanView(queue2, bomberman);
-      queue2.store(bomberman.objectId, bombermanView);
+      _ref = field.bombermans;
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        bomberman = _ref[_i];
+        bombermanView = new BombermanView(queue2, bomberman);
+        queue2.store(bomberman.objectId, bombermanView);
+      }
       label = new enchant.Label();
       label.color = "white";
       label.x = 4;
       scene.addChild(label);
       game.addEventListener('enterframe', function() {
-        var data, i, j, view, _ref, _results;
+        var data, i, j, view, _ref2, _results;
         field.update(game.input);
         label.text = field.toString();
         queue.update();
         queue2.update();
         _results = [];
-        for (i = 0, _ref = field.height; 0 <= _ref ? i < _ref : i > _ref; 0 <= _ref ? i++ : i--) {
+        for (i = 0, _ref2 = field.height; 0 <= _ref2 ? i < _ref2 : i > _ref2; 0 <= _ref2 ? i++ : i--) {
           _results.push((function() {
-            var _ref2, _results2;
+            var _ref3, _results2;
             _results2 = [];
-            for (j = 0, _ref2 = field.width; 0 <= _ref2 ? j < _ref2 : j > _ref2; 0 <= _ref2 ? j++ : j--) {
+            for (j = 0, _ref3 = field.width; 0 <= _ref3 ? j < _ref3 : j > _ref3; 0 <= _ref3 ? j++ : j--) {
               data = field.mutableDataMap[i][j];
               if (data && !queue.contains(data.objectId)) {
                 view = null;

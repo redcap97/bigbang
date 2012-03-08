@@ -6,7 +6,12 @@ class BattleField
     @height   = 13
     @width    = 15
 
-    @bomberman = new Bomberman(this, @tileSize, @tileSize)
+    @bombermans = [
+      new Bomberman(this, @tileSize,    @tileSize),
+      new Bomberman(this, @tileSize*13, @tileSize),
+      new Bomberman(this, @tileSize,    @tileSize*11),
+      new Bomberman(this, @tileSize*13, @tileSize*11)
+    ]
 
     w = new FieldObject(FieldObject.TYPE_WALL,   true)
     g = new FieldObject(FieldObject.TYPE_GROUND, false)
@@ -46,18 +51,19 @@ class BattleField
     @setMapData(x, y, null)
 
   update: (input) ->
-    ix = @bomberman.getCurrentIndex()
-    data = @getMapData(ix.x, ix.y)
+    for bomberman in @bombermans
+      ix = bomberman.getCurrentIndex()
+      data = @getMapData(ix.x, ix.y)
 
-    switch data.type
-      when FieldObject.TYPE_BLAST
-        @bomberman.destroy()
-      when FieldObject.TYPE_ITEM
-        data.exertEffectOn(@bomberman)
-        data.destroy()
+      switch data.type
+        when FieldObject.TYPE_BLAST
+          bomberman.destroy()
+        when FieldObject.TYPE_ITEM
+          data.exertEffectOn(bomberman)
+          data.destroy()
 
-    unless @bomberman.isDestroyed
-      @bomberman.update(input)
+    unless @bombermans[0].isDestroyed
+      @bombermans[0].update(input)
 
     @updateMap()
 
@@ -97,5 +103,4 @@ class BattleField
     @getMapData(x, y).isBarrier
 
   toString: ->
-    ix = @bomberman.getCurrentIndex()
-    "Index of Bomberman: #{ix.y}, #{ix.x}"
+    "undefined"
