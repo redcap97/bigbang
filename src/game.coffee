@@ -53,6 +53,7 @@ window.onload = ->
                 view = new ItemView(queue,  data)
               else
                 throw Error("Unknown object")
+
             queue.store(data.objectId, view)
     )
     game.pushScene(scene)

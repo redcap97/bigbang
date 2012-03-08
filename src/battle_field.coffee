@@ -102,5 +102,25 @@ class BattleField
   isBarrier: (x, y) ->
     @getMapData(x, y).isBarrier
 
+  getRemainingBombermans: ->
+    remainingBombermans = []
+    for bomberman in @bombermans
+      if bomberman.isDestroyed == false
+        remainingBombermans.push(bomberman)
+    remainingBombermans
+
+  isFinished: ->
+    @getRemainingBombermans().length < 2
+
+  isDraw: ->
+    @getRemainingBombermans().length == 0
+
+  getWinner: ->
+    for i in [0...@bombermans.length]
+      return i unless @bombermans[i].isDestroyed
+
   toString: ->
-    "undefined"
+    if @isFinished()
+      if @isDraw() then "draw" else "winner: #{@getWinner()}"
+    else
+      ""

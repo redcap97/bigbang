@@ -133,8 +133,42 @@
       return this.getMapData(x, y).isBarrier;
     };
 
+    BattleField.prototype.getRemainingBombermans = function() {
+      var bomberman, remainingBombermans, _i, _len, _ref;
+      remainingBombermans = [];
+      _ref = this.bombermans;
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        bomberman = _ref[_i];
+        if (bomberman.isDestroyed === false) remainingBombermans.push(bomberman);
+      }
+      return remainingBombermans;
+    };
+
+    BattleField.prototype.isFinished = function() {
+      return this.getRemainingBombermans().length < 2;
+    };
+
+    BattleField.prototype.isDraw = function() {
+      return this.getRemainingBombermans().length === 0;
+    };
+
+    BattleField.prototype.getWinner = function() {
+      var i, _ref;
+      for (i = 0, _ref = this.bombermans.length; 0 <= _ref ? i < _ref : i > _ref; 0 <= _ref ? i++ : i--) {
+        if (!this.bombermans[i].isDestroyed) return i;
+      }
+    };
+
     BattleField.prototype.toString = function() {
-      return "undefined";
+      if (this.isFinished()) {
+        if (this.isDraw()) {
+          return "draw";
+        } else {
+          return "winner: " + (this.getWinner());
+        }
+      } else {
+        return "";
+      }
     };
 
     return BattleField;
