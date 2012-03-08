@@ -118,9 +118,3 @@ class BattleField
   getWinner: ->
     for i in [0...@bombermans.length]
       return i unless @bombermans[i].isDestroyed
-
-  toString: ->
-    if @isFinished()
-      if @isDraw() then "draw" else "winner: #{@getWinner()}"
-    else
-      ""
