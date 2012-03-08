@@ -1,5 +1,5 @@
 (function() {
-  var BattleField, Blast, BlastView, Block, BlockView, Bomb, BombUp, BombView, Bomberman, BombermanView, ENCHANTJS_IMAGE_PATH, FieldObject, FieldView, FirePowerUp, Item, ItemView, Point, Rectangle, RenderingQueue, SpeedUp, Utils, View,
+  var BattleField, Blast, BlastView, Block, BlockView, Bomb, BombUp, BombView, Bomberman, BombermanView, ENCHANTJS_IMAGE_PATH, FieldObject, FieldView, FirePowerUp, InputController, Item, ItemView, Point, Rectangle, RenderingQueue, SpeedUp, Utils, View,
     __slice = Array.prototype.slice,
     __hasProp = Object.prototype.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor; child.__super__ = parent.prototype; return child; };
@@ -33,7 +33,7 @@
         return _results;
       }).call(this);
       this.setMapData(4, 1, new Block(this, new Point(4, 1)));
-      this.setMapData(5, 1, new Block(this, new Point(5, 1)));
+      this.setMapData(5, 5, new Block(this, new Point(5, 5)));
       this.setMapData(5, 2, new Block(this, new Point(5, 2)));
       this.setMapData(1, 2, new BombUp(this, new Point(1, 2)));
       this.updateMap();
@@ -153,19 +153,26 @@
       this.usedBomb = 0;
       this.canThrow = this.canKick = false;
       this.isDestroyed = false;
+      this.controller = new InputController();
     }
 
     Bomberman.prototype.update = function(input) {
-      if (input.right) {
-        this.moveRight();
-      } else if (input.down) {
-        this.moveDown();
-      } else if (input.left) {
-        this.moveLeft();
-      } else if (input.up) {
-        this.moveUp();
+      this.controller.update(input);
+      if (this.controller.aDown) this.putBomb();
+      return this.move();
+    };
+
+    Bomberman.prototype.move = function() {
+      switch (this.controller.direction) {
+        case InputController.LEFT:
+          return this.moveLeft();
+        case InputController.UP:
+          return this.moveUp();
+        case InputController.RIGHT:
+          return this.moveRight();
+        case InputController.DOWN:
+          return this.moveDown();
       }
-      if (input.a) return this.putBomb();
     };
 
     Bomberman.prototype.changePosition = function(r) {
@@ -652,7 +659,7 @@
       scene2 = new enchant.Scene();
       queue2 = new RenderingQueue(game, scene2);
       bombermanView = new BombermanView(queue2, bomberman);
-      queue.store(bomberman.objectId, bombermanView);
+      queue2.store(bomberman.objectId, bombermanView);
       label = new enchant.Label();
       label.color = "white";
       label.x = 4;
@@ -703,6 +710,99 @@
     };
     return game.start();
   };
+
+  InputController = (function() {
+
+    function InputController() {
+      this.a = this.b = false;
+      this.aDown = this.aUp = false;
+      this.bDown = this.bUp = false;
+      this.direction = this.oldDirection = InputController.NONE;
+      this.up = this.down = this.left = this.right = false;
+    }
+
+    InputController.prototype.update = function(input) {
+      this.updateDirection(input);
+      this.updateAButton(input);
+      return this.updateBButton(input);
+    };
+
+    InputController.prototype.isSamePreviousDirections = function(dirs) {
+      return (this.direction === dirs[0] && this.oldDirection === dirs[1]) || (this.direction === dirs[1] && this.oldDirection === dirs[0]);
+    };
+
+    InputController.prototype.getInputDirections = function(input) {
+      var dirs;
+      dirs = [];
+      if (input.left) dirs.push(InputController.LEFT);
+      if (input.up) dirs.push(InputController.UP);
+      if (input.right) dirs.push(InputController.RIGHT);
+      if (input.down) dirs.push(InputController.DOWN);
+      return dirs.slice(0, 2);
+    };
+
+    InputController.prototype.updateDirection = function(input) {
+      var dirs;
+      dirs = this.getInputDirections(input);
+      if (dirs.length === 0) {
+        this.direction = InputController.NONE;
+        return this.oldDirection = InputController.NONE;
+      } else if (dirs.length === 1) {
+        this.direction = dirs[0];
+        return this.oldDirection = InputController.NONE;
+      } else if (!this.isSamePreviousDirections(dirs)) {
+        if (this.direction === dirs[0]) {
+          this.oldDirection = this.direction;
+          return this.direction = dirs[1];
+        } else if (this.direction === dirs[1]) {
+          this.oldDirection = this.direction;
+          return this.direction = dirs[0];
+        } else {
+          this.direction = dirs[0];
+          return this.oldDirection = dirs[1];
+        }
+      }
+    };
+
+    InputController.prototype.updateAButton = function(input) {
+      if (this.a === input.a) {
+        this.aDown = this.aUp = false;
+      } else if (input.a === true) {
+        this.aDown = true;
+        this.aUp = false;
+      } else if (input.a === false) {
+        this.aDown = false;
+        this.aUp = true;
+      }
+      return this.a = input.a;
+    };
+
+    InputController.prototype.updateBButton = function(input) {
+      if (this.b === input.b) {
+        this.bDown = this.bUp = false;
+      } else if (input.b === true) {
+        this.bDown = true;
+        this.bUp = false;
+      } else if (input.b === false) {
+        this.bDown = false;
+        this.bUp = true;
+      }
+      return this.b = input.b;
+    };
+
+    return InputController;
+
+  })();
+
+  InputController.NONE = 0;
+
+  InputController.LEFT = 1;
+
+  InputController.UP = 2;
+
+  InputController.RIGHT = 3;
+
+  InputController.DOWN = 4;
 
   Point = (function() {
 

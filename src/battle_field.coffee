@@ -30,7 +30,7 @@ class BattleField
     @mutableDataMap = ((null for j in [0 ... @width]) for i in [0 ... @height])
 
     @setMapData(4, 1, new Block(this, new Point(4, 1)))
-    @setMapData(5, 1, new Block(this, new Point(5, 1)))
+    @setMapData(5, 5, new Block(this, new Point(5, 5)))
     @setMapData(5, 2, new Block(this, new Point(5, 2)))
     @setMapData(1, 2, new BombUp(this, new Point(1, 2)))
 

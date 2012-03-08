@@ -23,7 +23,7 @@ window.onload = ->
     queue2 = new RenderingQueue(game, scene2)
 
     bombermanView = new BombermanView(queue2, bomberman)
-    queue.store(bomberman.objectId, bombermanView)
+    queue2.store(bomberman.objectId, bombermanView)
 
     label = new enchant.Label()
     label.color = "white"

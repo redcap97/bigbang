@@ -9,18 +9,24 @@ class Bomberman
     @canThrow = @canKick = false
     @isDestroyed = false
 
-  update: (input) ->
-    if input.right
-      @moveRight()
-    else if input.down
-      @moveDown()
-    else if input.left
-      @moveLeft()
-    else if input.up
-      @moveUp()
+    @controller = new InputController()
 
-    if input.a
-      @putBomb()
+  update: (input) ->
+    @controller.update(input)
+
+    @putBomb() if @controller.aDown
+    @move()
+
+  move: ->
+    switch(@controller.direction)
+      when InputController.LEFT
+        @moveLeft()
+      when InputController.UP
+        @moveUp()
+      when InputController.RIGHT
+        @moveRight()
+      when InputController.DOWN
+        @moveDown()
 
   changePosition: (r) ->
     @x = r.x
