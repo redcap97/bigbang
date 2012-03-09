@@ -1,5 +1,5 @@
 (function() {
-  var BattleField, BattleGame, Blast, BlastView, Block, BlockView, Bomb, BombUp, BombView, Bomberman, BombermanView, ENCHANTJS_IMAGE_PATH, FieldObject, FieldView, FirePowerUp, InputController, Item, ItemView, Point, Rectangle, RenderingQueue, ScoreBoard, SpeedUp, Utils, View,
+  var BattleField, BattleGame, Blast, BlastView, Block, BlockView, Bomb, BombUp, BombView, Bomberman, BombermanView, ENCHANTJS_IMAGE_PATH, FieldObject, FieldView, FirePowerUp, GameScore, InputManager, Item, ItemView, Point, Rectangle, RenderingQueue, ScoreBoard, SpeedUp, Utils, View, WinnerScene,
     __slice = Array.prototype.slice,
     __hasProp = Object.prototype.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor; child.__super__ = parent.prototype; return child; };
@@ -35,7 +35,7 @@
       this.setMapData(4, 1, new Block(this, new Point(4, 1)));
       this.setMapData(5, 5, new Block(this, new Point(5, 5)));
       this.setMapData(5, 2, new Block(this, new Point(5, 2)));
-      this.setMapData(1, 2, new BombUp(this, new Point(1, 2)));
+      this.setMapData(1, 2, new SpeedUp(this, new Point(1, 2)));
       this.updateMap();
     }
 
@@ -177,24 +177,24 @@
       this.usedBomb = 0;
       this.canThrow = this.canKick = false;
       this.isDestroyed = false;
-      this.controller = new InputController();
+      this.inputManager = new InputManager();
     }
 
     Bomberman.prototype.update = function(input) {
-      this.controller.update(input);
-      if (this.controller.aDown) this.putBomb();
+      this.inputManager.update(input);
+      if (this.inputManager.aDown) this.putBomb();
       return this.move();
     };
 
     Bomberman.prototype.move = function() {
-      switch (this.controller.direction) {
-        case InputController.LEFT:
+      switch (this.inputManager.direction) {
+        case InputManager.LEFT:
           return this.moveLeft();
-        case InputController.UP:
+        case InputManager.UP:
           return this.moveUp();
-        case InputController.RIGHT:
+        case InputManager.RIGHT:
           return this.moveRight();
-        case InputController.DOWN:
+        case InputManager.DOWN:
           return this.moveDown();
       }
     };
@@ -671,19 +671,19 @@
       this.game = game;
       this.field = new BattleField();
       this.scene = new enchant.Scene();
+      this.game.pushScene(this.scene);
+      this.scene2 = new enchant.Scene();
+      this.game.pushScene(this.scene2);
       this.queue = new RenderingQueue(this.game, this.scene);
+      this.queue2 = new RenderingQueue(this.game, this.scene2);
       this.fieldView = new FieldView(this.queue, this.field);
       this.fieldView.update();
-      this.scene2 = new enchant.Scene();
-      this.queue2 = new RenderingQueue(this.game, this.scene2);
       _ref = this.field.bombermans;
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
         bomberman = _ref[_i];
         bombermanView = new BombermanView(this.queue2, bomberman);
         this.queue2.store(bomberman.objectId, bombermanView);
       }
-      this.game.pushScene(this.scene);
-      this.game.pushScene(this.scene2);
     }
 
     BattleGame.prototype.update = function() {
@@ -748,29 +748,111 @@
 
   ScoreBoard = (function() {
 
-    function ScoreBoard(game, result) {
+    function ScoreBoard(game, gameScore) {
       this.game = game;
+      this.gameScore = gameScore;
       this.scene = new enchant.Scene();
       this.label = new enchant.Label();
       this.label.x = 4;
-      if (result !== null) {
-        this.label.text = "Winner: " + result;
-      } else {
-        this.label.text = "Draw";
+      this.label.text = this.getText();
+      this.scene.addChild(this.label);
+      this.game.pushScene(this.scene);
+      this.count = 0;
+    }
+
+    ScoreBoard.prototype.getText = function() {
+      var i, text, _ref;
+      text = "";
+      if (this.gameScore.draw) text += "Draw<br/>";
+      for (i = 0, _ref = this.gameScore.scores.length; 0 <= _ref ? i < _ref : i > _ref; 0 <= _ref ? i++ : i--) {
+        text += "P" + i + ": " + this.gameScore.scores[i] + "<br/>";
       }
+      return text;
+    };
+
+    ScoreBoard.prototype.update = function() {
+      return this.count += 1;
+    };
+
+    ScoreBoard.prototype.isFinished = function() {
+      return this.count > 30;
+    };
+
+    ScoreBoard.prototype.release = function() {
+      return this.game.removeScene(this.scene);
+    };
+
+    return ScoreBoard;
+
+  })();
+
+  WinnerScene = (function() {
+
+    function WinnerScene(game, gameScore) {
+      this.game = game;
+      this.gameScore = gameScore;
+      this.scene = new enchant.Scene();
+      this.label = new enchant.Label();
+      this.label.x = 4;
+      this.label.text = "Winner: " + (gameScore.getWinner());
       this.scene.addChild(this.label);
       this.game.pushScene(this.scene);
     }
 
-    ScoreBoard.prototype.update = function() {};
+    WinnerScene.prototype.update = function() {};
 
-    ScoreBoard.prototype.isFinished = function() {
+    WinnerScene.prototype.isFinished = function() {
       return false;
     };
 
-    ScoreBoard.prototype.release = function() {};
+    WinnerScene.prototype.release = function() {
+      return this.game.removeScene(this.scene);
+    };
 
-    return ScoreBoard;
+    return WinnerScene;
+
+  })();
+
+  GameScore = (function() {
+
+    function GameScore() {
+      var i;
+      this.scores = (function() {
+        var _results;
+        _results = [];
+        for (i = 0; i < 4; i++) {
+          _results.push(0);
+        }
+        return _results;
+      })();
+      this.draw = false;
+    }
+
+    GameScore.prototype.setDraw = function() {
+      return this.draw = true;
+    };
+
+    GameScore.prototype.setWinner = function(pn) {
+      this.draw = false;
+      return this.scores[pn] += 1;
+    };
+
+    GameScore.prototype.gameOver = function() {
+      var i, _ref;
+      for (i = 0, _ref = this.scores.length; 0 <= _ref ? i < _ref : i > _ref; 0 <= _ref ? i++ : i--) {
+        if (this.scores[i] === 3) return true;
+      }
+      return false;
+    };
+
+    GameScore.prototype.getWinner = function() {
+      var i, _ref;
+      for (i = 0, _ref = this.scores.length; 0 <= _ref ? i < _ref : i > _ref; 0 <= _ref ? i++ : i--) {
+        if (this.scores[i] === 3) return i;
+      }
+    };
+
+    return GameScore;
 
   })();
 
@@ -783,15 +865,27 @@
     game.keybind("Z".charCodeAt(0), 'a');
     game.keybind("X".charCodeAt(0), 'b');
     game.onload = function() {
-      var currentGame;
-      currentGame = null;
+      var currentGame, gameScore;
+      currentGame = new BattleGame(game);
+      gameScore = new GameScore();
       return game.addEventListener('enterframe', function() {
-        var result;
-        if (!currentGame) currentGame = new BattleGame(game);
         if (currentGame.isFinished()) {
-          result = currentGame.isDraw() ? null : currentGame.getWinner();
-          currentGame.release();
-          currentGame = new ScoreBoard(game, result);
+          if (currentGame instanceof BattleGame) {
+            if (currentGame.isDraw()) {
+              gameScore.setDraw();
+            } else {
+              gameScore.setWinner(currentGame.getWinner());
+            }
+            currentGame.release();
+            if (gameScore.gameOver()) {
+              currentGame = new WinnerScene(game, gameScore);
+            } else {
+              currentGame = new ScoreBoard(game, gameScore);
+            }
+          } else if (currentGame instanceof ScoreBoard) {
+            currentGame.release();
+            currentGame = new BattleGame(game);
+          }
         }
         return currentGame.update();
       });
@@ -799,45 +893,45 @@
     return game.start();
   };
 
-  InputController = (function() {
+  InputManager = (function() {
 
-    function InputController() {
+    function InputManager() {
       this.a = this.b = false;
       this.aDown = this.aUp = false;
       this.bDown = this.bUp = false;
-      this.direction = this.oldDirection = InputController.NONE;
+      this.direction = this.oldDirection = InputManager.NONE;
       this.up = this.down = this.left = this.right = false;
     }
 
-    InputController.prototype.update = function(input) {
+    InputManager.prototype.update = function(input) {
       this.updateDirection(input);
       this.updateAButton(input);
       return this.updateBButton(input);
     };
 
-    InputController.prototype.isSamePreviousDirections = function(dirs) {
+    InputManager.prototype.isSamePreviousDirections = function(dirs) {
       return (this.direction === dirs[0] && this.oldDirection === dirs[1]) || (this.direction === dirs[1] && this.oldDirection === dirs[0]);
     };
 
-    InputController.prototype.getInputDirections = function(input) {
+    InputManager.prototype.getInputDirections = function(input) {
       var dirs;
       dirs = [];
-      if (input.left) dirs.push(InputController.LEFT);
-      if (input.up) dirs.push(InputController.UP);
-      if (input.right) dirs.push(InputController.RIGHT);
-      if (input.down) dirs.push(InputController.DOWN);
+      if (input.left) dirs.push(InputManager.LEFT);
+      if (input.up) dirs.push(InputManager.UP);
+      if (input.right) dirs.push(InputManager.RIGHT);
+      if (input.down) dirs.push(InputManager.DOWN);
       return dirs.slice(0, 2);
     };
 
-    InputController.prototype.updateDirection = function(input) {
+    InputManager.prototype.updateDirection = function(input) {
       var dirs;
       dirs = this.getInputDirections(input);
       if (dirs.length === 0) {
-        this.direction = InputController.NONE;
-        return this.oldDirection = InputController.NONE;
+        this.direction = InputManager.NONE;
+        return this.oldDirection = InputManager.NONE;
       } else if (dirs.length === 1) {
         this.direction = dirs[0];
-        return this.oldDirection = InputController.NONE;
+        return this.oldDirection = InputManager.NONE;
       } else if (!this.isSamePreviousDirections(dirs)) {
         if (this.direction === dirs[0]) {
           this.oldDirection = this.direction;
@@ -852,7 +946,7 @@
       }
     };
 
-    InputController.prototype.updateAButton = function(input) {
+    InputManager.prototype.updateAButton = function(input) {
       if (this.a === input.a) {
         this.aDown = this.aUp = false;
       } else if (input.a === true) {
@@ -865,7 +959,7 @@
       return this.a = input.a;
     };
 
-    InputController.prototype.updateBButton = function(input) {
+    InputManager.prototype.updateBButton = function(input) {
       if (this.b === input.b) {
         this.bDown = this.bUp = false;
       } else if (input.b === true) {
@@ -878,19 +972,19 @@
       return this.b = input.b;
     };
 
-    return InputController;
+    return InputManager;
 
   })();
 
-  InputController.NONE = 0;
+  InputManager.NONE = 0;
 
-  InputController.LEFT = 1;
+  InputManager.LEFT = 1;
 
-  InputController.UP = 2;
+  InputManager.UP = 2;
 
-  InputController.RIGHT = 3;
+  InputManager.RIGHT = 3;
 
-  InputController.DOWN = 4;
+  InputManager.DOWN = 4;
 
   Point = (function() {
 

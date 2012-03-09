@@ -1,9 +1,9 @@
-class InputController
+class InputManager
   constructor: ->
     @a = @b = false
     @aDown = @aUp = false
     @bDown = @bUp = false
-    @direction = @oldDirection = InputController.NONE
+    @direction = @oldDirection = InputManager.NONE
     @up = @down = @left = @right = false
 
   update: (input) ->
@@ -18,24 +18,24 @@ class InputController
   getInputDirections: (input) ->
     dirs = []
     if input.left
-      dirs.push(InputController.LEFT)
+      dirs.push(InputManager.LEFT)
     if input.up
-      dirs.push(InputController.UP)
+      dirs.push(InputManager.UP)
     if input.right
-      dirs.push(InputController.RIGHT)
+      dirs.push(InputManager.RIGHT)
     if input.down
-      dirs.push(InputController.DOWN)
+      dirs.push(InputManager.DOWN)
 
     dirs.slice(0, 2)
 
   updateDirection: (input) ->
     dirs = @getInputDirections(input)
     if dirs.length == 0
-      @direction = InputController.NONE
-      @oldDirection = InputController.NONE
+      @direction = InputManager.NONE
+      @oldDirection = InputManager.NONE
     else if dirs.length == 1
       @direction = dirs[0]
-      @oldDirection = InputController.NONE
+      @oldDirection = InputManager.NONE
     else if not @isSamePreviousDirections(dirs)
       if @direction == dirs[0]
         @oldDirection = @direction
@@ -69,8 +69,8 @@ class InputController
       @bUp = true
     @b = input.b
 
-InputController.NONE  = 0
-InputController.LEFT  = 1
-InputController.UP    = 2
-InputController.RIGHT = 3
-InputController.DOWN  = 4
+InputManager.NONE  = 0
+InputManager.LEFT  = 1
+InputManager.UP    = 2
+InputManager.RIGHT = 3
+InputManager.DOWN  = 4

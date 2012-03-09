@@ -5,20 +5,20 @@ class BattleGame
     @field = new BattleField()
 
     @scene = new enchant.Scene()
+    @game.pushScene(@scene)
+
+    @scene2 = new enchant.Scene()
+    @game.pushScene(@scene2)
+
     @queue = new RenderingQueue(@game, @scene)
+    @queue2 = new RenderingQueue(@game, @scene2)
 
     @fieldView = new FieldView(@queue, @field)
     @fieldView.update()
 
-    @scene2 = new enchant.Scene()
-    @queue2 = new RenderingQueue(@game, @scene2)
-
     for bomberman in @field.bombermans
       bombermanView = new BombermanView(@queue2, bomberman)
       @queue2.store(bomberman.objectId, bombermanView)
-
-    @game.pushScene(@scene)
-    @game.pushScene(@scene2)
 
   update: ->
     @field.update(@game.input)
@@ -59,16 +59,46 @@ class BattleGame
     @game.removeScene(@scene2)
 
 class ScoreBoard
-  constructor: (@game, result) ->
+  constructor: (@game, @gameScore) ->
     @scene = new enchant.Scene()
 
     @label = new enchant.Label()
     @label.x = 4
 
-    if result != null
-      @label.text = "Winner: #{result}"
-    else
-      @label.text = "Draw"
+    @label.text = @getText()
+
+    @scene.addChild(@label)
+    @game.pushScene(@scene)
+
+    @count = 0
+
+  getText: ->
+    text = ""
+    if @gameScore.draw
+      text += "Draw<br/>"
+
+    for i in [0...@gameScore.scores.length]
+      text += "P#{i}: #{@gameScore.scores[i]}<br/>"
+
+    text
+
+  update: ->
+    @count += 1
+
+  isFinished: ->
+    @count > 30
+
+  release: ->
+    @game.removeScene(@scene)
+
+class WinnerScene
+  constructor: (@game, @gameScore) ->
+    @scene = new enchant.Scene()
+
+    @label = new enchant.Label()
+    @label.x = 4
+
+    @label.text = "Winner: #{gameScore.getWinner()}"
 
     @scene.addChild(@label)
     @game.pushScene(@scene)
@@ -79,6 +109,28 @@ class ScoreBoard
     false
 
   release: ->
+    @game.removeScene(@scene)
+
+class GameScore
+  constructor: ->
+    @scores = (0 for i in [0...4])
+    @draw = false
+
+  setDraw: ->
+    @draw = true
+
+  setWinner: (pn) ->
+    @draw = false
+    @scores[pn] += 1
+
+  gameOver: ->
+    for i in [0 ... @scores.length]
+      return true if @scores[i] == 3
+    false
+
+  getWinner: ->
+    for i in [0 ... @scores.length]
+      return i if @scores[i] == 3
 
 window.onload = ->
   game = new enchant.Game(320, 320)
@@ -90,19 +142,26 @@ window.onload = ->
   game.keybind("X".charCodeAt(0), 'b')
 
   game.onload = ->
-    currentGame = null
+    currentGame = new BattleGame(game)
+    gameScore = new GameScore()
+
     game.addEventListener 'enterframe', ->
-      unless currentGame
-        currentGame = new BattleGame(game)
-
       if currentGame.isFinished()
-        result = if currentGame.isDraw()
-          null
-        else
-          currentGame.getWinner()
+        if currentGame instanceof BattleGame
+          if currentGame.isDraw()
+            gameScore.setDraw()
+          else
+            gameScore.setWinner(currentGame.getWinner())
 
-        currentGame.release()
-        currentGame = new ScoreBoard(game, result)
+          currentGame.release()
+          if gameScore.gameOver()
+            currentGame = new WinnerScene(game, gameScore)
+          else
+            currentGame = new ScoreBoard(game, gameScore)
+
+        else if currentGame instanceof ScoreBoard
+          currentGame.release()
+          currentGame = new BattleGame(game)
 
       currentGame.update()
 
