@@ -8,3 +8,29 @@ Utils =
 
   random: (max) ->
     Math.floor(Math.random() * max)
+
+  inputFlags:
+    left:  1
+    up:    2
+    right: 4
+    down:  8
+    a:     16
+    b:     32
+
+  encodeInput: (input) ->
+    value = 0
+    for own key, flag of @inputFlags
+      value |= flag if input[key]
+    value
+
+  decodeInput: (value) ->
+    input =
+      a:     false,
+      b:     false,
+      left:  false,
+      up:    false,
+      right: false,
+      down:  false
+    for own key, flag of @inputFlags
+      input[key] = true if value & flag
+    input

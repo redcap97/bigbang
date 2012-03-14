@@ -20,17 +20,43 @@ class BattleGame
       bombermanView = new BombermanView(@queue2, bomberman)
       @queue2.store(bomberman.objectId, bombermanView)
 
-  update: ->
-    @field.update(@game.input)
+    @inputBuffer = []
+    @socket = new WebSocket('ws://ds.local:8080', 'echo-protocol')
+    @socket.binaryType = 'arraybuffer'
+    @socket.onmessage = (event) =>
+      console.timeEnd('1')
+      byteArray = new Uint8Array(event.data)
+      inputs = []
+      for i in [0 ... byteArray.length]
+        inputs.push(Utils.decodeInput(byteArray[i]))
+      @inputBuffer.push(inputs)
 
-    @queue.update()
-    @queue2.update()
+  update: ->
+    while @inputBuffer.length > 0
+      inputs = @inputBuffer.shift()
+      @field.update(inputs)
+
+      @queue.update()
+      @queue2.update()
 
     for i in [0 ... @field.height]
       for j in [0 ... @field.width]
         data = @field.mutableDataMap[i][j]
         if data and !@queue.contains(data.objectId)
           @queue.store(data.objectId, @createView(data))
+
+    @sendInput(@game.input)
+
+  sendInput: (input) ->
+    v = Utils.encodeInput(input)
+    return if v == 0
+
+    byteArray = new Uint8Array(1)
+    byteArray[0] = v
+
+    console.time('1')
+    if @socket.readyState == 1
+      @socket.send(byteArray.buffer)
 
   createView: (data) ->
     switch data.type
@@ -55,6 +81,7 @@ class BattleGame
     @field.getWinner()
 
   release: ->
+    @socket.close()
     @game.removeScene(@scene)
     @game.removeScene(@scene2)
 
@@ -137,6 +164,8 @@ window.onload = ->
   game.scale = 3.0
   game.preload(ENCHANTJS_IMAGE_PATH + 'chara0.gif')
   game.preload(ENCHANTJS_IMAGE_PATH + 'map0.gif')
+
+  game.fps = 30
 
   game.keybind("Z".charCodeAt(0), 'a')
   game.keybind("X".charCodeAt(0), 'b')
