@@ -691,7 +691,7 @@
         this.queue2.store(bomberman.objectId, bombermanView);
       }
       this.inputBuffer = [];
-      this.socket = new WebSocket('ws://ds.local:8080', 'echo-protocol');
+      this.socket = new WebSocket('ws://localhost:8080', 'bigbang');
       this.socket.binaryType = 'arraybuffer';
       this.socket.onmessage = function(event) {
         var byteArray, i, inputs, _ref2;
@@ -704,6 +704,7 @@
         return _this.inputBuffer.push(inputs);
       };
       this.count = 0;
+      this.updateQueue();
     }
 
     BattleGame.prototype.update = function() {
@@ -711,8 +712,7 @@
       while (this.inputBuffer.length > 0) {
         inputs = this.inputBuffer.shift();
         this.field.update(inputs);
-        this.queue.update();
-        this.queue2.update();
+        this.updateQueue();
       }
       for (i = 0, _ref = this.field.height; 0 <= _ref ? i < _ref : i > _ref; 0 <= _ref ? i++ : i--) {
         for (j = 0, _ref2 = this.field.width; 0 <= _ref2 ? j < _ref2 : j > _ref2; 0 <= _ref2 ? j++ : j--) {
@@ -724,6 +724,11 @@
       }
       this.count = (this.count + 1) % 2;
       if (this.count === 0) return this.sendInput(this.game.input);
+    };
+
+    BattleGame.prototype.updateQueue = function() {
+      this.queue.update();
+      return this.queue2.update();
     };
 
     BattleGame.prototype.sendInput = function(input) {

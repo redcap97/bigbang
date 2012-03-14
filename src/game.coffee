@@ -21,7 +21,7 @@ class BattleGame
       @queue2.store(bomberman.objectId, bombermanView)
 
     @inputBuffer = []
-    @socket = new WebSocket('ws://ds.local:8080', 'echo-protocol')
+    @socket = new WebSocket('ws://localhost:8080', 'bigbang')
     @socket.binaryType = 'arraybuffer'
     @socket.onmessage = (event) =>
       console.timeEnd('1')
@@ -32,14 +32,14 @@ class BattleGame
       @inputBuffer.push(inputs)
 
     @count = 0
+    @updateQueue()
 
   update: ->
     while @inputBuffer.length > 0
       inputs = @inputBuffer.shift()
       @field.update(inputs)
+      @updateQueue()
 
-      @queue.update()
-      @queue2.update()
 
     for i in [0 ... @field.height]
       for j in [0 ... @field.width]
@@ -49,6 +49,10 @@ class BattleGame
 
     @count = (@count+1)%2
     @sendInput(@game.input) if @count == 0
+
+  updateQueue: ->
+    @queue.update()
+    @queue2.update()
 
   sendInput: (input) ->
     v = Utils.encodeInput(input)
