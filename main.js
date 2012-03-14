@@ -51,8 +51,8 @@
       return this.setMapData(x, y, null);
     };
 
-    BattleField.prototype.update = function(input) {
-      var bomberman, data, ix, _i, _len, _ref;
+    BattleField.prototype.update = function(inputs) {
+      var bomberman, data, i, ix, _i, _len, _ref, _ref2;
       _ref = this.bombermans;
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
         bomberman = _ref[_i];
@@ -67,7 +67,11 @@
             data.destroy();
         }
       }
-      if (!this.bombermans[0].isDestroyed) this.bombermans[0].update(input);
+      for (i = 0, _ref2 = this.bombermans.length; 0 <= _ref2 ? i < _ref2 : i > _ref2; 0 <= _ref2 ? i++ : i--) {
+        if (inputs[i] && !this.bombermans[i].isDestroyed) {
+          this.bombermans[i].update(inputs[i]);
+        }
+      }
       return this.updateMap();
     };
 
@@ -667,7 +671,8 @@
   BattleGame = (function() {
 
     function BattleGame(game) {
-      var bomberman, bombermanView, _i, _len, _ref;
+      var bomberman, bombermanView, _i, _len, _ref,
+        _this = this;
       this.game = game;
       this.field = new BattleField();
       this.scene = new enchant.Scene();
@@ -684,30 +689,48 @@
         bombermanView = new BombermanView(this.queue2, bomberman);
         this.queue2.store(bomberman.objectId, bombermanView);
       }
+      this.inputBuffer = [];
+      this.socket = new WebSocket('ws://ds.local:8080', 'echo-protocol');
+      this.socket.binaryType = 'arraybuffer';
+      this.socket.onmessage = function(event) {
+        var byteArray, i, inputs, _ref2;
+        console.timeEnd('1');
+        byteArray = new Uint8Array(event.data);
+        inputs = [];
+        for (i = 0, _ref2 = byteArray.length; 0 <= _ref2 ? i < _ref2 : i > _ref2; 0 <= _ref2 ? i++ : i--) {
+          inputs.push(Utils.decodeInput(byteArray[i]));
+        }
+        return _this.inputBuffer.push(inputs);
+      };
     }
 
     BattleGame.prototype.update = function() {
-      var data, i, j, _ref, _results;
-      this.field.update(this.game.input);
-      this.queue.update();
-      this.queue2.update();
-      _results = [];
-      for (i = 0, _ref = this.field.height; 0 <= _ref ? i < _ref : i > _ref; 0 <= _ref ? i++ : i--) {
-        _results.push((function() {
-          var _ref2, _results2;
-          _results2 = [];
-          for (j = 0, _ref2 = this.field.width; 0 <= _ref2 ? j < _ref2 : j > _ref2; 0 <= _ref2 ? j++ : j--) {
-            data = this.field.mutableDataMap[i][j];
-            if (data && !this.queue.contains(data.objectId)) {
-              _results2.push(this.queue.store(data.objectId, this.createView(data)));
-            } else {
-              _results2.push(void 0);
-            }
-          }
-          return _results2;
-        }).call(this));
+      var data, i, inputs, j, _ref, _ref2;
+      while (this.inputBuffer.length > 0) {
+        inputs = this.inputBuffer.shift();
+        this.field.update(inputs);
+        this.queue.update();
+        this.queue2.update();
       }
-      return _results;
+      for (i = 0, _ref = this.field.height; 0 <= _ref ? i < _ref : i > _ref; 0 <= _ref ? i++ : i--) {
+        for (j = 0, _ref2 = this.field.width; 0 <= _ref2 ? j < _ref2 : j > _ref2; 0 <= _ref2 ? j++ : j--) {
+          data = this.field.mutableDataMap[i][j];
+          if (data && !this.queue.contains(data.objectId)) {
+            this.queue.store(data.objectId, this.createView(data));
+          }
+        }
+      }
+      return this.sendInput(this.game.input);
+    };
+
+    BattleGame.prototype.sendInput = function(input) {
+      var byteArray, v;
+      v = Utils.encodeInput(input);
+      if (v === 0) return;
+      byteArray = new Uint8Array(1);
+      byteArray[0] = v;
+      console.time('1');
+      if (this.socket.readyState === 1) return this.socket.send(byteArray.buffer);
     };
 
     BattleGame.prototype.createView = function(data) {
@@ -738,6 +761,7 @@
     };
 
     BattleGame.prototype.release = function() {
+      this.socket.close();
       this.game.removeScene(this.scene);
       return this.game.removeScene(this.scene2);
     };
@@ -862,6 +886,7 @@
     game.scale = 3.0;
     game.preload(ENCHANTJS_IMAGE_PATH + 'chara0.gif');
     game.preload(ENCHANTJS_IMAGE_PATH + 'map0.gif');
+    game.fps = 30;
     game.keybind("Z".charCodeAt(0), 'a');
     game.keybind("X".charCodeAt(0), 'b');
     game.onload = function() {
@@ -1105,6 +1130,43 @@
     })(),
     random: function(max) {
       return Math.floor(Math.random() * max);
+    },
+    inputFlags: {
+      left: 1,
+      up: 2,
+      right: 4,
+      down: 8,
+      a: 16,
+      b: 32
+    },
+    encodeInput: function(input) {
+      var flag, key, value, _ref;
+      value = 0;
+      _ref = this.inputFlags;
+      for (key in _ref) {
+        if (!__hasProp.call(_ref, key)) continue;
+        flag = _ref[key];
+        if (input[key]) value |= flag;
+      }
+      return value;
+    },
+    decodeInput: function(value) {
+      var flag, input, key, _ref;
+      input = {
+        a: false,
+        b: false,
+        left: false,
+        up: false,
+        right: false,
+        down: false
+      };
+      _ref = this.inputFlags;
+      for (key in _ref) {
+        if (!__hasProp.call(_ref, key)) continue;
+        flag = _ref[key];
+        if (value & flag) input[key] = true;
+      }
+      return input;
     }
   };
 
