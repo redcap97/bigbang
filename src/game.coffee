@@ -24,7 +24,6 @@ class BattleGame
     @socket = new WebSocket('ws://localhost:8080', 'bigbang')
     @socket.binaryType = 'arraybuffer'
     @socket.onmessage = (event) =>
-      console.timeEnd('1')
       byteArray = new Uint8Array(event.data)
       inputs = []
       for i in [0 ... byteArray.length]
@@ -39,7 +38,6 @@ class BattleGame
       inputs = @inputBuffer.shift()
       @field.update(inputs)
       @updateQueue()
-
 
     for i in [0 ... @field.height]
       for j in [0 ... @field.width]
@@ -61,7 +59,6 @@ class BattleGame
     byteArray = new Uint8Array(1)
     byteArray[0] = v
 
-    console.time('1')
     if @socket.readyState == 1
       @socket.send(byteArray.buffer)
 
@@ -92,79 +89,29 @@ class BattleGame
     @game.removeScene(@scene)
     @game.removeScene(@scene2)
 
-class ScoreBoard
-  constructor: (@game, @gameScore) ->
+class GameResult
+  constructor: (@game) ->
     @scene = new enchant.Scene()
 
     @label = new enchant.Label()
     @label.x = 4
 
-    @label.text = @getText()
-
     @scene.addChild(@label)
     @game.pushScene(@scene)
-
-    @count = 0
-
-  getText: ->
-    text = ""
-    if @gameScore.draw
-      text += "Draw<br/>"
-
-    for i in [0...@gameScore.scores.length]
-      text += "P#{i}: #{@gameScore.scores[i]}<br/>"
-
-    text
-
-  update: ->
-    @count += 1
-
-  isFinished: ->
-    @count > 30
-
-  release: ->
-    @game.removeScene(@scene)
-
-class WinnerScene
-  constructor: (@game, @gameScore) ->
-    @scene = new enchant.Scene()
-
-    @label = new enchant.Label()
-    @label.x = 4
-
-    @label.text = "Winner: #{gameScore.getWinner()}"
-
-    @scene.addChild(@label)
-    @game.pushScene(@scene)
-
-  update: ->
-
-  isFinished: ->
-    false
-
-  release: ->
-    @game.removeScene(@scene)
-
-class GameScore
-  constructor: ->
-    @scores = (0 for i in [0...4])
-    @draw = false
-
-  setDraw: ->
-    @draw = true
 
   setWinner: (pn) ->
-    @draw = false
-    @scores[pn] += 1
+    @label.text = "Winner: #{pn}"
 
-  gameOver: ->
-    for i in [0 ... @scores.length]
-      return true if @scores[i] == 3
+  setDraw: ->
+    @label.text = "Draw"
+
+  update: ->
+
+  isFinished: ->
     false
 
-  getWinner: ->
-    for i in [0 ... @scores.length]
-      return i if @scores[i] == 3
+  release: ->
+    @game.removeScene(@scene)
 
 window.onload = ->
   game = new enchant.Game(320, 320)
@@ -178,27 +125,24 @@ window.onload = ->
   game.keybind("X".charCodeAt(0), 'b')
 
   game.onload = ->
-    currentGame = new BattleGame(game)
-    gameScore = new GameScore()
+    currentScene = new BattleGame(game)
 
     game.addEventListener 'enterframe', ->
-      if currentGame.isFinished()
-        if currentGame instanceof BattleGame
-          if currentGame.isDraw()
-            gameScore.setDraw()
+      if currentScene.isFinished()
+        if currentScene instanceof BattleGame
+          gameResult = new GameResult(game)
+          if currentScene.isDraw()
+            gameResult.setDraw()
           else
-            gameScore.setWinner(currentGame.getWinner())
+            gameResult.setWinner(currentScene.getWinner())
+          currentScene.release()
+          currentScene = gameResult
+        else if currentScene instanceof GameResult
+          currentScene.release()
+          currentScene = new BattleGame(game)
+        else
+          throw new Error("Unknown scene")
 
-          currentGame.release()
-          if gameScore.gameOver()
-            currentGame = new WinnerScene(game, gameScore)
-          else
-            currentGame = new ScoreBoard(game, gameScore)
-
-        else if currentGame instanceof ScoreBoard
-          currentGame.release()
-          currentGame = new BattleGame(game)
-
-      currentGame.update()
+      currentScene.update()
 
   game.start()
