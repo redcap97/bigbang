@@ -185,6 +185,7 @@
     }
 
     Bomberman.prototype.update = function(input) {
+      if (Utils.encodeInput(input) === 0) return;
       this.inputManager.update(input);
       if (this.inputManager.aDown) this.putBomb();
       return this.move();
@@ -702,6 +703,7 @@
         }
         return _this.inputBuffer.push(inputs);
       };
+      this.count = 0;
     }
 
     BattleGame.prototype.update = function() {
@@ -720,7 +722,8 @@
           }
         }
       }
-      return this.sendInput(this.game.input);
+      this.count = (this.count + 1) % 2;
+      if (this.count === 0) return this.sendInput(this.game.input);
     };
 
     BattleGame.prototype.sendInput = function(input) {
@@ -886,7 +889,7 @@
     game.scale = 3.0;
     game.preload(ENCHANTJS_IMAGE_PATH + 'chara0.gif');
     game.preload(ENCHANTJS_IMAGE_PATH + 'map0.gif');
-    game.fps = 30;
+    game.fps = 60;
     game.keybind("Z".charCodeAt(0), 'a');
     game.keybind("X".charCodeAt(0), 'b');
     game.onload = function() {

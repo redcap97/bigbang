@@ -31,6 +31,8 @@ class BattleGame
         inputs.push(Utils.decodeInput(byteArray[i]))
       @inputBuffer.push(inputs)
 
+    @count = 0
+
   update: ->
     while @inputBuffer.length > 0
       inputs = @inputBuffer.shift()
@@ -45,7 +47,8 @@ class BattleGame
         if data and !@queue.contains(data.objectId)
           @queue.store(data.objectId, @createView(data))
 
-    @sendInput(@game.input)
+    @count = (@count+1)%2
+    @sendInput(@game.input) if @count == 0
 
   sendInput: (input) ->
     v = Utils.encodeInput(input)
@@ -165,7 +168,7 @@ window.onload = ->
   game.preload(ENCHANTJS_IMAGE_PATH + 'chara0.gif')
   game.preload(ENCHANTJS_IMAGE_PATH + 'map0.gif')
 
-  game.fps = 30
+  game.fps = 60
 
   game.keybind("Z".charCodeAt(0), 'a')
   game.keybind("X".charCodeAt(0), 'b')

@@ -12,8 +12,9 @@ class Bomberman
     @inputManager = new InputManager()
 
   update: (input) ->
-    @inputManager.update(input)
+    return if Utils.encodeInput(input) == 0
 
+    @inputManager.update(input)
     @putBomb() if @inputManager.aDown
     @move()
 
