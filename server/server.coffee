@@ -34,6 +34,11 @@ class Group
   add: (player) ->
     @players.push(player)
 
+  purge: ->
+    for i in ([0 ... @players.length].reverse())
+      unless @players[i].isConnected()
+        @players.splice(i, 1)
+
   startGame: ->
     player.clearBuffer() for player in @players
 
@@ -83,6 +88,7 @@ webSocketServer.on 'request', (request) ->
   connection = request.accept('bigbang', request.origin)
   console.log((new Date()) + ' Connection accepted.')
 
+  group.purge()
   player = new Player(connection)
   group.add(player)
 
