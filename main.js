@@ -1,5 +1,5 @@
 (function() {
-  var BattleField, BattleGame, Blast, BlastView, Block, BlockView, Bomb, BombUp, BombView, Bomberman, BombermanView, ENCHANTJS_IMAGE_PATH, FieldObject, FieldView, FirePowerUp, GameScore, InputManager, Item, ItemView, Point, Rectangle, RenderingQueue, ScoreBoard, SpeedUp, Utils, View, WinnerScene,
+  var BattleField, BattleGame, Blast, BlastView, Block, BlockView, Bomb, BombUp, BombView, Bomberman, BombermanView, ENCHANTJS_IMAGE_PATH, FieldObject, FieldView, FirePowerUp, GameResult, InputManager, Item, ItemView, Point, Rectangle, RenderingQueue, SpeedUp, Utils, View,
     __slice = Array.prototype.slice,
     __hasProp = Object.prototype.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor; child.__super__ = parent.prototype; return child; };
@@ -164,6 +164,113 @@
     };
 
     return BattleField;
+
+  })();
+
+  BattleGame = (function() {
+
+    function BattleGame(game) {
+      var bomberman, bombermanView, _i, _len, _ref,
+        _this = this;
+      this.game = game;
+      this.field = new BattleField();
+      this.scene = new enchant.Scene();
+      this.game.pushScene(this.scene);
+      this.scene2 = new enchant.Scene();
+      this.game.pushScene(this.scene2);
+      this.queue = new RenderingQueue(this.game, this.scene);
+      this.queue2 = new RenderingQueue(this.game, this.scene2);
+      this.fieldView = new FieldView(this.queue, this.field);
+      this.fieldView.update();
+      _ref = this.field.bombermans;
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        bomberman = _ref[_i];
+        bombermanView = new BombermanView(this.queue2, bomberman);
+        this.queue2.store(bomberman.objectId, bombermanView);
+      }
+      this.inputBuffer = [];
+      this.socket = new WebSocket('ws://localhost:8080', 'bigbang');
+      this.socket.binaryType = 'arraybuffer';
+      this.socket.onmessage = function(event) {
+        var byteArray, i, inputs, _ref2;
+        byteArray = new Uint8Array(event.data);
+        inputs = [];
+        for (i = 0, _ref2 = byteArray.length; 0 <= _ref2 ? i < _ref2 : i > _ref2; 0 <= _ref2 ? i++ : i--) {
+          inputs.push(Utils.decodeInput(byteArray[i]));
+        }
+        return _this.inputBuffer.push(inputs);
+      };
+      this.count = 0;
+      this.updateQueue();
+    }
+
+    BattleGame.prototype.update = function() {
+      var data, i, inputs, j, _ref, _ref2;
+      while (this.inputBuffer.length > 0) {
+        inputs = this.inputBuffer.shift();
+        this.field.update(inputs);
+        this.updateQueue();
+      }
+      for (i = 0, _ref = this.field.height; 0 <= _ref ? i < _ref : i > _ref; 0 <= _ref ? i++ : i--) {
+        for (j = 0, _ref2 = this.field.width; 0 <= _ref2 ? j < _ref2 : j > _ref2; 0 <= _ref2 ? j++ : j--) {
+          data = this.field.mutableDataMap[i][j];
+          if (data && !this.queue.contains(data.objectId)) {
+            this.queue.store(data.objectId, this.createView(data));
+          }
+        }
+      }
+      this.count = (this.count + 1) % 2;
+      if (this.count === 0) return this.sendInput(this.game.input);
+    };
+
+    BattleGame.prototype.updateQueue = function() {
+      this.queue.update();
+      return this.queue2.update();
+    };
+
+    BattleGame.prototype.sendInput = function(input) {
+      var byteArray, v;
+      v = Utils.encodeInput(input);
+      if (v === 0) return;
+      byteArray = new Uint8Array(1);
+      byteArray[0] = v;
+      if (this.socket.readyState === 1) return this.socket.send(byteArray.buffer);
+    };
+
+    BattleGame.prototype.createView = function(data) {
+      switch (data.type) {
+        case FieldObject.TYPE_BOMB:
+          return new BombView(this.queue, data);
+        case FieldObject.TYPE_BLAST:
+          return new BlastView(this.queue, data);
+        case FieldObject.TYPE_BLOCK:
+          return new BlockView(this.queue, data);
+        case FieldObject.TYPE_ITEM:
+          return new ItemView(this.queue, data);
+        default:
+          throw Error("Unknown object");
+      }
+    };
+
+    BattleGame.prototype.isFinished = function() {
+      return this.field.isFinished();
+    };
+
+    BattleGame.prototype.isDraw = function() {
+      return this.field.isDraw();
+    };
+
+    BattleGame.prototype.getWinner = function() {
+      return this.field.getWinner();
+    };
+
+    BattleGame.prototype.release = function() {
+      this.socket.close();
+      this.game.removeScene(this.scene);
+      return this.game.removeScene(this.scene2);
+    };
+
+    return BattleGame;
 
   })();
 
@@ -667,264 +774,38 @@
 
   })(Item);
 
-  ENCHANTJS_IMAGE_PATH = "enchantjs/images/";
+  GameResult = (function() {
 
-  BattleGame = (function() {
-
-    function BattleGame(game) {
-      var bomberman, bombermanView, _i, _len, _ref,
-        _this = this;
+    function GameResult(game) {
       this.game = game;
-      this.field = new BattleField();
-      this.scene = new enchant.Scene();
-      this.game.pushScene(this.scene);
-      this.scene2 = new enchant.Scene();
-      this.game.pushScene(this.scene2);
-      this.queue = new RenderingQueue(this.game, this.scene);
-      this.queue2 = new RenderingQueue(this.game, this.scene2);
-      this.fieldView = new FieldView(this.queue, this.field);
-      this.fieldView.update();
-      _ref = this.field.bombermans;
-      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-        bomberman = _ref[_i];
-        bombermanView = new BombermanView(this.queue2, bomberman);
-        this.queue2.store(bomberman.objectId, bombermanView);
-      }
-      this.inputBuffer = [];
-      this.socket = new WebSocket('ws://localhost:8080', 'bigbang');
-      this.socket.binaryType = 'arraybuffer';
-      this.socket.onmessage = function(event) {
-        var byteArray, i, inputs, _ref2;
-        console.timeEnd('1');
-        byteArray = new Uint8Array(event.data);
-        inputs = [];
-        for (i = 0, _ref2 = byteArray.length; 0 <= _ref2 ? i < _ref2 : i > _ref2; 0 <= _ref2 ? i++ : i--) {
-          inputs.push(Utils.decodeInput(byteArray[i]));
-        }
-        return _this.inputBuffer.push(inputs);
-      };
-      this.count = 0;
-      this.updateQueue();
-    }
-
-    BattleGame.prototype.update = function() {
-      var data, i, inputs, j, _ref, _ref2;
-      while (this.inputBuffer.length > 0) {
-        inputs = this.inputBuffer.shift();
-        this.field.update(inputs);
-        this.updateQueue();
-      }
-      for (i = 0, _ref = this.field.height; 0 <= _ref ? i < _ref : i > _ref; 0 <= _ref ? i++ : i--) {
-        for (j = 0, _ref2 = this.field.width; 0 <= _ref2 ? j < _ref2 : j > _ref2; 0 <= _ref2 ? j++ : j--) {
-          data = this.field.mutableDataMap[i][j];
-          if (data && !this.queue.contains(data.objectId)) {
-            this.queue.store(data.objectId, this.createView(data));
-          }
-        }
-      }
-      this.count = (this.count + 1) % 2;
-      if (this.count === 0) return this.sendInput(this.game.input);
-    };
-
-    BattleGame.prototype.updateQueue = function() {
-      this.queue.update();
-      return this.queue2.update();
-    };
-
-    BattleGame.prototype.sendInput = function(input) {
-      var byteArray, v;
-      v = Utils.encodeInput(input);
-      if (v === 0) return;
-      byteArray = new Uint8Array(1);
-      byteArray[0] = v;
-      console.time('1');
-      if (this.socket.readyState === 1) return this.socket.send(byteArray.buffer);
-    };
-
-    BattleGame.prototype.createView = function(data) {
-      switch (data.type) {
-        case FieldObject.TYPE_BOMB:
-          return new BombView(this.queue, data);
-        case FieldObject.TYPE_BLAST:
-          return new BlastView(this.queue, data);
-        case FieldObject.TYPE_BLOCK:
-          return new BlockView(this.queue, data);
-        case FieldObject.TYPE_ITEM:
-          return new ItemView(this.queue, data);
-        default:
-          throw Error("Unknown object");
-      }
-    };
-
-    BattleGame.prototype.isFinished = function() {
-      return this.field.isFinished();
-    };
-
-    BattleGame.prototype.isDraw = function() {
-      return this.field.isDraw();
-    };
-
-    BattleGame.prototype.getWinner = function() {
-      return this.field.getWinner();
-    };
-
-    BattleGame.prototype.release = function() {
-      this.socket.close();
-      this.game.removeScene(this.scene);
-      return this.game.removeScene(this.scene2);
-    };
-
-    return BattleGame;
-
-  })();
-
-  ScoreBoard = (function() {
-
-    function ScoreBoard(game, gameScore) {
-      this.game = game;
-      this.gameScore = gameScore;
       this.scene = new enchant.Scene();
       this.label = new enchant.Label();
       this.label.x = 4;
-      this.label.text = this.getText();
-      this.scene.addChild(this.label);
-      this.game.pushScene(this.scene);
-      this.count = 0;
-    }
-
-    ScoreBoard.prototype.getText = function() {
-      var i, text, _ref;
-      text = "";
-      if (this.gameScore.draw) text += "Draw<br/>";
-      for (i = 0, _ref = this.gameScore.scores.length; 0 <= _ref ? i < _ref : i > _ref; 0 <= _ref ? i++ : i--) {
-        text += "P" + i + ": " + this.gameScore.scores[i] + "<br/>";
-      }
-      return text;
-    };
-
-    ScoreBoard.prototype.update = function() {
-      return this.count += 1;
-    };
-
-    ScoreBoard.prototype.isFinished = function() {
-      return this.count > 30;
-    };
-
-    ScoreBoard.prototype.release = function() {
-      return this.game.removeScene(this.scene);
-    };
-
-    return ScoreBoard;
-
-  })();
-
-  WinnerScene = (function() {
-
-    function WinnerScene(game, gameScore) {
-      this.game = game;
-      this.gameScore = gameScore;
-      this.scene = new enchant.Scene();
-      this.label = new enchant.Label();
-      this.label.x = 4;
-      this.label.text = "Winner: " + (gameScore.getWinner());
       this.scene.addChild(this.label);
       this.game.pushScene(this.scene);
     }
 
-    WinnerScene.prototype.update = function() {};
+    GameResult.prototype.setWinner = function(pn) {
+      return this.label.text = "Winner: " + pn;
+    };
 
-    WinnerScene.prototype.isFinished = function() {
+    GameResult.prototype.setDraw = function() {
+      return this.label.text = "Draw";
+    };
+
+    GameResult.prototype.update = function() {};
+
+    GameResult.prototype.isFinished = function() {
       return false;
     };
 
-    WinnerScene.prototype.release = function() {
+    GameResult.prototype.release = function() {
       return this.game.removeScene(this.scene);
     };
 
-    return WinnerScene;
+    return GameResult;
 
   })();
-
-  GameScore = (function() {
-
-    function GameScore() {
-      var i;
-      this.scores = (function() {
-        var _results;
-        _results = [];
-        for (i = 0; i < 4; i++) {
-          _results.push(0);
-        }
-        return _results;
-      })();
-      this.draw = false;
-    }
-
-    GameScore.prototype.setDraw = function() {
-      return this.draw = true;
-    };
-
-    GameScore.prototype.setWinner = function(pn) {
-      this.draw = false;
-      return this.scores[pn] += 1;
-    };
-
-    GameScore.prototype.gameOver = function() {
-      var i, _ref;
-      for (i = 0, _ref = this.scores.length; 0 <= _ref ? i < _ref : i > _ref; 0 <= _ref ? i++ : i--) {
-        if (this.scores[i] === 3) return true;
-      }
-      return false;
-    };
-
-    GameScore.prototype.getWinner = function() {
-      var i, _ref;
-      for (i = 0, _ref = this.scores.length; 0 <= _ref ? i < _ref : i > _ref; 0 <= _ref ? i++ : i--) {
-        if (this.scores[i] === 3) return i;
-      }
-    };
-
-    return GameScore;
-
-  })();
-
-  window.onload = function() {
-    var game;
-    game = new enchant.Game(320, 320);
-    game.scale = 3.0;
-    game.preload(ENCHANTJS_IMAGE_PATH + 'chara0.gif');
-    game.preload(ENCHANTJS_IMAGE_PATH + 'map0.gif');
-    game.fps = 60;
-    game.keybind("Z".charCodeAt(0), 'a');
-    game.keybind("X".charCodeAt(0), 'b');
-    game.onload = function() {
-      var currentGame, gameScore;
-      currentGame = new BattleGame(game);
-      gameScore = new GameScore();
-      return game.addEventListener('enterframe', function() {
-        if (currentGame.isFinished()) {
-          if (currentGame instanceof BattleGame) {
-            if (currentGame.isDraw()) {
-              gameScore.setDraw();
-            } else {
-              gameScore.setWinner(currentGame.getWinner());
-            }
-            currentGame.release();
-            if (gameScore.gameOver()) {
-              currentGame = new WinnerScene(game, gameScore);
-            } else {
-              currentGame = new ScoreBoard(game, gameScore);
-            }
-          } else if (currentGame instanceof ScoreBoard) {
-            currentGame.release();
-            currentGame = new BattleGame(game);
-          }
-        }
-        return currentGame.update();
-      });
-    };
-    return game.start();
-  };
 
   InputManager = (function() {
 
@@ -1018,6 +899,45 @@
   InputManager.RIGHT = 3;
 
   InputManager.DOWN = 4;
+
+  ENCHANTJS_IMAGE_PATH = "enchantjs/images/";
+
+  window.onload = function() {
+    var game;
+    game = new enchant.Game(320, 320);
+    game.scale = 3.0;
+    game.preload(ENCHANTJS_IMAGE_PATH + 'chara0.gif');
+    game.preload(ENCHANTJS_IMAGE_PATH + 'map0.gif');
+    game.fps = 60;
+    game.keybind("Z".charCodeAt(0), 'a');
+    game.keybind("X".charCodeAt(0), 'b');
+    game.onload = function() {
+      var currentScene;
+      currentScene = new BattleGame(game);
+      return game.addEventListener('enterframe', function() {
+        var gameResult;
+        if (currentScene.isFinished()) {
+          if (currentScene instanceof BattleGame) {
+            gameResult = new GameResult(game);
+            if (currentScene.isDraw()) {
+              gameResult.setDraw();
+            } else {
+              gameResult.setWinner(currentScene.getWinner());
+            }
+            currentScene.release();
+            currentScene = gameResult;
+          } else if (currentScene instanceof GameResult) {
+            currentScene.release();
+            currentScene = new BattleGame(game);
+          } else {
+            throw new Error("Unknown scene");
+          }
+        }
+        return currentScene.update();
+      });
+    };
+    return game.start();
+  };
 
   Point = (function() {
 
