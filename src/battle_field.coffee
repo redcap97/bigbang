@@ -7,14 +7,14 @@ class BattleField
     @width    = 15
 
     @bombermans = [
-      new Bomberman(this, @tileSize,    @tileSize),
-      new Bomberman(this, @tileSize*13, @tileSize),
-      new Bomberman(this, @tileSize,    @tileSize*11),
-      new Bomberman(this, @tileSize*13, @tileSize*11)
+      new Bomberman(@, @tileSize,    @tileSize),
+      new Bomberman(@, @tileSize*13, @tileSize),
+      new Bomberman(@, @tileSize,    @tileSize*11),
+      new Bomberman(@, @tileSize*13, @tileSize*11)
     ]
 
-    w = new FieldObject(FieldObject.TYPE_WALL,   true)
-    g = new FieldObject(FieldObject.TYPE_GROUND, false)
+    w = new Wall(@)
+    g = new Ground(@)
 
     @staticDataMap = [
       [w, w, w, w, w, w, w, w, w, w, w, w, w, w, w],
@@ -34,10 +34,10 @@ class BattleField
 
     @mutableDataMap = ((null for j in [0 ... @width]) for i in [0 ... @height])
 
-    @setMapData(4, 1, new Block(this, new Point(4, 1)))
-    @setMapData(5, 5, new Block(this, new Point(5, 5)))
-    @setMapData(5, 2, new Block(this, new Point(5, 2)))
-    @setMapData(1, 2, new SpeedUp(this, new Point(1, 2)))
+    @setMapData(4, 1, new Block(@, new Point(4, 1)))
+    @setMapData(5, 5, new Block(@, new Point(5, 5)))
+    @setMapData(5, 2, new Block(@, new Point(5, 2)))
+    @setMapData(1, 2, new SpeedUp(@, new Point(1, 2)))
 
     @updateMap()
 
@@ -116,5 +116,5 @@ class BattleField
     @getRemainingBombermans().length == 0
 
   getWinner: ->
-    for i in [0...@bombermans.length]
-      return i unless @bombermans[i].isDestroyed
+    for bomberman, i in @bombermans
+      return i unless bomberman.isDestroyed

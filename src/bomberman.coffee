@@ -37,7 +37,7 @@ class Bomberman
     if @canPutBomb() and @usedBomb < @bombCapacity
       ix = @getCurrentIndex()
       @usedBomb += 1
-      @field.setMapData(ix.x, ix.y, new Bomb(this, @field, ix))
+      @field.setMapData(ix.x, ix.y, new Bomb(@field, ix, @))
 
   canMoveOnBomb: (ni) ->
     oi = @getCurrentIndex()

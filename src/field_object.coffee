@@ -13,10 +13,18 @@ FieldObject.TYPE_BOMB   = 3
 FieldObject.TYPE_BLAST  = 4
 FieldObject.TYPE_ITEM   = 5
 
+class Wall extends FieldObject
+  constructor: (@field) ->
+    super(FieldObject.TYPE_WALL, true)
+
+class Ground extends FieldObject
+  constructor: (@field) ->
+    super(FieldObject.TYPE_GROUND, false)
+
 class Blast extends FieldObject
   DURATION: 10
 
-  constructor: (@bomberman, @field, @index) ->
+  constructor: (@field, @index, @bomberman) ->
     super(FieldObject.TYPE_BLAST, false)
     @x = @field.tileSize * @index.x
     @y = @field.tileSize * @index.y
@@ -33,7 +41,7 @@ class Blast extends FieldObject
 class Bomb extends FieldObject
   TIME_LIMIT: 80
 
-  constructor: (@bomberman, @field, @index) ->
+  constructor: (@field, @index, @bomberman) ->
     super(FieldObject.TYPE_BOMB, true)
     @count = 0
     @x = @field.tileSize * @index.x
@@ -71,7 +79,7 @@ class Bomb extends FieldObject
         @setBlast(ix.clone())
 
   setBlast: (ix) ->
-    blast = new Blast(@bomberman, @field, ix)
+    blast = new Blast(@field, ix, @bomberman)
     @field.setMapData(ix.x, ix.y, blast)
 
 class Block extends FieldObject

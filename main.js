@@ -1,5 +1,5 @@
 (function() {
-  var BattleField, BattleGame, Blast, BlastView, Block, BlockView, Bomb, BombUp, BombView, Bomberman, BombermanView, DataTransport, ENCHANTJS_IMAGE_PATH, EntryScreen, FieldObject, FieldView, FirePowerUp, GameResult, InputManager, Item, ItemView, MAX_NUMBER_OF_PLAYERS, Point, Rectangle, RenderingQueue, SpeedUp, Utils, View, WS_SUBPROTOCOL, WS_URI,
+  var BattleField, BattleGame, Blast, BlastView, Block, BlockView, Bomb, BombUp, BombView, Bomberman, BombermanView, DataTransport, ENCHANTJS_IMAGE_PATH, EntryScreen, FieldObject, FieldView, FirePowerUp, GameResult, Ground, InputManager, Item, ItemView, MAX_NUMBER_OF_PLAYERS, Point, Rectangle, RenderingQueue, SpeedUp, Utils, View, WS_SUBPROTOCOL, WS_URI, Wall,
     __slice = Array.prototype.slice,
     __hasProp = Object.prototype.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor; child.__super__ = parent.prototype; return child; };
@@ -14,8 +14,8 @@
       this.height = 13;
       this.width = 15;
       this.bombermans = [new Bomberman(this, this.tileSize, this.tileSize), new Bomberman(this, this.tileSize * 13, this.tileSize), new Bomberman(this, this.tileSize, this.tileSize * 11), new Bomberman(this, this.tileSize * 13, this.tileSize * 11)];
-      w = new FieldObject(FieldObject.TYPE_WALL, true);
-      g = new FieldObject(FieldObject.TYPE_GROUND, false);
+      w = new Wall(this);
+      g = new Ground(this);
       this.staticDataMap = [[w, w, w, w, w, w, w, w, w, w, w, w, w, w, w], [w, g, g, g, g, g, g, g, g, g, g, g, g, g, w], [w, g, w, g, w, g, w, g, w, g, w, g, w, g, w], [w, g, g, g, g, g, g, g, g, g, g, g, g, g, w], [w, g, w, g, w, g, w, g, w, g, w, g, w, g, w], [w, g, g, g, g, g, g, g, g, g, g, g, g, g, w], [w, g, w, g, w, g, w, g, w, g, w, g, w, g, w], [w, g, g, g, g, g, g, g, g, g, g, g, g, g, w], [w, g, w, g, w, g, w, g, w, g, w, g, w, g, w], [w, g, g, g, g, g, g, g, g, g, g, g, g, g, w], [w, g, w, g, w, g, w, g, w, g, w, g, w, g, w], [w, g, g, g, g, g, g, g, g, g, g, g, g, g, w], [w, w, w, w, w, w, w, w, w, w, w, w, w, w, w]];
       this.mutableDataMap = (function() {
         var _ref, _results;
@@ -153,9 +153,11 @@
     };
 
     BattleField.prototype.getWinner = function() {
-      var i, _ref;
-      for (i = 0, _ref = this.bombermans.length; 0 <= _ref ? i < _ref : i > _ref; 0 <= _ref ? i++ : i--) {
-        if (!this.bombermans[i].isDestroyed) return i;
+      var bomberman, i, _len, _ref;
+      _ref = this.bombermans;
+      for (i = 0, _len = _ref.length; i < _len; i++) {
+        bomberman = _ref[i];
+        if (!bomberman.isDestroyed) return i;
       }
     };
 
@@ -301,7 +303,7 @@
       if (this.canPutBomb() && this.usedBomb < this.bombCapacity) {
         ix = this.getCurrentIndex();
         this.usedBomb += 1;
-        return this.field.setMapData(ix.x, ix.y, new Bomb(this, this.field, ix));
+        return this.field.setMapData(ix.x, ix.y, new Bomb(this.field, ix, this));
       }
     };
 
@@ -689,16 +691,42 @@
 
   FieldObject.TYPE_ITEM = 5;
 
+  Wall = (function(_super) {
+
+    __extends(Wall, _super);
+
+    function Wall(field) {
+      this.field = field;
+      Wall.__super__.constructor.call(this, FieldObject.TYPE_WALL, true);
+    }
+
+    return Wall;
+
+  })(FieldObject);
+
+  Ground = (function(_super) {
+
+    __extends(Ground, _super);
+
+    function Ground(field) {
+      this.field = field;
+      Ground.__super__.constructor.call(this, FieldObject.TYPE_GROUND, false);
+    }
+
+    return Ground;
+
+  })(FieldObject);
+
   Blast = (function(_super) {
 
     __extends(Blast, _super);
 
     Blast.prototype.DURATION = 10;
 
-    function Blast(bomberman, field, index) {
-      this.bomberman = bomberman;
+    function Blast(field, index, bomberman) {
       this.field = field;
       this.index = index;
+      this.bomberman = bomberman;
       Blast.__super__.constructor.call(this, FieldObject.TYPE_BLAST, false);
       this.x = this.field.tileSize * this.index.x;
       this.y = this.field.tileSize * this.index.y;
@@ -725,10 +753,10 @@
 
     Bomb.prototype.TIME_LIMIT = 80;
 
-    function Bomb(bomberman, field, index) {
-      this.bomberman = bomberman;
+    function Bomb(field, index, bomberman) {
       this.field = field;
       this.index = index;
+      this.bomberman = bomberman;
       Bomb.__super__.constructor.call(this, FieldObject.TYPE_BOMB, true);
       this.count = 0;
       this.x = this.field.tileSize * this.index.x;
@@ -770,7 +798,7 @@
 
     Bomb.prototype.setBlast = function(ix) {
       var blast;
-      blast = new Blast(this.bomberman, this.field, ix);
+      blast = new Blast(this.field, ix, this.bomberman);
       return this.field.setMapData(ix.x, ix.y, blast);
     };
 
