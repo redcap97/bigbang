@@ -1,5 +1,5 @@
 (function() {
-  var BattleField, BattleGame, Blast, BlastView, Block, BlockView, Bomb, BombUp, BombView, Bomberman, BombermanView, ENCHANTJS_IMAGE_PATH, FieldObject, FieldView, FirePowerUp, GameResult, InputManager, Item, ItemView, Point, Rectangle, RenderingQueue, SpeedUp, Utils, View,
+  var BattleField, BattleGame, Blast, BlastView, Block, BlockView, Bomb, BombUp, BombView, Bomberman, BombermanView, ENCHANTJS_IMAGE_PATH, EntryScreen, FieldObject, FieldView, FirePowerUp, GameResult, InputManager, Item, ItemView, Point, Rectangle, RenderingQueue, SpeedUp, Utils, View,
     __slice = Array.prototype.slice,
     __hasProp = Object.prototype.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor; child.__super__ = parent.prototype; return child; };
@@ -536,6 +536,35 @@
 
   })();
 
+  EntryScreen = (function() {
+
+    function EntryScreen(game) {
+      this.game = game;
+      this.finished = false;
+      this.scene = new enchant.Scene();
+      this.label = new enchant.Label();
+      this.label.x = 4;
+      this.label.text = "Plese input Z to start game";
+      this.scene.addChild(this.label);
+      this.game.pushScene(this.scene);
+    }
+
+    EntryScreen.prototype.update = function() {
+      if (this.game.input.a) return this.finished = true;
+    };
+
+    EntryScreen.prototype.isFinished = function() {
+      return this.finished;
+    };
+
+    EntryScreen.prototype.release = function() {
+      return this.game.removeScene(this.scene);
+    };
+
+    return EntryScreen;
+
+  })();
+
   FieldObject = (function() {
 
     function FieldObject(type, isBarrier) {
@@ -913,11 +942,14 @@
     game.keybind("X".charCodeAt(0), 'b');
     game.onload = function() {
       var currentScene;
-      currentScene = new BattleGame(game);
+      currentScene = new EntryScreen(game);
       return game.addEventListener('enterframe', function() {
         var gameResult;
         if (currentScene.isFinished()) {
-          if (currentScene instanceof BattleGame) {
+          if (currentScene instanceof EntryScreen) {
+            currentScene.release();
+            currentScene = new BattleGame(game);
+          } else if (currentScene instanceof BattleGame) {
             gameResult = new GameResult(game);
             if (currentScene.isDraw()) {
               gameResult.setDraw();
@@ -928,7 +960,7 @@
             currentScene = gameResult;
           } else if (currentScene instanceof GameResult) {
             currentScene.release();
-            currentScene = new BattleGame(game);
+            currentScene = new EntryScreen(game);
           } else {
             throw new Error("Unknown scene");
           }

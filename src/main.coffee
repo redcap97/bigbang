@@ -12,11 +12,13 @@ window.onload = ->
   game.keybind("X".charCodeAt(0), 'b')
 
   game.onload = ->
-    currentScene = new BattleGame(game)
-
+    currentScene = new EntryScreen(game)
     game.addEventListener 'enterframe', ->
       if currentScene.isFinished()
-        if currentScene instanceof BattleGame
+        if currentScene instanceof EntryScreen
+          currentScene.release()
+          currentScene = new BattleGame(game)
+        else if currentScene instanceof BattleGame
           gameResult = new GameResult(game)
           if currentScene.isDraw()
             gameResult.setDraw()
@@ -26,7 +28,7 @@ window.onload = ->
           currentScene = gameResult
         else if currentScene instanceof GameResult
           currentScene.release()
-          currentScene = new BattleGame(game)
+          currentScene = new EntryScreen(game)
         else
           throw new Error("Unknown scene")
       currentScene.update()
