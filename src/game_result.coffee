@@ -8,6 +8,8 @@ class GameResult
     @scene.addChild(@label)
     @game.pushScene(@scene)
 
+    @count = 0
+
   setWinner: (pn) ->
     @label.text = "Winner: #{pn}"
 
@@ -15,9 +17,10 @@ class GameResult
     @label.text = "Draw"
 
   update: ->
+    @count += 1
 
   isFinished: ->
-    false
+    @count > 60
 
   release: ->
     @game.removeScene(@scene)

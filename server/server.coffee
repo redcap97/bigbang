@@ -6,11 +6,8 @@ class Player
     @inputBuffer = []
 
     @connection.on 'message', (message) =>
-      if message.type == 'utf8'
-        @connection.sendUTF(message.utf8Data)
-      else if message.type == 'binary'
-        data = message.binaryData
-        @inputBuffer.push(data.readUInt8(0))
+      data = message.binaryData
+      @inputBuffer.push(data.readUInt8(0))
 
     @connection.on 'close', (reasonCode, description) =>
       console.log((new Date()) + ' Peer ' + @connection.remoteAddress + ' disconnected.')
@@ -40,7 +37,13 @@ class Group
         @players.splice(i, 1)
 
   startGame: ->
-    player.clearBuffer() for player in @players
+    buffer = new Buffer(@getNumberOfPlayers())
+    buffer.writeUInt8(@getNumberOfPlayers(), 0)
+
+    for i in [0 ... @getNumberOfPlayers()]
+      buffer.writeUInt8(i, 1)
+      @players[i].sendBytes(buffer)
+      @players[i].clearBuffer()
 
     id = setInterval =>
       if @gameOver()

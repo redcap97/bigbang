@@ -51,7 +51,7 @@ class BattleField
     @setMapData(x, y, null)
 
   update: (inputs) ->
-    for bomberman in @bombermans
+    for bomberman, i in @bombermans
       ix = bomberman.getCurrentIndex()
       data = @getMapData(ix.x, ix.y)
 
@@ -62,9 +62,8 @@ class BattleField
           data.exertEffectOn(bomberman)
           data.destroy()
 
-    for i in [0...@bombermans.length]
-      if inputs[i] and !@bombermans[i].isDestroyed
-        @bombermans[i].update(inputs[i])
+      if inputs[i] and !bomberman.isDestroyed
+        bomberman.update(inputs[i])
 
     @updateMap()
 

@@ -1,3 +1,8 @@
+WS_URI = 'ws://localhost:8080'
+WS_SUBPROTOCOL = 'bigbang'
+
+MAX_NUMBER_OF_PLAYERS = 4
+
 ENCHANTJS_IMAGE_PATH = "enchantjs/images/"
 
 window.onload = ->
@@ -16,14 +21,17 @@ window.onload = ->
     game.addEventListener 'enterframe', ->
       if currentScene.isFinished()
         if currentScene instanceof EntryScreen
+          dataTransport = currentScene.getDataTransport()
+
           currentScene.release()
-          currentScene = new BattleGame(game)
+          currentScene = new BattleGame(game, dataTransport)
         else if currentScene instanceof BattleGame
           gameResult = new GameResult(game)
           if currentScene.isDraw()
             gameResult.setDraw()
           else
             gameResult.setWinner(currentScene.getWinner())
+
           currentScene.release()
           currentScene = gameResult
         else if currentScene instanceof GameResult

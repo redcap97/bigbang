@@ -1,39 +1,30 @@
 class BattleGame
-  constructor: (@game) ->
+  constructor: (@game, @dataTransport) ->
     @field = new BattleField()
 
     @scene = new enchant.Scene()
     @game.pushScene(@scene)
+    @queue = new RenderingQueue(@game, @scene)
 
     @scene2 = new enchant.Scene()
     @game.pushScene(@scene2)
-
-    @queue = new RenderingQueue(@game, @scene)
     @queue2 = new RenderingQueue(@game, @scene2)
 
     @fieldView = new FieldView(@queue, @field)
     @fieldView.update()
 
+    @count = 0
+
     for bomberman in @field.bombermans
       bombermanView = new BombermanView(@queue2, bomberman)
       @queue2.store(bomberman.objectId, bombermanView)
 
-    @inputBuffer = []
-    @socket = new WebSocket('ws://localhost:8080', 'bigbang')
-    @socket.binaryType = 'arraybuffer'
-    @socket.onmessage = (event) =>
-      byteArray = new Uint8Array(event.data)
-      inputs = []
-      for i in [0 ... byteArray.length]
-        inputs.push(Utils.decodeInput(byteArray[i]))
-      @inputBuffer.push(inputs)
-
-    @count = 0
     @updateQueue()
+    @dataTransport.clearBuffer()
 
   update: ->
-    while @inputBuffer.length > 0
-      inputs = @inputBuffer.shift()
+    while @dataTransport.getBufferSize() > 0
+      inputs = @dataTransport.getInput()
       @field.update(inputs)
       @updateQueue()
 
@@ -51,14 +42,7 @@ class BattleGame
     @queue2.update()
 
   sendInput: (input) ->
-    v = Utils.encodeInput(input)
-    return if v == 0
-
-    byteArray = new Uint8Array(1)
-    byteArray[0] = v
-
-    if @socket.readyState == 1
-      @socket.send(byteArray.buffer)
+    @dataTransport.sendInput(input)
 
   createView: (data) ->
     switch data.type
@@ -83,6 +67,6 @@ class BattleGame
     @field.getWinner()
 
   release: ->
-    @socket.close()
     @game.removeScene(@scene)
     @game.removeScene(@scene2)
+    @dataTransport.release()

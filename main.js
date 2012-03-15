@@ -1,5 +1,5 @@
 (function() {
-  var BattleField, BattleGame, Blast, BlastView, Block, BlockView, Bomb, BombUp, BombView, Bomberman, BombermanView, ENCHANTJS_IMAGE_PATH, EntryScreen, FieldObject, FieldView, FirePowerUp, GameResult, InputManager, Item, ItemView, Point, Rectangle, RenderingQueue, SpeedUp, Utils, View,
+  var BattleField, BattleGame, Blast, BlastView, Block, BlockView, Bomb, BombUp, BombView, Bomberman, BombermanView, DataTransport, ENCHANTJS_IMAGE_PATH, EntryScreen, FieldObject, FieldView, FirePowerUp, GameResult, InputManager, Item, ItemView, MAX_NUMBER_OF_PLAYERS, Point, Rectangle, RenderingQueue, SpeedUp, Utils, View, WS_SUBPROTOCOL, WS_URI,
     __slice = Array.prototype.slice,
     __hasProp = Object.prototype.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor; child.__super__ = parent.prototype; return child; };
@@ -52,10 +52,10 @@
     };
 
     BattleField.prototype.update = function(inputs) {
-      var bomberman, data, i, ix, _i, _len, _ref, _ref2;
+      var bomberman, data, i, ix, _len, _ref;
       _ref = this.bombermans;
-      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-        bomberman = _ref[_i];
+      for (i = 0, _len = _ref.length; i < _len; i++) {
+        bomberman = _ref[i];
         ix = bomberman.getCurrentIndex();
         data = this.getMapData(ix.x, ix.y);
         switch (data.type) {
@@ -66,11 +66,7 @@
             data.exertEffectOn(bomberman);
             data.destroy();
         }
-      }
-      for (i = 0, _ref2 = this.bombermans.length; 0 <= _ref2 ? i < _ref2 : i > _ref2; 0 <= _ref2 ? i++ : i--) {
-        if (inputs[i] && !this.bombermans[i].isDestroyed) {
-          this.bombermans[i].update(inputs[i]);
-        }
+        if (inputs[i] && !bomberman.isDestroyed) bomberman.update(inputs[i]);
       }
       return this.updateMap();
     };
@@ -169,45 +165,34 @@
 
   BattleGame = (function() {
 
-    function BattleGame(game) {
-      var bomberman, bombermanView, _i, _len, _ref,
-        _this = this;
+    function BattleGame(game, dataTransport) {
+      var bomberman, bombermanView, _i, _len, _ref;
       this.game = game;
+      this.dataTransport = dataTransport;
       this.field = new BattleField();
       this.scene = new enchant.Scene();
       this.game.pushScene(this.scene);
+      this.queue = new RenderingQueue(this.game, this.scene);
       this.scene2 = new enchant.Scene();
       this.game.pushScene(this.scene2);
-      this.queue = new RenderingQueue(this.game, this.scene);
       this.queue2 = new RenderingQueue(this.game, this.scene2);
       this.fieldView = new FieldView(this.queue, this.field);
       this.fieldView.update();
+      this.count = 0;
       _ref = this.field.bombermans;
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
         bomberman = _ref[_i];
         bombermanView = new BombermanView(this.queue2, bomberman);
         this.queue2.store(bomberman.objectId, bombermanView);
       }
-      this.inputBuffer = [];
-      this.socket = new WebSocket('ws://localhost:8080', 'bigbang');
-      this.socket.binaryType = 'arraybuffer';
-      this.socket.onmessage = function(event) {
-        var byteArray, i, inputs, _ref2;
-        byteArray = new Uint8Array(event.data);
-        inputs = [];
-        for (i = 0, _ref2 = byteArray.length; 0 <= _ref2 ? i < _ref2 : i > _ref2; 0 <= _ref2 ? i++ : i--) {
-          inputs.push(Utils.decodeInput(byteArray[i]));
-        }
-        return _this.inputBuffer.push(inputs);
-      };
-      this.count = 0;
       this.updateQueue();
+      this.dataTransport.clearBuffer();
     }
 
     BattleGame.prototype.update = function() {
       var data, i, inputs, j, _ref, _ref2;
-      while (this.inputBuffer.length > 0) {
-        inputs = this.inputBuffer.shift();
+      while (this.dataTransport.getBufferSize() > 0) {
+        inputs = this.dataTransport.getInput();
         this.field.update(inputs);
         this.updateQueue();
       }
@@ -229,12 +214,7 @@
     };
 
     BattleGame.prototype.sendInput = function(input) {
-      var byteArray, v;
-      v = Utils.encodeInput(input);
-      if (v === 0) return;
-      byteArray = new Uint8Array(1);
-      byteArray[0] = v;
-      if (this.socket.readyState === 1) return this.socket.send(byteArray.buffer);
+      return this.dataTransport.sendInput(input);
     };
 
     BattleGame.prototype.createView = function(data) {
@@ -265,9 +245,9 @@
     };
 
     BattleGame.prototype.release = function() {
-      this.socket.close();
       this.game.removeScene(this.scene);
-      return this.game.removeScene(this.scene2);
+      this.game.removeScene(this.scene2);
+      return this.dataTransport.release();
     };
 
     return BattleGame;
@@ -536,25 +516,140 @@
 
   })();
 
+  DataTransport = (function() {
+
+    function DataTransport() {
+      var _this = this;
+      this.inputBuffer = [];
+      this.playerId = this.numberOfPlayers = null;
+      this.socket = new WebSocket(WS_URI, WS_SUBPROTOCOL);
+      this.socket.binaryType = 'arraybuffer';
+      this.socket.onmessage = function(event) {
+        if (!_this.hasBattleData()) {
+          return _this.receiveBattleData(event.data);
+        } else {
+          return _this.receiveInputs(event.data);
+        }
+      };
+    }
+
+    DataTransport.prototype.receiveBattleData = function(data) {
+      var byteArray;
+      byteArray = new Uint8Array(event.data);
+      this.numberOfPlayers = byteArray[0];
+      this.playerId = byteArray[1];
+      if (!this.validateBattleData()) {
+        this.release();
+        throw Error("Invalid battle data");
+      }
+    };
+
+    DataTransport.prototype.receiveInputs = function(data) {
+      var byteArray, i, inputs, _ref;
+      byteArray = new Uint8Array(data);
+      inputs = [];
+      for (i = 0, _ref = byteArray.length; 0 <= _ref ? i < _ref : i > _ref; 0 <= _ref ? i++ : i--) {
+        inputs.push(Utils.decodeInput(byteArray[i]));
+      }
+      return this.inputBuffer.push(inputs);
+    };
+
+    DataTransport.prototype.sendInput = function(input) {
+      var byteArray, v;
+      v = Utils.encodeInput(input);
+      if (v === 0) return;
+      byteArray = new Uint8Array(1);
+      byteArray[0] = v;
+      if (this.isConnected()) return this.socket.send(byteArray.buffer);
+    };
+
+    DataTransport.prototype.getInput = function() {
+      return this.inputBuffer.shift();
+    };
+
+    DataTransport.prototype.getBufferSize = function() {
+      return this.inputBuffer.length;
+    };
+
+    DataTransport.prototype.clearBuffer = function() {
+      return this.inputBuffer.length = 0;
+    };
+
+    DataTransport.prototype.hasBattleData = function() {
+      return (this.playerId != null) && (this.numberOfPlayers != null);
+    };
+
+    DataTransport.prototype.validateBattleData = function() {
+      return this.numberOfPlayers >= 2 && this.numberOfPlayers <= MAX_NUMBER_OF_PLAYERS && this.playerId >= 0 && this.playerId < this.numberOfPlayers;
+    };
+
+    DataTransport.prototype.isConnected = function() {
+      return this.socket.readyState === WebSocket.OPEN;
+    };
+
+    DataTransport.prototype.isClosed = function() {
+      return this.socket.readyState === WebSocket.CLOSED;
+    };
+
+    DataTransport.prototype.release = function() {
+      this.clearBuffer();
+      this.playerId = this.numberOfPlayers = null;
+      return this.socket.close();
+    };
+
+    return DataTransport;
+
+  })();
+
   EntryScreen = (function() {
 
     function EntryScreen(game) {
       this.game = game;
-      this.finished = false;
       this.scene = new enchant.Scene();
       this.label = new enchant.Label();
       this.label.x = 4;
-      this.label.text = "Plese input Z to start game";
       this.scene.addChild(this.label);
       this.game.pushScene(this.scene);
+      this.setText("Plese input Z to start game");
+      this.dataTransport = null;
+      this.isCanceling = false;
+      this.finished = false;
     }
 
     EntryScreen.prototype.update = function() {
-      if (this.game.input.a) return this.finished = true;
+      var id,
+        _this = this;
+      if (this.game.input.a && this.dataTransport === null) {
+        this.setText("Please wait");
+        this.dataTransport = new DataTransport();
+      }
+      if (this.game.input.b && this.dataTransport !== null && !this.isCanceling) {
+        this.setText("Canceling...");
+        this.dataTransport.release();
+        this.isCanceling = true;
+        return id = setInterval(function() {
+          console.log(_this.dataTransport);
+          if (_this.dataTransport.isClosed()) {
+            _this.setText("Plese input Z to start game");
+            _this.dataTransport = null;
+            _this.isCanceling = false;
+            return clearInterval(id);
+          }
+        }, 2 * 1000);
+      }
+    };
+
+    EntryScreen.prototype.setText = function(text) {
+      return this.label.text = text;
     };
 
     EntryScreen.prototype.isFinished = function() {
-      return this.finished;
+      var _ref;
+      return (_ref = this.dataTransport) != null ? _ref.hasBattleData() : void 0;
+    };
+
+    EntryScreen.prototype.getDataTransport = function() {
+      return this.dataTransport;
     };
 
     EntryScreen.prototype.release = function() {
@@ -812,6 +907,7 @@
       this.label.x = 4;
       this.scene.addChild(this.label);
       this.game.pushScene(this.scene);
+      this.count = 0;
     }
 
     GameResult.prototype.setWinner = function(pn) {
@@ -822,10 +918,12 @@
       return this.label.text = "Draw";
     };
 
-    GameResult.prototype.update = function() {};
+    GameResult.prototype.update = function() {
+      return this.count += 1;
+    };
 
     GameResult.prototype.isFinished = function() {
-      return false;
+      return this.count > 60;
     };
 
     GameResult.prototype.release = function() {
@@ -929,6 +1027,12 @@
 
   InputManager.DOWN = 4;
 
+  WS_URI = 'ws://localhost:8080';
+
+  WS_SUBPROTOCOL = 'bigbang';
+
+  MAX_NUMBER_OF_PLAYERS = 4;
+
   ENCHANTJS_IMAGE_PATH = "enchantjs/images/";
 
   window.onload = function() {
@@ -944,11 +1048,12 @@
       var currentScene;
       currentScene = new EntryScreen(game);
       return game.addEventListener('enterframe', function() {
-        var gameResult;
+        var dataTransport, gameResult;
         if (currentScene.isFinished()) {
           if (currentScene instanceof EntryScreen) {
+            dataTransport = currentScene.getDataTransport();
             currentScene.release();
-            currentScene = new BattleGame(game);
+            currentScene = new BattleGame(game, dataTransport);
           } else if (currentScene instanceof BattleGame) {
             gameResult = new GameResult(game);
             if (currentScene.isDraw()) {
