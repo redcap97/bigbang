@@ -56,7 +56,7 @@ class Group
     , 1000/30.0
 
   canStartGame: ->
-    @players.length == 2
+    @players.length == 4
 
   getNumberOfPlayers: ->
     @players.length
@@ -78,23 +78,35 @@ webSocketServer = new WebSocketServer(
 
 originIsAllowed = (origin) -> true
 
+timerId = null
 group = new Group()
+
 webSocketServer.on 'request', (request) ->
   if !originIsAllowed(request.origin)
     request.reject()
     console.log((new Date()) + ' Connection from origin ' + request.origin + ' rejected.')
     return
 
+  if timerId != null
+    clearTimeout(timerId)
+    timerId = null
+
   connection = request.accept('bigbang', request.origin)
   console.log((new Date()) + ' Connection accepted.')
 
   group.purge()
-  player = new Player(connection)
-  group.add(player)
+  group.add(new Player(connection))
 
   if group.canStartGame()
     group.startGame()
     group = new Group()
+  else if group.getNumberOfPlayers() > 1
+    timerId = setTimeout ->
+      group.purge()
+      if group.getNumberOfPlayers() > 1
+        group.startGame()
+        group = new Group()
+    ,3 * 1000
 
 server.listen 8080, ->
   console.log((new Date()) + ' Server is listening on port 8080')
