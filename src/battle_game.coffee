@@ -1,6 +1,6 @@
 class BattleGame
   constructor: (@game, @dataTransport) ->
-    @field = new BattleField()
+    @field = new BattleField(@dataTransport.numberOfPlayers)
 
     @scene = new enchant.Scene()
     @game.pushScene(@scene)
@@ -20,7 +20,6 @@ class BattleGame
       @queue2.store(bomberman.objectId, bombermanView)
 
     @updateQueue()
-    @dataTransport.clearBuffer()
 
   update: ->
     while @dataTransport.getBufferSize() > 0

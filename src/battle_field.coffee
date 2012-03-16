@@ -1,17 +1,12 @@
 class BattleField
   OUTSIDE_OF_FIELD_ERROR: "Point is outside of the field"
 
-  constructor: ->
+  constructor: (numberOfPlayers) ->
     @tileSize = 16
     @height   = 13
     @width    = 15
 
-    @bombermans = [
-      new Bomberman(@, @tileSize,    @tileSize),
-      new Bomberman(@, @tileSize*13, @tileSize),
-      new Bomberman(@, @tileSize,    @tileSize*11),
-      new Bomberman(@, @tileSize*13, @tileSize*11)
-    ]
+    @bombermans = @createBombermans(numberOfPlayers)
 
     w = new Wall(@)
     g = new Ground(@)
@@ -72,6 +67,24 @@ class BattleField
       for x in [0...@width]
         @getMapData(x, y).update()
 
+  createBombermans: (n) ->
+    if n < 2 and n > MAX_NUMBER_OF_PLAYERS
+      throw Error("Cannot create bombermans")
+
+    positions = [
+      new Point(1,  1),
+      new Point(13, 11),
+      new Point(13, 1),
+      new Point(1,  11),
+    ]
+
+    bombermans = []
+    for i in [0 ... n]
+      x = positions[i].x
+      y = positions[i].y
+      bombermans.push(new Bomberman(@, @tileSize*x, @tileSize*y))
+    bombermans
+
   getIndex: (x, y) ->
     if x < 0 or x >= @tileSize * @width or
         y < 0 or y >= @tileSize * @height
@@ -116,5 +129,8 @@ class BattleField
     @getRemainingBombermans().length == 0
 
   getWinner: ->
+    unless @isFinished()
+      throw new Error("Battle is not finished")
+
     for bomberman, i in @bombermans
       return i unless bomberman.isDestroyed

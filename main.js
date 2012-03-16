@@ -8,12 +8,12 @@
 
     BattleField.prototype.OUTSIDE_OF_FIELD_ERROR = "Point is outside of the field";
 
-    function BattleField() {
+    function BattleField(numberOfPlayers) {
       var g, i, j, w;
       this.tileSize = 16;
       this.height = 13;
       this.width = 15;
-      this.bombermans = [new Bomberman(this, this.tileSize, this.tileSize), new Bomberman(this, this.tileSize * 13, this.tileSize), new Bomberman(this, this.tileSize, this.tileSize * 11), new Bomberman(this, this.tileSize * 13, this.tileSize * 11)];
+      this.bombermans = this.createBombermans(numberOfPlayers);
       w = new Wall(this);
       g = new Ground(this);
       this.staticDataMap = [[w, w, w, w, w, w, w, w, w, w, w, w, w, w, w], [w, g, g, g, g, g, g, g, g, g, g, g, g, g, w], [w, g, w, g, w, g, w, g, w, g, w, g, w, g, w], [w, g, g, g, g, g, g, g, g, g, g, g, g, g, w], [w, g, w, g, w, g, w, g, w, g, w, g, w, g, w], [w, g, g, g, g, g, g, g, g, g, g, g, g, g, w], [w, g, w, g, w, g, w, g, w, g, w, g, w, g, w], [w, g, g, g, g, g, g, g, g, g, g, g, g, g, w], [w, g, w, g, w, g, w, g, w, g, w, g, w, g, w], [w, g, g, g, g, g, g, g, g, g, g, g, g, g, w], [w, g, w, g, w, g, w, g, w, g, w, g, w, g, w], [w, g, g, g, g, g, g, g, g, g, g, g, g, g, w], [w, w, w, w, w, w, w, w, w, w, w, w, w, w, w]];
@@ -87,6 +87,21 @@
       return _results;
     };
 
+    BattleField.prototype.createBombermans = function(n) {
+      var bombermans, i, positions, x, y;
+      if (n < 2 && n > MAX_NUMBER_OF_PLAYERS) {
+        throw Error("Cannot create bombermans");
+      }
+      positions = [new Point(1, 1), new Point(13, 11), new Point(13, 1), new Point(1, 11)];
+      bombermans = [];
+      for (i = 0; 0 <= n ? i < n : i > n; 0 <= n ? i++ : i--) {
+        x = positions[i].x;
+        y = positions[i].y;
+        bombermans.push(new Bomberman(this, this.tileSize * x, this.tileSize * y));
+      }
+      return bombermans;
+    };
+
     BattleField.prototype.getIndex = function(x, y) {
       if (x < 0 || x >= this.tileSize * this.width || y < 0 || y >= this.tileSize * this.height) {
         throw new Error(this.OUTSIDE_OF_FIELD_ERROR);
@@ -154,6 +169,7 @@
 
     BattleField.prototype.getWinner = function() {
       var bomberman, i, _len, _ref;
+      if (!this.isFinished()) throw new Error("Battle is not finished");
       _ref = this.bombermans;
       for (i = 0, _len = _ref.length; i < _len; i++) {
         bomberman = _ref[i];
@@ -171,7 +187,7 @@
       var bomberman, bombermanView, _i, _len, _ref;
       this.game = game;
       this.dataTransport = dataTransport;
-      this.field = new BattleField();
+      this.field = new BattleField(this.dataTransport.numberOfPlayers);
       this.scene = new enchant.Scene();
       this.game.pushScene(this.scene);
       this.queue = new RenderingQueue(this.game, this.scene);
@@ -188,7 +204,6 @@
         this.queue2.store(bomberman.objectId, bombermanView);
       }
       this.updateQueue();
-      this.dataTransport.clearBuffer();
     }
 
     BattleGame.prototype.update = function() {
