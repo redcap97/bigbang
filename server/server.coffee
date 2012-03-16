@@ -1,8 +1,11 @@
 BUFFER_LIMIT = 1200
 BATTLE_TIME_LIMIT = 30 * 60 * 5
+MAX_CONNECTIONS = 100
 
 WebSocketServer = require('websocket').server
 http = require('http')
+
+numberOfConnections = 0
 
 class Player
   constructor: (@connection) ->
@@ -17,6 +20,7 @@ class Player
       @inputBuffer.push(data.readUInt8(0))
 
     @connection.on 'close', (reasonCode, description) =>
+      numberOfConnections -= 1
       console.log((new Date()) + ' Peer ' + @connection.remoteAddress + ' disconnected.')
 
   sendBytes: (buffer) ->
@@ -131,11 +135,19 @@ webSocketServer.on 'request', (request) ->
     console.log((new Date()) + ' Connection from origin ' + request.origin + ' rejected.')
     return
 
+  if numberOfConnections > MAX_CONNECTIONS
+    request.reject()
+    console.log("#{new Date()} MAX_CONNECTIONS limit is exceeded")
+    return
+
   if timerId != null
     clearTimeout(timerId)
     timerId = null
 
+  numberOfConnections += 1
   connection = request.accept('bigbang', request.origin)
+
+  console.log("Number of Users #{numberOfConnections}")
   console.log((new Date()) + ' Connection accepted.')
 
   group.purge()
