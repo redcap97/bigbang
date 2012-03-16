@@ -83,7 +83,7 @@ class Group
 
   sendBattleData: ->
     battleData =
-      seed: @getRandom(),
+      seed: [@getRandom(), @getRandom()],
       numberOfPlayers: @getNumberOfPlayers(),
 
     for player, i in @players
