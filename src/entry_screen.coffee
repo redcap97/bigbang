@@ -33,7 +33,7 @@ class EntryScreen
           @dataTransport = null
           @isCanceling = false
           clearInterval(id)
-      ,2 * 1000
+      , 2 * 1000
 
   setText: (text) ->
     @label.text = text

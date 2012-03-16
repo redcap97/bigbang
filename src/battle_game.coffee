@@ -1,6 +1,9 @@
 class BattleGame
   constructor: (@game, @dataTransport) ->
-    @field = new BattleField(@dataTransport.numberOfPlayers)
+    @field = new BattleField(
+      @dataTransport.numberOfPlayers,
+      @dataTransport.seed
+    )
 
     @scene = new enchant.Scene()
     @game.pushScene(@scene)

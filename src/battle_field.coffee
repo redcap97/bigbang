@@ -1,7 +1,7 @@
 class BattleField
   OUTSIDE_OF_FIELD_ERROR: "Point is outside of the field"
 
-  constructor: (numberOfPlayers) ->
+  constructor: (numberOfPlayers, seed) ->
     @tileSize = 16
     @height   = 13
     @width    = 15
@@ -44,7 +44,7 @@ class BattleField
     @setMapData(1, 3, new FirePowerUp(@, new Point(1, 3)))
     @setMapData(1, 4, new BombUp(@, new Point(1, 4)))
 
-    @random = new Random(2000)
+    @random = new Random(seed)
 
     @updateMap()
 

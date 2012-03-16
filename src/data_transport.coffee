@@ -13,9 +13,14 @@ class DataTransport
         @receiveInputs(event.data)
 
   receiveBattleData: (data) ->
-    byteArray = new Uint8Array(event.data)
-    @numberOfPlayers = byteArray[0]
-    @playerId = byteArray[1]
+    try
+      battleData = JSON.parse(data)
+      @seed = battleData.seed
+      @numberOfPlayers = battleData.numberOfPlayers
+      @playerId = battleData.playerId
+    catch e
+      @release()
+      throw e
 
     unless @validateBattleData()
       @release()
@@ -51,7 +56,8 @@ class DataTransport
     @playerId? and @numberOfPlayers?
 
   validateBattleData: ->
-    @numberOfPlayers >= 2 and
+    @seed? and
+      @numberOfPlayers >= 2 and
       @numberOfPlayers <= MAX_NUMBER_OF_PLAYERS and
       @playerId >= 0 and
       @playerId < @numberOfPlayers
@@ -64,5 +70,4 @@ class DataTransport
 
   release: ->
     @clearBuffer()
-    @playerId = @numberOfPlayers = null
     @socket.close()

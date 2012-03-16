@@ -8,7 +8,7 @@
 
     BattleField.prototype.OUTSIDE_OF_FIELD_ERROR = "Point is outside of the field";
 
-    function BattleField(numberOfPlayers) {
+    function BattleField(numberOfPlayers, seed) {
       var g, i, j, w;
       this.tileSize = 16;
       this.height = 13;
@@ -46,7 +46,7 @@
       this.setMapData(1, 2, new SpeedUp(this, new Point(1, 2)));
       this.setMapData(1, 3, new FirePowerUp(this, new Point(1, 3)));
       this.setMapData(1, 4, new BombUp(this, new Point(1, 4)));
-      this.random = new Random(2000);
+      this.random = new Random(seed);
       this.updateMap();
     }
 
@@ -202,7 +202,7 @@
       var bomberman, bombermanView, _i, _len, _ref;
       this.game = game;
       this.dataTransport = dataTransport;
-      this.field = new BattleField(this.dataTransport.numberOfPlayers);
+      this.field = new BattleField(this.dataTransport.numberOfPlayers, this.dataTransport.seed);
       this.scene = new enchant.Scene();
       this.game.pushScene(this.scene);
       this.queue = new RenderingQueue(this.game, this.scene);
@@ -566,10 +566,16 @@
     }
 
     DataTransport.prototype.receiveBattleData = function(data) {
-      var byteArray;
-      byteArray = new Uint8Array(event.data);
-      this.numberOfPlayers = byteArray[0];
-      this.playerId = byteArray[1];
+      var battleData;
+      try {
+        battleData = JSON.parse(data);
+        this.seed = battleData.seed;
+        this.numberOfPlayers = battleData.numberOfPlayers;
+        this.playerId = battleData.playerId;
+      } catch (e) {
+        this.release();
+        throw e;
+      }
       if (!this.validateBattleData()) {
         this.release();
         throw Error("Invalid battle data");
@@ -612,7 +618,7 @@
     };
 
     DataTransport.prototype.validateBattleData = function() {
-      return this.numberOfPlayers >= 2 && this.numberOfPlayers <= MAX_NUMBER_OF_PLAYERS && this.playerId >= 0 && this.playerId < this.numberOfPlayers;
+      return (this.seed != null) && this.numberOfPlayers >= 2 && this.numberOfPlayers <= MAX_NUMBER_OF_PLAYERS && this.playerId >= 0 && this.playerId < this.numberOfPlayers;
     };
 
     DataTransport.prototype.isConnected = function() {
@@ -625,7 +631,6 @@
 
     DataTransport.prototype.release = function() {
       this.clearBuffer();
-      this.playerId = this.numberOfPlayers = null;
       return this.socket.close();
     };
 
