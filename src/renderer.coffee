@@ -1,4 +1,4 @@
-class View
+class Renderer
   constructor: (@queue) ->
     @game = @queue.getGame()
     @scene = @queue.getScene()
@@ -14,7 +14,7 @@ class View
 
   update: ->
 
-class FieldView extends View
+class FieldRenderer extends Renderer
   constructor: (@queue, @field) ->
     super(@queue)
 
@@ -34,7 +34,7 @@ class FieldView extends View
         else
           4
 
-class BombermanView extends View
+class BombermanRenderer extends Renderer
   constructor: (@queue, @bomberman) ->
     super(@queue)
 
@@ -54,7 +54,7 @@ class BombermanView extends View
     @sprite.x = @bomberman.x
     @sprite.y = @bomberman.y
 
-class BombView extends View
+class BombRenderer extends Renderer
   constructor: (@queue, @bomb) ->
     super(@queue)
 
@@ -80,7 +80,7 @@ class BombView extends View
       @stopUpdate(@bomb.objectId)
       @removeNode(@sprite)
 
-class BlastView extends View
+class BlastRenderer extends Renderer
   constructor: (@queue, @blast) ->
     super(@queue)
 
@@ -101,7 +101,7 @@ class BlastView extends View
       @removeNode(@sprite)
 
 
-class BlockView extends View
+class BlockRenderer extends Renderer
   constructor: (@queue, @block) ->
     super(@queue)
 
@@ -118,7 +118,7 @@ class BlockView extends View
       @stopUpdate(@block.objectId)
       @removeNode(@sprite)
 
-class ItemView extends View
+class ItemRenderer extends Renderer
   constructor: (@queue, @item) ->
     super(@queue)
 

@@ -2,22 +2,21 @@ class RenderingQueue
   constructor: (@game, @scene) ->
     @table = {}
 
-  contains: (key) ->
-    !!(@table[key])
+  contains: (id) ->
+    !!(@table[id])
 
-  store: (id, view) ->
-    @table[id] = view
+  store: (id, renderer) ->
+    @table[id] = renderer
 
   remove: (id) ->
     delete @table[id]
 
   update: ->
-    for own id, view of @table
-      view.update()
+    for own id, renderer of @table
+      renderer.update()
 
   getScene: ->
     @scene
 
   getGame: ->
     @game
-

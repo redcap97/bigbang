@@ -13,14 +13,14 @@ class BattleGame
     @game.pushScene(@scene2)
     @queue2 = new RenderingQueue(@game, @scene2)
 
-    @fieldView = new FieldView(@queue, @field)
-    @fieldView.update()
+    @fieldRenderer = new FieldRenderer(@queue, @field)
+    @fieldRenderer.update()
 
     @count = 0
 
     for bomberman in @field.bombermans
-      bombermanView = new BombermanView(@queue2, bomberman)
-      @queue2.store(bomberman.objectId, bombermanView)
+      bombermanRenderer = new BombermanRenderer(@queue2, bomberman)
+      @queue2.store(bomberman.objectId, bombermanRenderer)
 
     @updateQueue()
 
@@ -34,7 +34,7 @@ class BattleGame
       for j in [0 ... @field.width]
         data = @field.mutableDataMap[i][j]
         if data and !@queue.contains(data.objectId)
-          @queue.store(data.objectId, @createView(data))
+          @queue.store(data.objectId, @createRenderer(data))
 
     @count = (@count+1)%2
     @sendInput(@game.input) if @count == 0
@@ -46,16 +46,16 @@ class BattleGame
   sendInput: (input) ->
     @dataTransport.sendInput(input)
 
-  createView: (data) ->
+  createRenderer: (data) ->
     switch data.type
       when FieldObject.TYPE_BOMB
-        new BombView(@queue,  data)
+        new BombRenderer(@queue,  data)
       when FieldObject.TYPE_BLAST
-        new BlastView(@queue, data)
+        new BlastRenderer(@queue, data)
       when FieldObject.TYPE_BLOCK
-        new BlockView(@queue, data)
+        new BlockRenderer(@queue, data)
       when FieldObject.TYPE_ITEM
-        new ItemView(@queue,  data)
+        new ItemRenderer(@queue,  data)
       else
         throw Error("Unknown object")
 
