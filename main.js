@@ -1,5 +1,5 @@
 (function() {
-  var BattleField, BattleGame, Blast, BlastView, Block, BlockView, Bomb, BombUp, BombView, Bomberman, BombermanView, DataTransport, ENCHANTJS_IMAGE_PATH, EntryScreen, FieldObject, FieldView, FirePowerUp, GameResult, Ground, InputManager, Item, ItemView, MAX_NUMBER_OF_PLAYERS, Point, Rectangle, RenderingQueue, SpeedUp, Utils, View, WS_SUBPROTOCOL, WS_URI, Wall,
+  var BattleField, BattleGame, Blast, BlastView, Block, BlockView, Bomb, BombUp, BombView, Bomberman, BombermanView, DataTransport, ENCHANTJS_IMAGE_PATH, EntryScreen, FieldObject, FieldView, FirePowerUp, GameResult, Ground, InputManager, Item, ItemView, MAX_NUMBER_OF_PLAYERS, Point, Random, Rectangle, RenderingQueue, SpeedUp, Utils, View, WS_SUBPROTOCOL, WS_URI, Wall,
     __slice = Array.prototype.slice,
     __hasProp = Object.prototype.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor; child.__super__ = parent.prototype; return child; };
@@ -13,6 +13,14 @@
       this.tileSize = 16;
       this.height = 13;
       this.width = 15;
+      this.generateId = (function() {
+        var maxId;
+        maxId = 0;
+        return function() {
+          maxId += 1;
+          return maxId;
+        };
+      })();
       this.bombermans = this.createBombermans(numberOfPlayers);
       w = new Wall(this);
       g = new Ground(this);
@@ -36,6 +44,9 @@
       this.setMapData(5, 5, new Block(this, new Point(5, 5)));
       this.setMapData(5, 2, new Block(this, new Point(5, 2)));
       this.setMapData(1, 2, new SpeedUp(this, new Point(1, 2)));
+      this.setMapData(1, 3, new FirePowerUp(this, new Point(1, 3)));
+      this.setMapData(1, 4, new BombUp(this, new Point(1, 4)));
+      this.random = new Random(2000);
       this.updateMap();
     }
 
@@ -142,6 +153,10 @@
       _ref = this.getXIndexes(r.getLeft(), r.getRight()), il = _ref[0], ir = _ref[1];
       _ref2 = this.getYIndexes(r.getTop(), r.getBottom()), it = _ref2[0], ib = _ref2[1];
       return [il, it, ir, ib];
+    };
+
+    BattleField.prototype.getRandom = function(max) {
+      return this.random.getRandom(max);
     };
 
     BattleField.prototype.isBarrier = function(x, y) {
@@ -277,7 +292,7 @@
       this.field = field;
       this.x = x;
       this.y = y;
-      this.objectId = Utils.generateId();
+      this.objectId = this.field.generateId();
       this.width = this.height = this.field.tileSize;
       this.power = 2;
       this.speed = 2;
@@ -645,7 +660,6 @@
         this.dataTransport.release();
         this.isCanceling = true;
         return id = setInterval(function() {
-          console.log(_this.dataTransport);
           if (_this.dataTransport.isClosed()) {
             _this.setText("Plese input Z to start game");
             _this.dataTransport = null;
@@ -679,10 +693,11 @@
 
   FieldObject = (function() {
 
-    function FieldObject(type, isBarrier) {
+    function FieldObject(field, type, isBarrier) {
+      this.field = field;
       this.type = type;
       this.isBarrier = isBarrier;
-      this.objectId = Utils.generateId();
+      this.objectId = this.field.generateId();
       this.isDestroyed = false;
     }
 
@@ -711,8 +726,7 @@
     __extends(Wall, _super);
 
     function Wall(field) {
-      this.field = field;
-      Wall.__super__.constructor.call(this, FieldObject.TYPE_WALL, true);
+      Wall.__super__.constructor.call(this, field, FieldObject.TYPE_WALL, true);
     }
 
     return Wall;
@@ -724,8 +738,7 @@
     __extends(Ground, _super);
 
     function Ground(field) {
-      this.field = field;
-      Ground.__super__.constructor.call(this, FieldObject.TYPE_GROUND, false);
+      Ground.__super__.constructor.call(this, field, FieldObject.TYPE_GROUND, false);
     }
 
     return Ground;
@@ -739,10 +752,9 @@
     Blast.prototype.DURATION = 10;
 
     function Blast(field, index, bomberman) {
-      this.field = field;
       this.index = index;
       this.bomberman = bomberman;
-      Blast.__super__.constructor.call(this, FieldObject.TYPE_BLAST, false);
+      Blast.__super__.constructor.call(this, field, FieldObject.TYPE_BLAST, false);
       this.x = this.field.tileSize * this.index.x;
       this.y = this.field.tileSize * this.index.y;
       this.count = 0;
@@ -769,10 +781,9 @@
     Bomb.prototype.TIME_LIMIT = 80;
 
     function Bomb(field, index, bomberman) {
-      this.field = field;
       this.index = index;
       this.bomberman = bomberman;
-      Bomb.__super__.constructor.call(this, FieldObject.TYPE_BOMB, true);
+      Bomb.__super__.constructor.call(this, field, FieldObject.TYPE_BOMB, true);
       this.count = 0;
       this.x = this.field.tileSize * this.index.x;
       this.y = this.field.tileSize * this.index.y;
@@ -826,9 +837,8 @@
     __extends(Block, _super);
 
     function Block(field, index) {
-      this.field = field;
       this.index = index;
-      Block.__super__.constructor.call(this, FieldObject.TYPE_BLOCK, true);
+      Block.__super__.constructor.call(this, field, FieldObject.TYPE_BLOCK, true);
       this.x = this.field.tileSize * this.index.x;
       this.y = this.field.tileSize * this.index.y;
     }
@@ -845,13 +855,13 @@
     };
 
     Block.prototype.hasItem = function() {
-      return Utils.random(3) === 0;
+      return this.field.getRandom(3) === 0;
     };
 
     Block.prototype.generateItem = function() {
       var cs, klass;
       cs = [BombUp, FirePowerUp, SpeedUp];
-      klass = cs[Utils.random(cs.length)];
+      klass = cs[this.field.getRandom(cs.length)];
       return new klass(this.field, this.index);
     };
 
@@ -864,9 +874,8 @@
     __extends(Item, _super);
 
     function Item(field, index) {
-      this.field = field;
       this.index = index;
-      Item.__super__.constructor.call(this, FieldObject.TYPE_ITEM, false);
+      Item.__super__.constructor.call(this, field, FieldObject.TYPE_ITEM, false);
       this.x = this.field.tileSize * this.index.x;
       this.y = this.field.tileSize * this.index.y;
     }
@@ -876,9 +885,7 @@
       return this.field.removeMapData(this.index.x, this.index.y);
     };
 
-    Item.prototype.exertEffectOn = function(bomberman) {
-      this.bomberman = bomberman;
-    };
+    Item.prototype.exertEffectOn = function(bomberman) {};
 
     return Item;
 
@@ -889,14 +896,12 @@
     __extends(BombUp, _super);
 
     function BombUp(field, index) {
-      this.field = field;
       this.index = index;
-      BombUp.__super__.constructor.call(this, this.field, this.index);
+      BombUp.__super__.constructor.call(this, field, this.index);
     }
 
     BombUp.prototype.exertEffectOn = function(bomberman) {
-      this.bomberman = bomberman;
-      return this.bomberman.bombCapacity += 1;
+      return bomberman.bombCapacity += 1;
     };
 
     return BombUp;
@@ -908,14 +913,12 @@
     __extends(FirePowerUp, _super);
 
     function FirePowerUp(field, index) {
-      this.field = field;
       this.index = index;
-      FirePowerUp.__super__.constructor.call(this, this.field, this.index);
+      FirePowerUp.__super__.constructor.call(this, field, this.index);
     }
 
     FirePowerUp.prototype.exertEffectOn = function(bomberman) {
-      this.bomberman = bomberman;
-      return this.bomberman.power += 1;
+      return bomberman.power += 1;
     };
 
     return FirePowerUp;
@@ -927,14 +930,12 @@
     __extends(SpeedUp, _super);
 
     function SpeedUp(field, index) {
-      this.field = field;
       this.index = index;
-      SpeedUp.__super__.constructor.call(this, this.field, this.index);
+      SpeedUp.__super__.constructor.call(this, field, this.index);
     }
 
     SpeedUp.prototype.exertEffectOn = function(bomberman) {
-      this.bomberman = bomberman;
-      return this.bomberman.speed += 1;
+      return bomberman.speed += 1;
     };
 
     return SpeedUp;
@@ -1138,6 +1139,20 @@
 
   })();
 
+  Random = (function() {
+
+    function Random(seed) {
+      this.mt19937 = new MersenneTwister(seed);
+    }
+
+    Random.prototype.getRandom = function(max) {
+      return this.mt19937.nextInt(max);
+    };
+
+    return Random;
+
+  })();
+
   Rectangle = (function() {
 
     function Rectangle(x, y, width, height) {
@@ -1228,17 +1243,6 @@
   })();
 
   Utils = {
-    generateId: (function() {
-      var maxId;
-      maxId = 0;
-      return function() {
-        maxId += 1;
-        return maxId;
-      };
-    })(),
-    random: function(max) {
-      return Math.floor(Math.random() * max);
-    },
     inputFlags: {
       left: 1,
       up: 2,

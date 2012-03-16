@@ -6,6 +6,13 @@ class BattleField
     @height   = 13
     @width    = 15
 
+    @generateId = (->
+      maxId = 0
+      ->
+        maxId += 1
+        maxId
+    )()
+
     @bombermans = @createBombermans(numberOfPlayers)
 
     w = new Wall(@)
@@ -32,7 +39,12 @@ class BattleField
     @setMapData(4, 1, new Block(@, new Point(4, 1)))
     @setMapData(5, 5, new Block(@, new Point(5, 5)))
     @setMapData(5, 2, new Block(@, new Point(5, 2)))
+
     @setMapData(1, 2, new SpeedUp(@, new Point(1, 2)))
+    @setMapData(1, 3, new FirePowerUp(@, new Point(1, 3)))
+    @setMapData(1, 4, new BombUp(@, new Point(1, 4)))
+
+    @random = new Random(2000)
 
     @updateMap()
 
@@ -111,6 +123,9 @@ class BattleField
     [il, ir] = @getXIndexes(r.getLeft(), r.getRight())
     [it, ib] = @getYIndexes(r.getTop(), r.getBottom())
     [il, it, ir, ib]
+
+  getRandom: (max) ->
+    @random.getRandom(max)
 
   isBarrier: (x, y) ->
     @getMapData(x, y).isBarrier

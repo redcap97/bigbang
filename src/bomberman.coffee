@@ -1,6 +1,6 @@
 class Bomberman
   constructor: (@field, @x, @y) ->
-    @objectId = Utils.generateId()
+    @objectId = @field.generateId()
     @width = @height = @field.tileSize
     @power = 2
     @speed = 2

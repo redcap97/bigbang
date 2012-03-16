@@ -1,6 +1,6 @@
 class FieldObject
-  constructor: (@type, @isBarrier) ->
-    @objectId    = Utils.generateId()
+  constructor: (@field, @type, @isBarrier) ->
+    @objectId = @field.generateId()
     @isDestroyed = false
 
   update: ->
@@ -14,18 +14,18 @@ FieldObject.TYPE_BLAST  = 4
 FieldObject.TYPE_ITEM   = 5
 
 class Wall extends FieldObject
-  constructor: (@field) ->
-    super(FieldObject.TYPE_WALL, true)
+  constructor: (field) ->
+    super(field, FieldObject.TYPE_WALL, true)
 
 class Ground extends FieldObject
-  constructor: (@field) ->
-    super(FieldObject.TYPE_GROUND, false)
+  constructor: (field) ->
+    super(field, FieldObject.TYPE_GROUND, false)
 
 class Blast extends FieldObject
   DURATION: 10
 
-  constructor: (@field, @index, @bomberman) ->
-    super(FieldObject.TYPE_BLAST, false)
+  constructor: (field, @index, @bomberman) ->
+    super(field, FieldObject.TYPE_BLAST, false)
     @x = @field.tileSize * @index.x
     @y = @field.tileSize * @index.y
     @count = 0
@@ -41,8 +41,8 @@ class Blast extends FieldObject
 class Bomb extends FieldObject
   TIME_LIMIT: 80
 
-  constructor: (@field, @index, @bomberman) ->
-    super(FieldObject.TYPE_BOMB, true)
+  constructor: (field, @index, @bomberman) ->
+    super(field, FieldObject.TYPE_BOMB, true)
     @count = 0
     @x = @field.tileSize * @index.x
     @y = @field.tileSize * @index.y
@@ -83,8 +83,8 @@ class Bomb extends FieldObject
     @field.setMapData(ix.x, ix.y, blast)
 
 class Block extends FieldObject
-  constructor: (@field, @index) ->
-    super(FieldObject.TYPE_BLOCK, true)
+  constructor: (field, @index) ->
+    super(field, FieldObject.TYPE_BLOCK, true)
     @x = @field.tileSize * @index.x
     @y = @field.tileSize * @index.y
 
@@ -98,16 +98,16 @@ class Block extends FieldObject
       @field.removeMapData(@index.x, @index.y)
 
   hasItem: ->
-    Utils.random(3) == 0
+    @field.getRandom(3) == 0
 
   generateItem: ->
     cs = [BombUp, FirePowerUp, SpeedUp]
-    klass = cs[Utils.random(cs.length)]
+    klass = cs[@field.getRandom(cs.length)]
     new klass(@field, @index)
 
 class Item extends FieldObject
-  constructor: (@field, @index) ->
-    super(FieldObject.TYPE_ITEM, false)
+  constructor: (field, @index) ->
+    super(field, FieldObject.TYPE_ITEM, false)
     @x = @field.tileSize * @index.x
     @y = @field.tileSize * @index.y
 
@@ -115,25 +115,25 @@ class Item extends FieldObject
     @isDestroyed = true
     @field.removeMapData(@index.x, @index.y)
 
-  exertEffectOn: (@bomberman) ->
+  exertEffectOn: (bomberman) ->
 
 class BombUp extends Item
-  constructor: (@field, @index) ->
-    super(@field, @index)
+  constructor: (field, @index) ->
+    super(field, @index)
 
-  exertEffectOn: (@bomberman) ->
-    @bomberman.bombCapacity += 1
+  exertEffectOn: (bomberman) ->
+    bomberman.bombCapacity += 1
 
 class FirePowerUp extends Item
-  constructor: (@field, @index) ->
-    super(@field, @index)
+  constructor: (field, @index) ->
+    super(field, @index)
 
-  exertEffectOn: (@bomberman) ->
-    @bomberman.power += 1
+  exertEffectOn: (bomberman) ->
+    bomberman.power += 1
 
 class SpeedUp extends Item
-  constructor: (@field, @index) ->
-    super(@field, @index)
+  constructor: (field, @index) ->
+    super(field, @index)
 
-  exertEffectOn: (@bomberman) ->
-    @bomberman.speed += 1
+  exertEffectOn: (bomberman) ->
+    bomberman.speed += 1

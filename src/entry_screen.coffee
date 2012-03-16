@@ -27,7 +27,6 @@ class EntryScreen
       @isCanceling = true
 
       id = setInterval =>
-        console.log(@dataTransport)
         if @dataTransport.isClosed()
           @setText("Plese input Z to start game")
 
