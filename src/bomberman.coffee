@@ -30,8 +30,7 @@ class Bomberman
         @moveDown()
 
   changePosition: (r) ->
-    @x = r.x
-    @y = r.y
+    {x : @x, y : @y} = r
 
   putBomb: ->
     if @canPutBomb() and @usedBomb < @bombCapacity

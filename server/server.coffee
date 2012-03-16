@@ -114,13 +114,13 @@ class Group
   release: ->
     player.release() for player in @players
 
-server = http.createServer (request, response) ->
+httpServer = http.createServer (request, response) ->
   console.log((new Date()) + ' Received request for ' + request.url)
   response.writeHead(404)
   response.end()
 
 webSocketServer = new WebSocketServer(
-  httpServer: server,
+  httpServer: httpServer,
   autoAcceptConnections: false
 )
 
@@ -147,8 +147,8 @@ webSocketServer.on 'request', (request) ->
   numberOfConnections += 1
   connection = request.accept('bigbang', request.origin)
 
-  console.log("Number of Users #{numberOfConnections}")
-  console.log((new Date()) + ' Connection accepted.')
+  console.log("#{new Date()} Connection accepted.")
+  console.log("#{new Date()} The number of Connections: #{numberOfConnections}")
 
   group.purge()
   group.add(new Player(connection))
@@ -164,5 +164,5 @@ webSocketServer.on 'request', (request) ->
         group = new Group()
     , 3 * 1000
 
-server.listen 8080, ->
+httpServer.listen 8080, ->
   console.log((new Date()) + ' Server is listening on port 8080')

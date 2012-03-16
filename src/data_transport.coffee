@@ -14,10 +14,11 @@ class DataTransport
 
   receiveBattleData: (data) ->
     try
-      battleData = JSON.parse(data)
-      @seed = battleData.seed
-      @numberOfPlayers = battleData.numberOfPlayers
-      @playerId = battleData.playerId
+      {
+        seed:            @seed
+        numberOfPlayers: @numberOfPlayers
+        playerId:        @playerId
+      } = JSON.parse(data)
     catch e
       @release()
       throw e

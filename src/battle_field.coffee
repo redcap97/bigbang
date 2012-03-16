@@ -13,6 +13,8 @@ class BattleField
         maxId
     )()
 
+    @random = new Random(seed)
+
     @bombermans = @createBombermans(numberOfPlayers)
 
     w = new Wall(@)
@@ -43,8 +45,6 @@ class BattleField
     @setMapData(1, 2, new SpeedUp(@, new Point(1, 2)))
     @setMapData(1, 3, new FirePowerUp(@, new Point(1, 3)))
     @setMapData(1, 4, new BombUp(@, new Point(1, 4)))
-
-    @random = new Random(seed)
 
     @updateMap()
 

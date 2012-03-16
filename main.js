@@ -21,6 +21,7 @@
           return maxId;
         };
       })();
+      this.random = new Random(seed);
       this.bombermans = this.createBombermans(numberOfPlayers);
       w = new Wall(this);
       g = new Ground(this);
@@ -46,7 +47,6 @@
       this.setMapData(1, 2, new SpeedUp(this, new Point(1, 2)));
       this.setMapData(1, 3, new FirePowerUp(this, new Point(1, 3)));
       this.setMapData(1, 4, new BombUp(this, new Point(1, 4)));
-      this.random = new Random(seed);
       this.updateMap();
     }
 
@@ -324,8 +324,7 @@
     };
 
     Bomberman.prototype.changePosition = function(r) {
-      this.x = r.x;
-      return this.y = r.y;
+      return this.x = r.x, this.y = r.y, r;
     };
 
     Bomberman.prototype.putBomb = function() {
@@ -566,12 +565,9 @@
     }
 
     DataTransport.prototype.receiveBattleData = function(data) {
-      var battleData;
+      var _ref;
       try {
-        battleData = JSON.parse(data);
-        this.seed = battleData.seed;
-        this.numberOfPlayers = battleData.numberOfPlayers;
-        this.playerId = battleData.playerId;
+        _ref = JSON.parse(data), this.seed = _ref.seed, this.numberOfPlayers = _ref.numberOfPlayers, this.playerId = _ref.playerId;
       } catch (e) {
         this.release();
         throw e;
