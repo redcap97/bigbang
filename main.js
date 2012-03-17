@@ -47,14 +47,7 @@
         return _results;
       }).call(this);
       this.count = 0;
-      this.setMapData(4, 1, new Block(this, new Point(4, 1)));
-      this.setMapData(5, 5, new Block(this, new Point(5, 5)));
-      this.setMapData(5, 2, new Block(this, new Point(5, 2)));
-      this.setMapData(1, 2, new SpeedUp(this, new Point(1, 2)));
-      this.setMapData(1, 3, new FirePowerUp(this, new Point(1, 3)));
-      this.setMapData(1, 4, new BombUp(this, new Point(1, 4)));
-      this.setMapData(1, 5, new Remocon(this, new Point(1, 5)));
-      this.setMapData(1, 7, new BombKick(this, new Point(1, 7)));
+      this.createBlocks();
       this.updateMap();
     }
 
@@ -120,6 +113,52 @@
         bombermans.push(new Bomberman(this, this.tileSize * x, this.tileSize * y));
       }
       return bombermans;
+    };
+
+    BattleField.prototype.createBlocks = function() {
+      var data, n, x, y, _ref, _ref2, _results;
+      for (y = 0, _ref = this.height; 0 <= _ref ? y < _ref : y > _ref; 0 <= _ref ? y++ : y--) {
+        for (x = 0, _ref2 = this.width; 0 <= _ref2 ? x < _ref2 : x > _ref2; 0 <= _ref2 ? x++ : x--) {
+          data = this.getMapData(x, y);
+          if (data.type === FieldObject.TYPE_GROUND) {
+            this.setMapData(x, y, new Block(this, new Point(x, y)));
+          }
+        }
+      }
+      this.removeMapData(1, 1);
+      this.removeMapData(1, 2);
+      this.removeMapData(1, 3);
+      this.removeMapData(2, 1);
+      this.removeMapData(3, 1);
+      this.removeMapData(this.width - 2, 1);
+      this.removeMapData(this.width - 2, 2);
+      this.removeMapData(this.width - 2, 3);
+      this.removeMapData(this.width - 3, 1);
+      this.removeMapData(this.width - 4, 1);
+      this.removeMapData(1, this.height - 2);
+      this.removeMapData(1, this.height - 3);
+      this.removeMapData(1, this.height - 4);
+      this.removeMapData(2, this.height - 2);
+      this.removeMapData(3, this.height - 2);
+      this.removeMapData(this.width - 2, this.height - 2);
+      this.removeMapData(this.width - 2, this.height - 3);
+      this.removeMapData(this.width - 2, this.height - 4);
+      this.removeMapData(this.width - 3, this.height - 2);
+      this.removeMapData(this.width - 4, this.height - 2);
+      n = 0;
+      _results = [];
+      while (n < 11) {
+        x = this.getRandom(this.width);
+        y = this.getRandom(this.height);
+        data = this.getMapData(x, y);
+        if (data.type === FieldObject.TYPE_BLOCK) {
+          this.removeMapData(x, y);
+          _results.push(n += 1);
+        } else {
+          _results.push(void 0);
+        }
+      }
+      return _results;
     };
 
     BattleField.prototype.getIndex = function(x, y) {

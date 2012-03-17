@@ -1,5 +1,5 @@
 BUFFER_LIMIT = 1200
-BATTLE_TIME_LIMIT = 30 * 60 * 5
+BATTLE_TIME_LIMIT = 30 * 60 * 3
 MAX_CONNECTIONS = 100
 
 WebSocketServer = require('websocket').server
