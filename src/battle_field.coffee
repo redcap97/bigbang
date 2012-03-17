@@ -43,15 +43,15 @@ class BattleField
 
     @count = 0
 
-    @setMapData(4, 1, new Block(@, new Point(4, 1)))
-    @setMapData(5, 5, new Block(@, new Point(5, 5)))
-    @setMapData(5, 2, new Block(@, new Point(5, 2)))
-
-    @setMapData(1, 2, new SpeedUp(@, new Point(1, 2)))
-    @setMapData(1, 3, new FirePowerUp(@, new Point(1, 3)))
-    @setMapData(1, 4, new BombUp(@, new Point(1, 4)))
-    @setMapData(1, 5, new Remocon(@, new Point(1, 5)))
-    @setMapData(1, 7, new BombKick(@, new Point(1, 7)))
+    #@setMapData(4, 1, new Block(@, new Point(4, 1)))
+    #@setMapData(5, 5, new Block(@, new Point(5, 5)))
+    #@setMapData(5, 2, new Block(@, new Point(5, 2)))
+    #@setMapData(1, 2, new SpeedUp(@, new Point(1, 2)))
+    #@setMapData(1, 3, new FirePowerUp(@, new Point(1, 3)))
+    #@setMapData(1, 4, new BombUp(@, new Point(1, 4)))
+    #@setMapData(1, 5, new Remocon(@, new Point(1, 5)))
+    #@setMapData(1, 7, new BombKick(@, new Point(1, 7)))
+    @createBlocks()
 
     @updateMap()
 
@@ -105,6 +105,46 @@ class BattleField
       y = positions[i].y
       bombermans.push(new Bomberman(@, @tileSize*x, @tileSize*y))
     bombermans
+
+  createBlocks: ->
+    for y in [0 ... @height]
+      for x in [0 ... @width]
+        data = @getMapData(x, y)
+        if data.type == FieldObject.TYPE_GROUND
+          @setMapData(x, y, new Block(@, new Point(x, y)))
+
+    @removeMapData(1, 1)
+    @removeMapData(1, 2)
+    @removeMapData(1, 3)
+    @removeMapData(2, 1)
+    @removeMapData(3, 1)
+
+    @removeMapData(@width-2, 1)
+    @removeMapData(@width-2, 2)
+    @removeMapData(@width-2, 3)
+    @removeMapData(@width-3, 1)
+    @removeMapData(@width-4, 1)
+
+    @removeMapData(1, @height-2)
+    @removeMapData(1, @height-3)
+    @removeMapData(1, @height-4)
+    @removeMapData(2, @height-2)
+    @removeMapData(3, @height-2)
+
+    @removeMapData(@width-2, @height-2)
+    @removeMapData(@width-2, @height-3)
+    @removeMapData(@width-2, @height-4)
+    @removeMapData(@width-3, @height-2)
+    @removeMapData(@width-4, @height-2)
+
+    n = 0
+    while n < 11
+      x = @getRandom(@width)
+      y = @getRandom(@height)
+      data = @getMapData(x, y)
+      if data.type == FieldObject.TYPE_BLOCK
+        @removeMapData(x, y)
+        n += 1
 
   getIndex: (x, y) ->
     if x < 0 or x >= @tileSize * @width or
