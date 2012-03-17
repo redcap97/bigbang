@@ -1,5 +1,8 @@
 class BattleField
-  OUTSIDE_OF_FIELD_ERROR: "Point is outside of the field"
+  OUTSIDE_OF_FIELD_ERROR = "Point is outside of the field"
+
+  FPS = 30
+  TIME_LIMIT = FPS * 60 * 2
 
   constructor: (numberOfPlayers, seed) ->
     @tileSize = 16
@@ -38,6 +41,8 @@ class BattleField
 
     @mutableDataMap = ((null for j in [0 ... @width]) for i in [0 ... @height])
 
+    @count = 0
+
     @setMapData(4, 1, new Block(@, new Point(4, 1)))
     @setMapData(5, 5, new Block(@, new Point(5, 5)))
     @setMapData(5, 2, new Block(@, new Point(5, 2)))
@@ -60,6 +65,8 @@ class BattleField
     @setMapData(x, y, null)
 
   update: (inputs) ->
+    @count += 1
+
     for bomberman, i in @bombermans
       ix = bomberman.getCurrentIndex()
       data = @getMapData(ix.x, ix.y)
@@ -102,14 +109,14 @@ class BattleField
   getIndex: (x, y) ->
     if x < 0 or x >= @tileSize * @width or
         y < 0 or y >= @tileSize * @height
-      throw new Error(@OUTSIDE_OF_FIELD_ERROR)
+      throw new Error(OUTSIDE_OF_FIELD_ERROR)
     new Point(x/@tileSize|0, y/@tileSize|0)
 
   getXIndexes: (xs...) ->
     rs = []
     for x in xs
       if x < 0 or x >= @tileSize * @width
-        throw new Error(@OUTSIDE_OF_FIELD_ERROR)
+        throw new Error(OUTSIDE_OF_FIELD_ERROR)
       rs.push(x / @tileSize | 0)
     rs
 
@@ -117,7 +124,7 @@ class BattleField
     rs = []
     for y in ys
       if y < 0 or y >= @tileSize * @height
-        throw new Error(@OUTSIDE_OF_FIELD_ERROR)
+        throw new Error(OUTSIDE_OF_FIELD_ERROR)
       rs.push(y / @tileSize | 0)
     rs
 
@@ -169,10 +176,12 @@ class BattleField
     remainingBombermans
 
   isFinished: ->
-    @getRemainingBombermans().length < 2
+    @count > TIME_LIMIT or
+      @getRemainingBombermans().length < 2
 
   isDraw: ->
-    @getRemainingBombermans().length == 0
+    @count > TIME_LIMIT or
+      @getRemainingBombermans().length == 0
 
   getWinner: ->
     unless @isFinished()
@@ -180,3 +189,9 @@ class BattleField
 
     for bomberman, i in @bombermans
       return i unless bomberman.isDestroyed
+
+  getRemainingTime: ->
+    return [0, 0] if @count > TIME_LIMIT
+
+    v = ((TIME_LIMIT - @count) / FPS)
+    [Math.floor(v/60), Math.floor(v%60)]

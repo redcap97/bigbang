@@ -16,6 +16,11 @@ class BattleGame
     @fieldRenderer = new FieldRenderer(@queue, @field)
     @fieldRenderer.update()
 
+    @label = new enchant.Label()
+    @label.color = "white"
+    @label.x = 4
+    @scene2.addChild(@label)
+
     @count = 0
 
     for bomberman in @field.bombermans
@@ -23,12 +28,14 @@ class BattleGame
       @queue2.store(bomberman.objectId, bombermanRenderer)
 
     @updateQueue()
+    @updateRemainingTime()
 
   update: ->
     while @dataTransport.getBufferSize() > 0
       inputs = @dataTransport.getInput()
       @field.update(inputs)
       @updateQueue()
+      @updateRemainingTime()
 
     for i in [0 ... @field.height]
       for j in [0 ... @field.width]
@@ -42,6 +49,12 @@ class BattleGame
   updateQueue: ->
     @queue.update()
     @queue2.update()
+
+  updateRemainingTime: ->
+    [min, sec] = @field.getRemainingTime()
+    sm = if min < 10 then ('0'+String(min)) else String(min)
+    ss = if sec < 10 then ('0'+String(sec)) else String(sec)
+    @label.text = "#{sm}:#{ss}"
 
   sendInput: (input) ->
     @dataTransport.sendInput(input)

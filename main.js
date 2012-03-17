@@ -5,8 +5,13 @@
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor; child.__super__ = parent.prototype; return child; };
 
   BattleField = (function() {
+    var FPS, OUTSIDE_OF_FIELD_ERROR, TIME_LIMIT;
 
-    BattleField.prototype.OUTSIDE_OF_FIELD_ERROR = "Point is outside of the field";
+    OUTSIDE_OF_FIELD_ERROR = "Point is outside of the field";
+
+    FPS = 30;
+
+    TIME_LIMIT = FPS * 60 * 2;
 
     function BattleField(numberOfPlayers, seed) {
       var g, i, j, w;
@@ -41,6 +46,7 @@
         }
         return _results;
       }).call(this);
+      this.count = 0;
       this.setMapData(4, 1, new Block(this, new Point(4, 1)));
       this.setMapData(5, 5, new Block(this, new Point(5, 5)));
       this.setMapData(5, 2, new Block(this, new Point(5, 2)));
@@ -66,6 +72,7 @@
 
     BattleField.prototype.update = function(inputs) {
       var bomberman, data, i, ix, _len, _ref;
+      this.count += 1;
       _ref = this.bombermans;
       for (i = 0, _len = _ref.length; i < _len; i++) {
         bomberman = _ref[i];
@@ -117,7 +124,7 @@
 
     BattleField.prototype.getIndex = function(x, y) {
       if (x < 0 || x >= this.tileSize * this.width || y < 0 || y >= this.tileSize * this.height) {
-        throw new Error(this.OUTSIDE_OF_FIELD_ERROR);
+        throw new Error(OUTSIDE_OF_FIELD_ERROR);
       }
       return new Point(x / this.tileSize | 0, y / this.tileSize | 0);
     };
@@ -129,7 +136,7 @@
       for (_i = 0, _len = xs.length; _i < _len; _i++) {
         x = xs[_i];
         if (x < 0 || x >= this.tileSize * this.width) {
-          throw new Error(this.OUTSIDE_OF_FIELD_ERROR);
+          throw new Error(OUTSIDE_OF_FIELD_ERROR);
         }
         rs.push(x / this.tileSize | 0);
       }
@@ -143,7 +150,7 @@
       for (_i = 0, _len = ys.length; _i < _len; _i++) {
         y = ys[_i];
         if (y < 0 || y >= this.tileSize * this.height) {
-          throw new Error(this.OUTSIDE_OF_FIELD_ERROR);
+          throw new Error(OUTSIDE_OF_FIELD_ERROR);
         }
         rs.push(y / this.tileSize | 0);
       }
@@ -215,11 +222,11 @@
     };
 
     BattleField.prototype.isFinished = function() {
-      return this.getRemainingBombermans().length < 2;
+      return this.count > TIME_LIMIT || this.getRemainingBombermans().length < 2;
     };
 
     BattleField.prototype.isDraw = function() {
-      return this.getRemainingBombermans().length === 0;
+      return this.count > TIME_LIMIT || this.getRemainingBombermans().length === 0;
     };
 
     BattleField.prototype.getWinner = function() {
@@ -230,6 +237,13 @@
         bomberman = _ref[i];
         if (!bomberman.isDestroyed) return i;
       }
+    };
+
+    BattleField.prototype.getRemainingTime = function() {
+      var v;
+      if (this.count > TIME_LIMIT) return [0, 0];
+      v = (TIME_LIMIT - this.count) / FPS;
+      return [Math.floor(v / 60), Math.floor(v % 60)];
     };
 
     return BattleField;
@@ -251,6 +265,10 @@
       this.queue2 = new RenderingQueue(this.game, this.scene2);
       this.fieldRenderer = new FieldRenderer(this.queue, this.field);
       this.fieldRenderer.update();
+      this.label = new enchant.Label();
+      this.label.color = "white";
+      this.label.x = 4;
+      this.scene2.addChild(this.label);
       this.count = 0;
       _ref = this.field.bombermans;
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
@@ -259,6 +277,7 @@
         this.queue2.store(bomberman.objectId, bombermanRenderer);
       }
       this.updateQueue();
+      this.updateRemainingTime();
     }
 
     BattleGame.prototype.update = function() {
@@ -267,6 +286,7 @@
         inputs = this.dataTransport.getInput();
         this.field.update(inputs);
         this.updateQueue();
+        this.updateRemainingTime();
       }
       for (i = 0, _ref = this.field.height; 0 <= _ref ? i < _ref : i > _ref; 0 <= _ref ? i++ : i--) {
         for (j = 0, _ref2 = this.field.width; 0 <= _ref2 ? j < _ref2 : j > _ref2; 0 <= _ref2 ? j++ : j--) {
@@ -283,6 +303,14 @@
     BattleGame.prototype.updateQueue = function() {
       this.queue.update();
       return this.queue2.update();
+    };
+
+    BattleGame.prototype.updateRemainingTime = function() {
+      var min, sec, sm, ss, _ref;
+      _ref = this.field.getRemainingTime(), min = _ref[0], sec = _ref[1];
+      sm = min < 10 ? '0' + String(min) : String(min);
+      ss = sec < 10 ? '0' + String(sec) : String(sec);
+      return this.label.text = "" + sm + ":" + ss;
     };
 
     BattleGame.prototype.sendInput = function(input) {
