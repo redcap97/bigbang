@@ -29,10 +29,8 @@ class FieldRenderer extends Renderer
   getIdMap: ->
     for i in [0 ... @field.height]
       for j in [0 ... @field.width]
-        if @field.staticDataMap[i][j].type == FieldObject.TYPE_GROUND
-          0
-        else
-          4
+        data = @field.staticDataMap[i][j]
+        if data.type == FieldObject.TYPE_GROUND then 0 else 4
 
 class BombermanRenderer extends Renderer
   constructor: (@queue, @bomberman) ->

@@ -45,6 +45,8 @@ class BattleField
     @setMapData(1, 2, new SpeedUp(@, new Point(1, 2)))
     @setMapData(1, 3, new FirePowerUp(@, new Point(1, 3)))
     @setMapData(1, 4, new BombUp(@, new Point(1, 4)))
+    @setMapData(1, 5, new Remocon(@, new Point(1, 5)))
+    @setMapData(1, 7, new BombKick(@, new Point(1, 7)))
 
     @updateMap()
 

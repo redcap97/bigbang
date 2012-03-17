@@ -2,12 +2,14 @@ class Bomberman
   constructor: (@field, @x, @y) ->
     @objectId = @field.generateId()
     @width = @height = @field.tileSize
-    @power = 2
-    @speed = 2
-    @bombCapacity = 2
-    @usedBomb = 0
-    @hasRemocon = @canKick = true
     @isDestroyed = false
+
+    @speed = 2
+    @power = 1
+    @bombCapacity = 1
+    @usedBomb = 0
+    @hasRemocon = false
+    @canKick = false
 
     @inputManager = new InputManager()
 
@@ -23,6 +25,15 @@ class Bomberman
       @explodeBomb()
 
     @move()
+
+  incrementSpeed: ->
+    @speed += 1 if @speed < 8
+
+  incrementPower: ->
+    @power += 1 if @power < 9
+
+  incrementBombCapacity: ->
+    @bombCapacity += 1 if @bombCapacity < 9
 
   move: ->
     switch(@inputManager.direction)

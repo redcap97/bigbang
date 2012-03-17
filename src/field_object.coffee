@@ -146,7 +146,7 @@ class Block extends FieldObject
     @field.getRandom(3) == 0
 
   generateItem: ->
-    cs = [BombUp, FirePowerUp, SpeedUp]
+    cs = [BombUp, FirePowerUp, SpeedUp, BombKick, Remocon]
     klass = cs[@field.getRandom(cs.length)]
     new klass(@field, @index)
 
@@ -167,18 +167,32 @@ class BombUp extends Item
     super(field, @index)
 
   exertEffectOn: (bomberman) ->
-    bomberman.bombCapacity += 1
+    bomberman.incrementBombCapacity()
 
 class FirePowerUp extends Item
   constructor: (field, @index) ->
     super(field, @index)
 
   exertEffectOn: (bomberman) ->
-    bomberman.power += 1
+    bomberman.incrementPower()
 
 class SpeedUp extends Item
   constructor: (field, @index) ->
     super(field, @index)
 
   exertEffectOn: (bomberman) ->
-    bomberman.speed += 1
+    bomberman.incrementSpeed()
+
+class Remocon extends Item
+  constructor: (field, @index) ->
+    super(field, @index)
+
+  exertEffectOn: (bomberman) ->
+    bomberman.hasRemocon = true
+
+class BombKick extends Item
+  constructor: (field, @index) ->
+    super(field, @index)
+
+  exertEffectOn: (bomberman) ->
+    bomberman.canKick = true
