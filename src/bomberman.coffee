@@ -6,7 +6,7 @@ class Bomberman
     @speed = 2
     @bombCapacity = 2
     @usedBomb = 0
-    @canThrow = @canKick = true
+    @hasRemocon = @canKick = true
     @isDestroyed = false
 
     @inputManager = new InputManager()
@@ -15,7 +15,13 @@ class Bomberman
     return if Utils.encodeInput(input) == 0
 
     @inputManager.update(input)
-    @putBomb() if @inputManager.aDown
+
+    if @inputManager.aDown
+      @putBomb()
+
+    if @inputManager.bDown and @hasRemocon
+      @explodeBomb()
+
     @move()
 
   move: ->
@@ -38,9 +44,13 @@ class Bomberman
       @usedBomb += 1
       @field.setMapData(ix.x, ix.y, new Bomb(@field, ix, @))
 
-  canMoveOnBomb: (ni) ->
-    oi = @getCurrentIndex()
-    @field.isBarrier(oi.x, oi.y) and oi.equals(ni)
+  explodeBomb: ->
+    for y in [0 ... @field.height]
+      for x in [0 ... @field.width]
+        data = @field.getMapData(x, y)
+        if data.type == FieldObject.TYPE_BOMB and
+            data.bomberman.objectId == @objectId
+          data.destroy()
 
   canPutBomb: ->
     ix = @getCurrentIndex()
@@ -57,6 +67,10 @@ class Bomberman
       return true
 
     false
+
+  canMoveOnBomb: (ni) ->
+    oi = @getCurrentIndex()
+    @field.isBarrier(oi.x, oi.y) and oi.equals(ni)
 
   moveRight: ->
     new_rect = @getRectangle(@speed, 0)

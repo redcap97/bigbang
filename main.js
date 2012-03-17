@@ -336,7 +336,7 @@
       this.speed = 2;
       this.bombCapacity = 2;
       this.usedBomb = 0;
-      this.canThrow = this.canKick = true;
+      this.hasRemocon = this.canKick = true;
       this.isDestroyed = false;
       this.inputManager = new InputManager();
     }
@@ -345,6 +345,7 @@
       if (Utils.encodeInput(input) === 0) return;
       this.inputManager.update(input);
       if (this.inputManager.aDown) this.putBomb();
+      if (this.inputManager.bDown && this.hasRemocon) this.explodeBomb();
       return this.move();
     };
 
@@ -374,10 +375,25 @@
       }
     };
 
-    Bomberman.prototype.canMoveOnBomb = function(ni) {
-      var oi;
-      oi = this.getCurrentIndex();
-      return this.field.isBarrier(oi.x, oi.y) && oi.equals(ni);
+    Bomberman.prototype.explodeBomb = function() {
+      var data, x, y, _ref, _results;
+      _results = [];
+      for (y = 0, _ref = this.field.height; 0 <= _ref ? y < _ref : y > _ref; 0 <= _ref ? y++ : y--) {
+        _results.push((function() {
+          var _ref2, _results2;
+          _results2 = [];
+          for (x = 0, _ref2 = this.field.width; 0 <= _ref2 ? x < _ref2 : x > _ref2; 0 <= _ref2 ? x++ : x--) {
+            data = this.field.getMapData(x, y);
+            if (data.type === FieldObject.TYPE_BOMB && data.bomberman.objectId === this.objectId) {
+              _results2.push(data.destroy());
+            } else {
+              _results2.push(void 0);
+            }
+          }
+          return _results2;
+        }).call(this));
+      }
+      return _results;
     };
 
     Bomberman.prototype.canPutBomb = function() {
@@ -391,6 +407,12 @@
         return true;
       }
       return false;
+    };
+
+    Bomberman.prototype.canMoveOnBomb = function(ni) {
+      var oi;
+      oi = this.getCurrentIndex();
+      return this.field.isBarrier(oi.x, oi.y) && oi.equals(ni);
     };
 
     Bomberman.prototype.moveRight = function() {
