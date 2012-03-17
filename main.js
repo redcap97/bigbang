@@ -795,6 +795,18 @@
 
   FieldObject = (function() {
 
+    FieldObject.TYPE_WALL = 0;
+
+    FieldObject.TYPE_GROUND = 1;
+
+    FieldObject.TYPE_BLOCK = 2;
+
+    FieldObject.TYPE_BOMB = 3;
+
+    FieldObject.TYPE_BLAST = 4;
+
+    FieldObject.TYPE_ITEM = 5;
+
     function FieldObject(field, type, isBarrier) {
       this.field = field;
       this.type = type;
@@ -812,18 +824,6 @@
     return FieldObject;
 
   })();
-
-  FieldObject.TYPE_WALL = 0;
-
-  FieldObject.TYPE_GROUND = 1;
-
-  FieldObject.TYPE_BLOCK = 2;
-
-  FieldObject.TYPE_BOMB = 3;
-
-  FieldObject.TYPE_BLAST = 4;
-
-  FieldObject.TYPE_ITEM = 5;
 
   Wall = (function(_super) {
 
@@ -1157,6 +1157,16 @@
 
   InputManager = (function() {
 
+    InputManager.NONE = 0;
+
+    InputManager.LEFT = 1;
+
+    InputManager.UP = 2;
+
+    InputManager.RIGHT = 3;
+
+    InputManager.DOWN = 4;
+
     function InputManager() {
       this.a = this.b = false;
       this.aDown = this.aUp = false;
@@ -1237,16 +1247,6 @@
     return InputManager;
 
   })();
-
-  InputManager.NONE = 0;
-
-  InputManager.LEFT = 1;
-
-  InputManager.UP = 2;
-
-  InputManager.RIGHT = 3;
-
-  InputManager.DOWN = 4;
 
   WS_URI = 'ws://localhost:8080';
 
