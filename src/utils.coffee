@@ -24,3 +24,9 @@ Utils =
     for own key, flag of @inputFlags
       input[key] = true if value & flag
     input
+
+Direction =
+  LEFT:  0
+  UP:    1
+  RIGHT: 2
+  DOWN:  3

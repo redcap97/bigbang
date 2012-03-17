@@ -124,6 +124,13 @@ class BattleField
     [it, ib] = @getYIndexes(r.getTop(), r.getBottom())
     [il, it, ir, ib]
 
+  bombermanExists: (ix) ->
+    for bomberman in @bombermans
+      if !bomberman.isDestroyed and
+          ix.equals(bomberman.getCurrentIndex())
+        return true
+    false
+
   getRandom: (max) ->
     @random.getRandom(max)
 

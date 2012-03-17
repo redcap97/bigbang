@@ -76,6 +76,9 @@ class BombRenderer extends Renderer
       @sprite.frame = [5]
       @count = 0
 
+    @sprite.x = @bomb.x
+    @sprite.y = @bomb.y
+
     if @bomb.isDestroyed
       @stopUpdate(@bomb.objectId)
       @removeNode(@sprite)
@@ -99,7 +102,6 @@ class BlastRenderer extends Renderer
     if @count > @blast.DURATION
       @stopUpdate(@blast.objectId)
       @removeNode(@sprite)
-
 
 class BlockRenderer extends Renderer
   constructor: (@queue, @block) ->

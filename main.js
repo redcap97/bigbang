@@ -1,5 +1,5 @@
 (function() {
-  var BattleField, BattleGame, Blast, BlastRenderer, Block, BlockRenderer, Bomb, BombRenderer, BombUp, Bomberman, BombermanRenderer, DataTransport, ENCHANTJS_IMAGE_PATH, EntryScreen, FieldObject, FieldRenderer, FirePowerUp, GameResult, Ground, InputManager, Item, ItemRenderer, MAX_NUMBER_OF_PLAYERS, Point, Random, Rectangle, Renderer, RenderingQueue, SpeedUp, Utils, WS_SUBPROTOCOL, WS_URI, Wall,
+  var BattleField, BattleGame, Blast, BlastRenderer, Block, BlockRenderer, Bomb, BombRenderer, BombUp, Bomberman, BombermanRenderer, DataTransport, Direction, ENCHANTJS_IMAGE_PATH, EntryScreen, FieldObject, FieldRenderer, FirePowerUp, GameResult, Ground, InputManager, Item, ItemRenderer, MAX_NUMBER_OF_PLAYERS, Point, Random, Rectangle, Renderer, RenderingQueue, SpeedUp, Utils, WS_SUBPROTOCOL, WS_URI, Wall,
     __slice = Array.prototype.slice,
     __hasProp = Object.prototype.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor; child.__super__ = parent.prototype; return child; };
@@ -155,6 +155,18 @@
       return [il, it, ir, ib];
     };
 
+    BattleField.prototype.bombermanExists = function(ix) {
+      var bomberman, _i, _len, _ref;
+      _ref = this.bombermans;
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        bomberman = _ref[_i];
+        if (!bomberman.isDestroyed && ix.equals(bomberman.getCurrentIndex())) {
+          return true;
+        }
+      }
+      return false;
+    };
+
     BattleField.prototype.getRandom = function(max) {
       return this.random.getRandom(max);
     };
@@ -298,7 +310,7 @@
       this.speed = 2;
       this.bombCapacity = 2;
       this.usedBomb = 0;
-      this.canThrow = this.canKick = false;
+      this.canThrow = this.canKick = true;
       this.isDestroyed = false;
       this.inputManager = new InputManager();
     }
@@ -356,7 +368,7 @@
     };
 
     Bomberman.prototype.moveRight = function() {
-      var bound, ib, il, ir, it, new_rect, old_rect, _ref;
+      var bound, data, ib, il, ir, it, new_rect, old_rect, _ref;
       new_rect = this.getRectangle(this.speed, 0);
       _ref = this.field.getRectangleIndex(new_rect), il = _ref[0], it = _ref[1], ir = _ref[2], ib = _ref[3];
       if (il !== ir && it === ib && this.field.isBarrier(il, it) && this.field.isBarrier(ir, ib)) {
@@ -369,6 +381,11 @@
       bound = ir * this.field.tileSize - 1;
       old_rect = this.getRectangle();
       if (bound === old_rect.getRight()) {
+        if (it === ib && this.canKick) {
+          data = this.field.getMapData(ir, it);
+          data.kick(Direction.RIGHT);
+          return false;
+        }
         new_rect = this.getRectangle(0, -this.speed);
         if (!this.field.isBarrier(ir, it) && (!this.field.isBarrier(il, it) || this.canMoveOnBomb(this.getIndex(new_rect)))) {
           if (it * this.field.tileSize > new_rect.getTop()) {
@@ -393,7 +410,7 @@
     };
 
     Bomberman.prototype.moveDown = function() {
-      var bound, ib, il, ir, it, new_rect, old_rect, _ref;
+      var bound, data, ib, il, ir, it, new_rect, old_rect, _ref;
       new_rect = this.getRectangle(0, this.speed);
       _ref = this.field.getRectangleIndex(new_rect), il = _ref[0], it = _ref[1], ir = _ref[2], ib = _ref[3];
       if (it !== ib && il === ir && this.field.isBarrier(il, it) && this.field.isBarrier(ir, ib)) {
@@ -406,6 +423,11 @@
       bound = ib * this.field.tileSize - 1;
       old_rect = this.getRectangle();
       if (bound === old_rect.getBottom()) {
+        if (ir === il && this.canKick) {
+          data = this.field.getMapData(ir, ib);
+          data.kick(Direction.DOWN);
+          return false;
+        }
         new_rect = this.getRectangle(-this.speed, 0);
         if (!this.field.isBarrier(il, ib) && (!this.field.isBarrier(il, it) || this.canMoveOnBomb(this.getIndex(new_rect)))) {
           if (il * this.field.tileSize > new_rect.getLeft()) {
@@ -430,7 +452,7 @@
     };
 
     Bomberman.prototype.moveLeft = function() {
-      var bound, ib, il, ir, it, new_rect, old_rect, _ref;
+      var bound, data, ib, il, ir, it, new_rect, old_rect, _ref;
       new_rect = this.getRectangle(-this.speed, 0);
       _ref = this.field.getRectangleIndex(new_rect), il = _ref[0], it = _ref[1], ir = _ref[2], ib = _ref[3];
       if (il !== ir && it === ib && this.field.isBarrier(il, it) && this.field.isBarrier(ir, ib)) {
@@ -443,6 +465,11 @@
       bound = ir * this.field.tileSize;
       old_rect = this.getRectangle();
       if (bound === old_rect.getLeft()) {
+        if (it === ib && this.canKick) {
+          data = this.field.getMapData(il, it);
+          data.kick(Direction.LEFT);
+          return false;
+        }
         new_rect = this.getRectangle(0, -this.speed);
         if (!this.field.isBarrier(il, it) && (!this.field.isBarrier(ir, it) || this.canMoveOnBomb(this.getIndex(new_rect)))) {
           if (it * this.field.tileSize > new_rect.getTop()) {
@@ -467,7 +494,7 @@
     };
 
     Bomberman.prototype.moveUp = function() {
-      var bound, ib, il, ir, it, new_rect, old_rect, _ref;
+      var bound, data, ib, il, ir, it, new_rect, old_rect, _ref;
       new_rect = this.getRectangle(0, -this.speed);
       _ref = this.field.getRectangleIndex(new_rect), il = _ref[0], it = _ref[1], ir = _ref[2], ib = _ref[3];
       if (it !== ib && il === ir && this.field.isBarrier(il, it) && this.field.isBarrier(ir, ib)) {
@@ -480,6 +507,11 @@
       bound = ib * this.field.tileSize;
       old_rect = this.getRectangle();
       if (bound === old_rect.getTop()) {
+        if (ir === il && this.canKick) {
+          data = this.field.getMapData(ir, it);
+          data.kick(Direction.UP);
+          return false;
+        }
         new_rect = this.getRectangle(-this.speed, 0);
         if (!this.field.isBarrier(il, it) && (!this.field.isBarrier(il, ib) || this.canMoveOnBomb(this.getIndex(new_rect)))) {
           if (il * this.field.tileSize > new_rect.getLeft()) {
@@ -706,6 +738,8 @@
 
     FieldObject.prototype.destroy = function() {};
 
+    FieldObject.prototype.kick = function(direction) {};
+
     return FieldObject;
 
   })();
@@ -785,14 +819,52 @@
       this.index = index;
       this.bomberman = bomberman;
       Bomb.__super__.constructor.call(this, field, FieldObject.TYPE_BOMB, true);
-      this.count = 0;
       this.x = this.field.tileSize * this.index.x;
       this.y = this.field.tileSize * this.index.y;
+      this.count = 0;
+      this.isKicked = false;
     }
 
     Bomb.prototype.update = function() {
       this.count += 1;
-      if (this.count > this.TIME_LIMIT) return this.destroy();
+      if (this.count > this.TIME_LIMIT) {
+        this.destroy();
+        return;
+      }
+      if (this.isKicked) return this.move();
+    };
+
+    Bomb.prototype.kick = function(direction) {
+      this.direction = direction;
+      return this.isKicked = true;
+    };
+
+    Bomb.prototype.move = function() {
+      var bounds, data, delta, ix;
+      delta = [new Point(-3, 0), new Point(0, -3), new Point(3, 0), new Point(0, 3)][this.direction];
+      this.x += delta.x;
+      this.y += delta.y;
+      bounds = new Point(this.x, this.y);
+      if (this.direction === Direction.RIGHT) {
+        bounds.x += this.field.tileSize - 1;
+      } else if (this.direction === Direction.DOWN) {
+        bounds.y += this.field.tileSize - 1;
+      }
+      ix = this.field.getIndex(bounds.x, bounds.y);
+      if ((this.field.isBarrier(ix.x, ix.y) && !ix.equals(this.index)) || this.field.bombermanExists(ix)) {
+        this.isKicked = false;
+        this.x = this.field.tileSize * this.index.x;
+        this.y = this.field.tileSize * this.index.y;
+      }
+      ix = this.bomberman.getIndex(new Rectangle(this.x, this.y, this.field.tileSize, this.field.tileSize));
+      if (!ix.equals(this.index)) {
+        data = this.field.getMapData(ix.x, ix.y);
+        data.destroy();
+        this.field.removeMapData(this.index.x, this.index.y);
+        this.field.setMapData(ix.x, ix.y, this);
+        this.index = ix;
+        if (data.type === FieldObject.TYPE_BLAST) return this.destroy;
+      }
     };
 
     Bomb.prototype.destroy = function() {
@@ -1320,6 +1392,8 @@
         this.sprite.frame = [5];
         this.count = 0;
       }
+      this.sprite.x = this.bomb.x;
+      this.sprite.y = this.bomb.y;
       if (this.bomb.isDestroyed) {
         this.stopUpdate(this.bomb.objectId);
         return this.removeNode(this.sprite);
@@ -1495,6 +1569,13 @@
       }
       return input;
     }
+  };
+
+  Direction = {
+    LEFT: 0,
+    UP: 1,
+    RIGHT: 2,
+    DOWN: 3
   };
 
 }).call(this);

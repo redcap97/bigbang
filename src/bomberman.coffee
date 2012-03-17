@@ -6,7 +6,7 @@ class Bomberman
     @speed = 2
     @bombCapacity = 2
     @usedBomb = 0
-    @canThrow = @canKick = false
+    @canThrow = @canKick = true
     @isDestroyed = false
 
     @inputManager = new InputManager()
@@ -73,6 +73,11 @@ class Bomberman
     bound = ir * @field.tileSize - 1
     old_rect = @getRectangle()
     if bound == old_rect.getRight()
+      if it == ib and @canKick
+        data = @field.getMapData(ir, it)
+        data.kick(Direction.RIGHT)
+        return false
+
       new_rect = @getRectangle(0, -@speed)
       if !@field.isBarrier(ir, it) and
           (!@field.isBarrier(il, it) or @canMoveOnBomb(@getIndex(new_rect)))
@@ -109,6 +114,11 @@ class Bomberman
     bound = ib * @field.tileSize - 1
     old_rect = @getRectangle()
     if bound == old_rect.getBottom()
+      if ir == il and @canKick
+        data = @field.getMapData(ir, ib)
+        data.kick(Direction.DOWN)
+        return false
+
       new_rect = @getRectangle(-@speed, 0)
       if !@field.isBarrier(il, ib) and
           (!@field.isBarrier(il, it) or @canMoveOnBomb(@getIndex(new_rect)))
@@ -145,6 +155,11 @@ class Bomberman
     bound = ir * @field.tileSize
     old_rect = @getRectangle()
     if bound == old_rect.getLeft()
+      if it == ib and @canKick
+        data = @field.getMapData(il, it)
+        data.kick(Direction.LEFT)
+        return false
+
       new_rect = @getRectangle(0, -@speed)
       if !@field.isBarrier(il, it) and
           (!@field.isBarrier(ir, it) or @canMoveOnBomb(@getIndex(new_rect)))
@@ -181,6 +196,11 @@ class Bomberman
     bound = ib * @field.tileSize
     old_rect = @getRectangle()
     if bound == old_rect.getTop()
+      if ir == il and @canKick
+        data = @field.getMapData(ir, it)
+        data.kick(Direction.UP)
+        return false
+
       new_rect = @getRectangle(-@speed, 0)
       if !@field.isBarrier(il, it) and
           (!@field.isBarrier(il, ib) or @canMoveOnBomb(@getIndex(new_rect)))

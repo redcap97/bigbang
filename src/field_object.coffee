@@ -5,6 +5,7 @@ class FieldObject
 
   update: ->
   destroy: ->
+  kick: (direction) ->
 
 FieldObject.TYPE_WALL   = 0
 FieldObject.TYPE_GROUND = 1
@@ -43,15 +44,58 @@ class Bomb extends FieldObject
 
   constructor: (field, @index, @bomberman) ->
     super(field, FieldObject.TYPE_BOMB, true)
-    @count = 0
     @x = @field.tileSize * @index.x
     @y = @field.tileSize * @index.y
+
+    @count = 0
+    @isKicked = false
 
   update: ->
     @count += 1
 
     if @count > @TIME_LIMIT
       @destroy()
+      return
+
+    @move() if @isKicked
+
+  kick: (@direction) ->
+    @isKicked = true
+
+  move: ->
+    delta = ([
+      new Point(-3, 0),
+      new Point(0, -3),
+      new Point(3, 0),
+      new Point(0, 3)
+    ])[@direction]
+
+    @x += delta.x
+    @y += delta.y
+
+    bounds = new Point(@x, @y)
+    if @direction == Direction.RIGHT
+      bounds.x += @field.tileSize - 1
+    else if @direction == Direction.DOWN
+      bounds.y += @field.tileSize - 1
+
+    ix = @field.getIndex(bounds.x, bounds.y)
+    if (@field.isBarrier(ix.x, ix.y) and !ix.equals(@index)) or
+        @field.bombermanExists(ix)
+      @isKicked = false
+      @x = @field.tileSize * @index.x
+      @y = @field.tileSize * @index.y
+
+    ix = @bomberman.getIndex(new Rectangle(@x, @y, @field.tileSize, @field.tileSize))
+    unless ix.equals(@index)
+      data = @field.getMapData(ix.x, ix.y)
+      data.destroy()
+
+      @field.removeMapData(@index.x, @index.y)
+      @field.setMapData(ix.x, ix.y, @)
+      @index = ix
+
+      @destroy if data.type == FieldObject.TYPE_BLAST
 
   destroy: ->
     @isDestroyed = true
