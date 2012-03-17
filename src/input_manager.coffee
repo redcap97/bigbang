@@ -1,4 +1,10 @@
 class InputManager
+  @NONE  = 0
+  @LEFT  = 1
+  @UP    = 2
+  @RIGHT = 3
+  @DOWN  = 4
+
   constructor: ->
     @a = @b = false
     @aDown = @aUp = false
@@ -68,9 +74,3 @@ class InputManager
       @bDown = false
       @bUp = true
     @b = input.b
-
-InputManager.NONE  = 0
-InputManager.LEFT  = 1
-InputManager.UP    = 2
-InputManager.RIGHT = 3
-InputManager.DOWN  = 4

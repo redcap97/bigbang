@@ -1,4 +1,11 @@
 class FieldObject
+  @TYPE_WALL   = 0
+  @TYPE_GROUND = 1
+  @TYPE_BLOCK  = 2
+  @TYPE_BOMB   = 3
+  @TYPE_BLAST  = 4
+  @TYPE_ITEM   = 5
+
   constructor: (@field, @type, @isBarrier) ->
     @objectId = @field.generateId()
     @isDestroyed = false
@@ -6,13 +13,6 @@ class FieldObject
   update: ->
   destroy: ->
   kick: (direction) ->
-
-FieldObject.TYPE_WALL   = 0
-FieldObject.TYPE_GROUND = 1
-FieldObject.TYPE_BLOCK  = 2
-FieldObject.TYPE_BOMB   = 3
-FieldObject.TYPE_BLAST  = 4
-FieldObject.TYPE_ITEM   = 5
 
 class Wall extends FieldObject
   constructor: (field) ->
