@@ -226,26 +226,7 @@ class Bomberman
     new Rectangle(@x + dx, @y + dy, @width, @height)
 
   getIndex: (r) ->
-    ix = new Point()
-
-    [il, ir] = @field.getXIndexes(r.getLeft(), r.getRight())
-    if il == ir
-      ix.x = il
-    else
-      if ((ir * @field.tileSize) - r.x) > (r.width/2|0)
-        ix.x = il
-      else
-        ix.x = ir
-
-    [it, ib] = @field.getYIndexes(r.getTop(), r.getBottom())
-    if it == ib
-      ix.y = it
-    else
-      if ((ib * @field.tileSize) - r.y) > (r.height/2|0)
-        ix.y = it
-      else
-        ix.y = ib
-    ix
+    @field.getNearestIndex(r)
 
   getCurrentIndex: ->
     @getIndex(@getRectangle())

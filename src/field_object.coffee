@@ -86,7 +86,8 @@ class Bomb extends FieldObject
       @x = @field.tileSize * @index.x
       @y = @field.tileSize * @index.y
 
-    ix = @bomberman.getIndex(new Rectangle(@x, @y, @field.tileSize, @field.tileSize))
+    r = new Rectangle(@x, @y, @field.tileSize, @field.tileSize)
+    ix = @field.getNearestIndex(r)
     unless ix.equals(@index)
       data = @field.getMapData(ix.x, ix.y)
       data.destroy()

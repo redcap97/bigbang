@@ -124,6 +124,28 @@ class BattleField
     [it, ib] = @getYIndexes(r.getTop(), r.getBottom())
     [il, it, ir, ib]
 
+  getNearestIndex: (r) ->
+    ix = new Point()
+
+    [il, ir] = @getXIndexes(r.getLeft(), r.getRight())
+    if il == ir
+      ix.x = il
+    else
+      if ((ir * @tileSize) - r.x) > (r.width/2|0)
+        ix.x = il
+      else
+        ix.x = ir
+
+    [it, ib] = @getYIndexes(r.getTop(), r.getBottom())
+    if it == ib
+      ix.y = it
+    else
+      if ((ib * @tileSize) - r.y) > (r.height/2|0)
+        ix.y = it
+      else
+        ix.y = ib
+    ix
+
   bombermanExists: (ix) ->
     for bomberman in @bombermans
       if !bomberman.isDestroyed and

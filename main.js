@@ -155,6 +155,32 @@
       return [il, it, ir, ib];
     };
 
+    BattleField.prototype.getNearestIndex = function(r) {
+      var ib, il, ir, it, ix, _ref, _ref2;
+      ix = new Point();
+      _ref = this.getXIndexes(r.getLeft(), r.getRight()), il = _ref[0], ir = _ref[1];
+      if (il === ir) {
+        ix.x = il;
+      } else {
+        if (((ir * this.tileSize) - r.x) > (r.width / 2 | 0)) {
+          ix.x = il;
+        } else {
+          ix.x = ir;
+        }
+      }
+      _ref2 = this.getYIndexes(r.getTop(), r.getBottom()), it = _ref2[0], ib = _ref2[1];
+      if (it === ib) {
+        ix.y = it;
+      } else {
+        if (((ib * this.tileSize) - r.y) > (r.height / 2 | 0)) {
+          ix.y = it;
+        } else {
+          ix.y = ib;
+        }
+      }
+      return ix;
+    };
+
     BattleField.prototype.bombermanExists = function(ix) {
       var bomberman, _i, _len, _ref;
       _ref = this.bombermans;
@@ -542,29 +568,7 @@
     };
 
     Bomberman.prototype.getIndex = function(r) {
-      var ib, il, ir, it, ix, _ref, _ref2;
-      ix = new Point();
-      _ref = this.field.getXIndexes(r.getLeft(), r.getRight()), il = _ref[0], ir = _ref[1];
-      if (il === ir) {
-        ix.x = il;
-      } else {
-        if (((ir * this.field.tileSize) - r.x) > (r.width / 2 | 0)) {
-          ix.x = il;
-        } else {
-          ix.x = ir;
-        }
-      }
-      _ref2 = this.field.getYIndexes(r.getTop(), r.getBottom()), it = _ref2[0], ib = _ref2[1];
-      if (it === ib) {
-        ix.y = it;
-      } else {
-        if (((ib * this.field.tileSize) - r.y) > (r.height / 2 | 0)) {
-          ix.y = it;
-        } else {
-          ix.y = ib;
-        }
-      }
-      return ix;
+      return this.field.getNearestIndex(r);
     };
 
     Bomberman.prototype.getCurrentIndex = function() {
@@ -840,7 +844,7 @@
     };
 
     Bomb.prototype.move = function() {
-      var bounds, data, delta, ix;
+      var bounds, data, delta, ix, r;
       delta = [new Point(-3, 0), new Point(0, -3), new Point(3, 0), new Point(0, 3)][this.direction];
       this.x += delta.x;
       this.y += delta.y;
@@ -856,7 +860,8 @@
         this.x = this.field.tileSize * this.index.x;
         this.y = this.field.tileSize * this.index.y;
       }
-      ix = this.bomberman.getIndex(new Rectangle(this.x, this.y, this.field.tileSize, this.field.tileSize));
+      r = new Rectangle(this.x, this.y, this.field.tileSize, this.field.tileSize);
+      ix = this.field.getNearestIndex(r);
       if (!ix.equals(this.index)) {
         data = this.field.getMapData(ix.x, ix.y);
         data.destroy();
