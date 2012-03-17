@@ -1,5 +1,5 @@
 (function() {
-  var BattleField, BattleGame, Blast, BlastRenderer, Block, BlockRenderer, Bomb, BombRenderer, BombUp, Bomberman, BombermanRenderer, DataTransport, Direction, ENCHANTJS_IMAGE_PATH, EntryScreen, FieldObject, FieldRenderer, FirePowerUp, GameResult, Ground, InputManager, Item, ItemRenderer, MAX_NUMBER_OF_PLAYERS, Point, Random, Rectangle, Renderer, RenderingQueue, SpeedUp, Utils, WS_SUBPROTOCOL, WS_URI, Wall,
+  var BattleField, BattleGame, Blast, BlastRenderer, Block, BlockRenderer, Bomb, BombKick, BombRenderer, BombUp, Bomberman, BombermanRenderer, DataTransport, Direction, ENCHANTJS_IMAGE_PATH, EntryScreen, FieldObject, FieldRenderer, FirePowerUp, GameResult, Ground, InputManager, Item, ItemRenderer, MAX_NUMBER_OF_PLAYERS, Point, Random, Rectangle, Remocon, Renderer, RenderingQueue, SpeedUp, Utils, WS_SUBPROTOCOL, WS_URI, Wall,
     __slice = Array.prototype.slice,
     __hasProp = Object.prototype.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor; child.__super__ = parent.prototype; return child; };
@@ -47,6 +47,8 @@
       this.setMapData(1, 2, new SpeedUp(this, new Point(1, 2)));
       this.setMapData(1, 3, new FirePowerUp(this, new Point(1, 3)));
       this.setMapData(1, 4, new BombUp(this, new Point(1, 4)));
+      this.setMapData(1, 5, new Remocon(this, new Point(1, 5)));
+      this.setMapData(1, 7, new BombKick(this, new Point(1, 7)));
       this.updateMap();
     }
 
@@ -332,12 +334,13 @@
       this.y = y;
       this.objectId = this.field.generateId();
       this.width = this.height = this.field.tileSize;
-      this.power = 2;
-      this.speed = 2;
-      this.bombCapacity = 2;
-      this.usedBomb = 0;
-      this.hasRemocon = this.canKick = true;
       this.isDestroyed = false;
+      this.speed = 2;
+      this.power = 1;
+      this.bombCapacity = 1;
+      this.usedBomb = 0;
+      this.hasRemocon = false;
+      this.canKick = false;
       this.inputManager = new InputManager();
     }
 
@@ -347,6 +350,18 @@
       if (this.inputManager.aDown) this.putBomb();
       if (this.inputManager.bDown && this.hasRemocon) this.explodeBomb();
       return this.move();
+    };
+
+    Bomberman.prototype.incrementSpeed = function() {
+      if (this.speed < 8) return this.speed += 1;
+    };
+
+    Bomberman.prototype.incrementPower = function() {
+      if (this.power < 9) return this.power += 1;
+    };
+
+    Bomberman.prototype.incrementBombCapacity = function() {
+      if (this.bombCapacity < 9) return this.bombCapacity += 1;
     };
 
     Bomberman.prototype.move = function() {
@@ -960,7 +975,7 @@
 
     Block.prototype.generateItem = function() {
       var cs, klass;
-      cs = [BombUp, FirePowerUp, SpeedUp];
+      cs = [BombUp, FirePowerUp, SpeedUp, BombKick, Remocon];
       klass = cs[this.field.getRandom(cs.length)];
       return new klass(this.field, this.index);
     };
@@ -1001,7 +1016,7 @@
     }
 
     BombUp.prototype.exertEffectOn = function(bomberman) {
-      return bomberman.bombCapacity += 1;
+      return bomberman.incrementBombCapacity();
     };
 
     return BombUp;
@@ -1018,7 +1033,7 @@
     }
 
     FirePowerUp.prototype.exertEffectOn = function(bomberman) {
-      return bomberman.power += 1;
+      return bomberman.incrementPower();
     };
 
     return FirePowerUp;
@@ -1035,10 +1050,44 @@
     }
 
     SpeedUp.prototype.exertEffectOn = function(bomberman) {
-      return bomberman.speed += 1;
+      return bomberman.incrementSpeed();
     };
 
     return SpeedUp;
+
+  })(Item);
+
+  Remocon = (function(_super) {
+
+    __extends(Remocon, _super);
+
+    function Remocon(field, index) {
+      this.index = index;
+      Remocon.__super__.constructor.call(this, field, this.index);
+    }
+
+    Remocon.prototype.exertEffectOn = function(bomberman) {
+      return bomberman.hasRemocon = true;
+    };
+
+    return Remocon;
+
+  })(Item);
+
+  BombKick = (function(_super) {
+
+    __extends(BombKick, _super);
+
+    function BombKick(field, index) {
+      this.index = index;
+      BombKick.__super__.constructor.call(this, field, this.index);
+    }
+
+    BombKick.prototype.exertEffectOn = function(bomberman) {
+      return bomberman.canKick = true;
+    };
+
+    return BombKick;
 
   })(Item);
 
@@ -1342,14 +1391,15 @@
     };
 
     FieldRenderer.prototype.getIdMap = function() {
-      var i, j, _ref, _results;
+      var data, i, j, _ref, _results;
       _results = [];
       for (i = 0, _ref = this.field.height; 0 <= _ref ? i < _ref : i > _ref; 0 <= _ref ? i++ : i--) {
         _results.push((function() {
           var _ref2, _results2;
           _results2 = [];
           for (j = 0, _ref2 = this.field.width; 0 <= _ref2 ? j < _ref2 : j > _ref2; 0 <= _ref2 ? j++ : j--) {
-            if (this.field.staticDataMap[i][j].type === FieldObject.TYPE_GROUND) {
+            data = this.field.staticDataMap[i][j];
+            if (data.type === FieldObject.TYPE_GROUND) {
               _results2.push(0);
             } else {
               _results2.push(4);
