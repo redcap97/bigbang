@@ -8,8 +8,13 @@ ENCHANTJS_IMAGE_PATH = "enchantjs/images/"
 window.onload = ->
   game = new enchant.Game(320, 320)
   game.scale = 3.0
-  game.preload(ENCHANTJS_IMAGE_PATH + 'chara0.gif')
   game.preload(ENCHANTJS_IMAGE_PATH + 'map0.gif')
+  game.preload(ENCHANTJS_IMAGE_PATH + 'effect0.gif')
+  game.preload(ENCHANTJS_IMAGE_PATH + 'icon0.gif')
+  game.preload('image/map0.png')
+  game.preload('image/icon0.png')
+  game.preload('image/char0.png')
+
 
   game.fps = 60
 
