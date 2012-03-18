@@ -2,6 +2,8 @@ BUFFER_LIMIT = 1200
 BATTLE_TIME_LIMIT = 30 * 60 * 3
 MAX_CONNECTIONS = 100
 
+NONE_INPUT = 64
+
 WebSocketServer = require('websocket').server
 http = require('http')
 
@@ -30,7 +32,7 @@ class Player
     @connection.sendUTF(text)
 
   getInput: ->
-    @inputBuffer.shift() || 0
+    @inputBuffer.shift() ? NONE_INPUT
 
   isConnected: ->
     @connection.connected

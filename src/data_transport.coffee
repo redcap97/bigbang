@@ -1,7 +1,8 @@
 class DataTransport
   constructor: ->
     @inputBuffer = []
-    @playerId = @numberOfPlayers = null
+    @playerId = @numberOfPlayers = @seed = null
+    @oldInput = 0
 
     @socket = new WebSocket(WS_URI, WS_SUBPROTOCOL)
     @socket.binaryType = 'arraybuffer'
@@ -35,14 +36,16 @@ class DataTransport
     @inputBuffer.push(inputs)
 
   sendInput: (input) ->
-    v = Utils.encodeInput(input)
-    return if v == 0
+    return unless @isConnected()
 
+    v = Utils.encodeInput(input)
     byteArray = new Uint8Array(1)
     byteArray[0] = v
 
-    if @isConnected()
+    unless v == 0 and @oldInput == 0
       @socket.send(byteArray.buffer)
+
+    @oldInput = v
 
   getInput: ->
     @inputBuffer.shift()

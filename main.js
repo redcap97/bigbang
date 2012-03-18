@@ -412,7 +412,6 @@
     }
 
     Bomberman.prototype.update = function(input) {
-      if (Utils.encodeInput(input) === 0) return;
       this.inputManager.update(input);
       if (this.inputManager.aDown) this.putBomb();
       if (this.inputManager.bDown && this.hasRemocon) this.explodeBomb();
@@ -692,7 +691,8 @@
     function DataTransport() {
       var _this = this;
       this.inputBuffer = [];
-      this.playerId = this.numberOfPlayers = null;
+      this.playerId = this.numberOfPlayers = this.seed = null;
+      this.oldInput = 0;
       this.socket = new WebSocket(WS_URI, WS_SUBPROTOCOL);
       this.socket.binaryType = 'arraybuffer';
       this.socket.onmessage = function(event) {
@@ -730,11 +730,12 @@
 
     DataTransport.prototype.sendInput = function(input) {
       var byteArray, v;
+      if (!this.isConnected()) return;
       v = Utils.encodeInput(input);
-      if (v === 0) return;
       byteArray = new Uint8Array(1);
       byteArray[0] = v;
-      if (this.isConnected()) return this.socket.send(byteArray.buffer);
+      if (!(v === 0 && this.oldInput === 0)) this.socket.send(byteArray.buffer);
+      return this.oldInput = v;
     };
 
     DataTransport.prototype.getInput = function() {
@@ -1196,15 +1197,15 @@
 
   InputManager = (function() {
 
-    InputManager.NONE = 0;
+    InputManager.LEFT = 0;
 
-    InputManager.LEFT = 1;
+    InputManager.UP = 1;
 
-    InputManager.UP = 2;
+    InputManager.RIGHT = 2;
 
-    InputManager.RIGHT = 3;
+    InputManager.DOWN = 3;
 
-    InputManager.DOWN = 4;
+    InputManager.NONE = 4;
 
     function InputManager() {
       this.a = this.b = false;
@@ -1731,7 +1732,8 @@
       right: 4,
       down: 8,
       a: 16,
-      b: 32
+      b: 32,
+      none: 64
     },
     encodeInput: function(input) {
       var flag, key, value, _ref;
@@ -1746,6 +1748,7 @@
     },
     decodeInput: function(value) {
       var flag, input, key, _ref;
+      if (value & this.inputFlags.none) return null;
       input = {
         a: false,
         b: false,

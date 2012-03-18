@@ -6,6 +6,7 @@ Utils =
     down:  8
     a:     16
     b:     32
+    none:  64
 
   encodeInput: (input) ->
     value = 0
@@ -14,12 +15,14 @@ Utils =
     value
 
   decodeInput: (value) ->
+    return null if value & @inputFlags.none
+
     input =
-      a:     false,
-      b:     false,
-      left:  false,
-      up:    false,
-      right: false,
+      a:     false
+      b:     false
+      left:  false
+      up:    false
+      right: false
       down:  false
     for own key, flag of @inputFlags
       input[key] = true if value & flag
