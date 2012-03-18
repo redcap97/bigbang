@@ -12,6 +12,7 @@ class Bomberman
     @canKick = false
 
     @inputManager = new InputManager()
+    @inputCount = 0
 
   update: (input) ->
     @inputManager.update(input)
@@ -43,6 +44,11 @@ class Bomberman
         @moveRight()
       when InputManager.DOWN
         @moveDown()
+
+    if @inputManager.direction == InputManager.NONE
+      @inputCount = 0
+    else
+      @inputCount += 1
 
   changePosition: (r) ->
     {x : @x, y : @y} = r
@@ -253,6 +259,9 @@ class Bomberman
 
   getCurrentIndex: ->
     @getIndex(@getRectangle())
+
+  getInputDirection: ->
+    @inputManager.direction
 
   destroy: ->
     @isDestroyed = true

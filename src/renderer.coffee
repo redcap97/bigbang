@@ -33,35 +33,57 @@ class FieldRenderer extends Renderer
         if data.type == FieldObject.TYPE_GROUND then 1 else 0
 
 class BombermanRenderer extends Renderer
-  constructor: (@queue, @bomberman) ->
+  constructor: (@queue, @bomberman, characterId) ->
     super(@queue)
 
     @sprite = new enchant.Sprite(16, 16)
     @sprite.image = @game.assets['image/char0.png']
     @sprite.x = @sprite.y = 16
-    @sprite.frame = [0]
+
+    @framesIndex = [
+      [6,  7,  8],
+      [3,  4,  5],
+      [9, 10, 11],
+      [0,  1,  2]
+    ]
+
+    for frames in @framesIndex
+      for frame, i in frames
+        frames[i] += (12 * characterId)
+
+    @sprite.frame = @framesIndex[InputManager.DOWN][1]
+
+    @oldDirection = InputManager.NONE
 
     @addNode(@sprite)
 
-    @count = 0
-
   update: ->
-    @count += 1
-
     if @bomberman.isDestroyed
       @stopUpdate(@bomberman.objectId)
       @removeNode(@sprite)
       return
 
-    if @count > 20
-      @sprite.frame = [0]
-      @count = 0
-    if @count > 15
-      @sprite.frame = [1]
-    else if @count > 10
-      @sprite.frame = [2]
-    else if @count > 5
-      @sprite.frame = [1]
+    direction = @bomberman.getInputDirection()
+
+    if direction == InputManager.NONE and
+        @oldDirection != InputManager.NONE
+      frames = @framesIndex[@oldDirection]
+      @sprite.frame = frames[1]
+      @oldDirection = direction
+    else if direction != InputManager.NONE
+      frames = @framesIndex[direction]
+      count = @bomberman.inputCount % 17
+
+      if count == 4
+        @sprite.frame = frames[1]
+      else if count == 8
+        @sprite.frame = frames[2]
+      else if count == 12
+        @sprite.frame = frames[1]
+      else if count == 16
+        @sprite.frame = frames[0]
+
+      @oldDirection = direction
 
     @sprite.x = @bomberman.x
     @sprite.y = @bomberman.y
@@ -73,7 +95,7 @@ class BombRenderer extends Renderer
     @count = 0
     @sprite = new enchant.Sprite(16, 16)
     @sprite.image = @game.assets[ENCHANTJS_IMAGE_PATH + 'icon0.gif']
-    @sprite.frame = [24]
+    @sprite.frame = 24
 
     @changePosition(@bomb.x, @bomb.y)
 
@@ -83,12 +105,12 @@ class BombRenderer extends Renderer
     @count += 1
 
     if @count == 10
-      @sprite.frame = [25]
+      @sprite.frame = 25
       @sprite.scaleX = 0.9
       @sprite.scaleY = 0.9
     else if @count == 20
       @count = 0
-      @sprite.frame = [24]
+      @sprite.frame = 24
       @sprite.scaleX = 1.0
       @sprite.scaleY = 1.0
 
@@ -110,21 +132,21 @@ class BlastRenderer extends Renderer
 
     @sprite = new enchant.Sprite(16, 16)
     @sprite.image = @game.assets[ENCHANTJS_IMAGE_PATH + 'effect0.gif']
-    @sprite.frame = [0]
+    @sprite.frame = 0
     @sprite.x = @blast.x
     @sprite.y = @blast.y
 
     @addNode(@sprite)
 
   update: ->
-    if @count > 8
-      @sprite.frame = [4]
-    else if @count > 6
-      @sprite.frame = [3]
-    else if @count > 4
-      @sprite.frame = [2]
-    else if @count > 2
-      @sprite.frame = [1]
+    if @count == 2
+      @sprite.frame = 1
+    else if @count == 4
+      @sprite.frame = 2
+    else if @count == 6
+      @sprite.frame = 3
+    else if @count == 8
+      @sprite.frame = 4
 
     if @count > @blast.DURATION
       @stopUpdate(@blast.objectId)
@@ -138,7 +160,7 @@ class BlockRenderer extends Renderer
 
     @sprite = new enchant.Sprite(16, 16)
     @sprite.image = @game.assets[ENCHANTJS_IMAGE_PATH + 'map0.gif']
-    @sprite.frame = [26]
+    @sprite.frame = 26
     @sprite.x = @block.x
     @sprite.y = @block.y
 
@@ -168,14 +190,14 @@ class ItemRenderer extends Renderer
 
   changeFrame: ->
     if @item instanceof BombUp
-      @sprite.frame = [14]
+      @sprite.frame = 14
     else if @item instanceof FirePowerUp
-      @sprite.frame = [27]
+      @sprite.frame = 27
     else if @item instanceof SpeedUp
-      @sprite.frame = [19]
+      @sprite.frame = 19
     else if @item instanceof BombKick
-      @sprite.frame = [5]
+      @sprite.frame = 5
     else if @item instanceof Remocon
-      @sprite.frame = [4]
+      @sprite.frame = 4
     else
       throw new Error("Unknown item")

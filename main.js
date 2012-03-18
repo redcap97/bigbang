@@ -290,12 +290,16 @@
   })();
 
   BattleGame = (function() {
+    var NUMBER_OF_CHARACTERS;
+
+    NUMBER_OF_CHARACTERS = 16;
 
     function BattleGame(game, dataTransport) {
-      var bomberman, bombermanRenderer, _i, _len, _ref;
+      var bomberman, charaIds, i, renderer, _len, _ref;
       this.game = game;
       this.dataTransport = dataTransport;
-      this.field = new BattleField(this.dataTransport.numberOfPlayers, this.dataTransport.seed);
+      this.numberOfPlayers = this.dataTransport.numberOfPlayers;
+      this.field = new BattleField(this.numberOfPlayers, this.dataTransport.seed);
       this.scene = new enchant.Scene();
       this.game.pushScene(this.scene);
       this.queue = new RenderingQueue(this.game, this.scene);
@@ -309,11 +313,12 @@
       this.label.x = 4;
       this.scene2.addChild(this.label);
       this.count = 0;
+      charaIds = this.generateCharacterIds();
       _ref = this.field.bombermans;
-      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-        bomberman = _ref[_i];
-        bombermanRenderer = new BombermanRenderer(this.queue2, bomberman);
-        this.queue2.store(bomberman.objectId, bombermanRenderer);
+      for (i = 0, _len = _ref.length; i < _len; i++) {
+        bomberman = _ref[i];
+        renderer = new BombermanRenderer(this.queue2, bomberman, charaIds[i]);
+        this.queue2.store(bomberman.objectId, renderer);
       }
       this.updateQueue();
       this.updateRemainingTime();
@@ -371,6 +376,20 @@
       }
     };
 
+    BattleGame.prototype.generateCharacterIds = function() {
+      var hash, id, ids;
+      hash = {};
+      ids = [];
+      while (ids.length < this.numberOfPlayers) {
+        id = this.field.getRandom(NUMBER_OF_CHARACTERS);
+        if (!hash[id]) {
+          hash[id] = true;
+          ids.push(id);
+        }
+      }
+      return ids;
+    };
+
     BattleGame.prototype.isFinished = function() {
       return this.field.isFinished();
     };
@@ -409,6 +428,7 @@
       this.hasRemocon = false;
       this.canKick = false;
       this.inputManager = new InputManager();
+      this.inputCount = 0;
     }
 
     Bomberman.prototype.update = function(input) {
@@ -433,13 +453,21 @@
     Bomberman.prototype.move = function() {
       switch (this.inputManager.direction) {
         case InputManager.LEFT:
-          return this.moveLeft();
+          this.moveLeft();
+          break;
         case InputManager.UP:
-          return this.moveUp();
+          this.moveUp();
+          break;
         case InputManager.RIGHT:
-          return this.moveRight();
+          this.moveRight();
+          break;
         case InputManager.DOWN:
-          return this.moveDown();
+          this.moveDown();
+      }
+      if (this.inputManager.direction === InputManager.NONE) {
+        return this.inputCount = 0;
+      } else {
+        return this.inputCount += 1;
       }
     };
 
@@ -676,6 +704,10 @@
 
     Bomberman.prototype.getCurrentIndex = function() {
       return this.getIndex(this.getRectangle());
+    };
+
+    Bomberman.prototype.getInputDirection = function() {
+      return this.inputManager.direction;
     };
 
     Bomberman.prototype.destroy = function() {
@@ -1491,35 +1523,53 @@
 
     __extends(BombermanRenderer, _super);
 
-    function BombermanRenderer(queue, bomberman) {
+    function BombermanRenderer(queue, bomberman, characterId) {
+      var frame, frames, i, _i, _len, _len2, _ref;
       this.queue = queue;
       this.bomberman = bomberman;
       BombermanRenderer.__super__.constructor.call(this, this.queue);
       this.sprite = new enchant.Sprite(16, 16);
       this.sprite.image = this.game.assets['image/char0.png'];
       this.sprite.x = this.sprite.y = 16;
-      this.sprite.frame = [0];
+      this.framesIndex = [[6, 7, 8], [3, 4, 5], [9, 10, 11], [0, 1, 2]];
+      _ref = this.framesIndex;
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        frames = _ref[_i];
+        for (i = 0, _len2 = frames.length; i < _len2; i++) {
+          frame = frames[i];
+          frames[i] += 12 * characterId;
+        }
+      }
+      this.sprite.frame = this.framesIndex[InputManager.DOWN][1];
+      this.oldDirection = InputManager.NONE;
       this.addNode(this.sprite);
-      this.count = 0;
     }
 
     BombermanRenderer.prototype.update = function() {
-      this.count += 1;
+      var count, direction, frames;
       if (this.bomberman.isDestroyed) {
         this.stopUpdate(this.bomberman.objectId);
         this.removeNode(this.sprite);
         return;
       }
-      if (this.count > 20) {
-        this.sprite.frame = [0];
-        this.count = 0;
-      }
-      if (this.count > 15) {
-        this.sprite.frame = [1];
-      } else if (this.count > 10) {
-        this.sprite.frame = [2];
-      } else if (this.count > 5) {
-        this.sprite.frame = [1];
+      direction = this.bomberman.getInputDirection();
+      if (direction === InputManager.NONE && this.oldDirection !== InputManager.NONE) {
+        frames = this.framesIndex[this.oldDirection];
+        this.sprite.frame = frames[1];
+        this.oldDirection = direction;
+      } else if (direction !== InputManager.NONE) {
+        frames = this.framesIndex[direction];
+        count = this.bomberman.inputCount % 17;
+        if (count === 4) {
+          this.sprite.frame = frames[1];
+        } else if (count === 8) {
+          this.sprite.frame = frames[2];
+        } else if (count === 12) {
+          this.sprite.frame = frames[1];
+        } else if (count === 16) {
+          this.sprite.frame = frames[0];
+        }
+        this.oldDirection = direction;
       }
       this.sprite.x = this.bomberman.x;
       return this.sprite.y = this.bomberman.y;
@@ -1540,7 +1590,7 @@
       this.count = 0;
       this.sprite = new enchant.Sprite(16, 16);
       this.sprite.image = this.game.assets[ENCHANTJS_IMAGE_PATH + 'icon0.gif'];
-      this.sprite.frame = [24];
+      this.sprite.frame = 24;
       this.changePosition(this.bomb.x, this.bomb.y);
       this.addNode(this.sprite);
     }
@@ -1548,12 +1598,12 @@
     BombRenderer.prototype.update = function() {
       this.count += 1;
       if (this.count === 10) {
-        this.sprite.frame = [25];
+        this.sprite.frame = 25;
         this.sprite.scaleX = 0.9;
         this.sprite.scaleY = 0.9;
       } else if (this.count === 20) {
         this.count = 0;
-        this.sprite.frame = [24];
+        this.sprite.frame = 24;
         this.sprite.scaleX = 1.0;
         this.sprite.scaleY = 1.0;
       }
@@ -1584,21 +1634,21 @@
       this.count = 0;
       this.sprite = new enchant.Sprite(16, 16);
       this.sprite.image = this.game.assets[ENCHANTJS_IMAGE_PATH + 'effect0.gif'];
-      this.sprite.frame = [0];
+      this.sprite.frame = 0;
       this.sprite.x = this.blast.x;
       this.sprite.y = this.blast.y;
       this.addNode(this.sprite);
     }
 
     BlastRenderer.prototype.update = function() {
-      if (this.count > 8) {
-        this.sprite.frame = [4];
-      } else if (this.count > 6) {
-        this.sprite.frame = [3];
-      } else if (this.count > 4) {
-        this.sprite.frame = [2];
-      } else if (this.count > 2) {
-        this.sprite.frame = [1];
+      if (this.count === 2) {
+        this.sprite.frame = 1;
+      } else if (this.count === 4) {
+        this.sprite.frame = 2;
+      } else if (this.count === 6) {
+        this.sprite.frame = 3;
+      } else if (this.count === 8) {
+        this.sprite.frame = 4;
       }
       if (this.count > this.blast.DURATION) {
         this.stopUpdate(this.blast.objectId);
@@ -1621,7 +1671,7 @@
       BlockRenderer.__super__.constructor.call(this, this.queue);
       this.sprite = new enchant.Sprite(16, 16);
       this.sprite.image = this.game.assets[ENCHANTJS_IMAGE_PATH + 'map0.gif'];
-      this.sprite.frame = [26];
+      this.sprite.frame = 26;
       this.sprite.x = this.block.x;
       this.sprite.y = this.block.y;
       this.addNode(this.sprite);
@@ -1663,15 +1713,15 @@
 
     ItemRenderer.prototype.changeFrame = function() {
       if (this.item instanceof BombUp) {
-        return this.sprite.frame = [14];
+        return this.sprite.frame = 14;
       } else if (this.item instanceof FirePowerUp) {
-        return this.sprite.frame = [27];
+        return this.sprite.frame = 27;
       } else if (this.item instanceof SpeedUp) {
-        return this.sprite.frame = [19];
+        return this.sprite.frame = 19;
       } else if (this.item instanceof BombKick) {
-        return this.sprite.frame = [5];
+        return this.sprite.frame = 5;
       } else if (this.item instanceof Remocon) {
-        return this.sprite.frame = [4];
+        return this.sprite.frame = 4;
       } else {
         throw new Error("Unknown item");
       }

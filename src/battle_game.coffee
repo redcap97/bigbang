@@ -1,9 +1,9 @@
 class BattleGame
+  NUMBER_OF_CHARACTERS = 16
+
   constructor: (@game, @dataTransport) ->
-    @field = new BattleField(
-      @dataTransport.numberOfPlayers,
-      @dataTransport.seed
-    )
+    @numberOfPlayers = @dataTransport.numberOfPlayers
+    @field = new BattleField(@numberOfPlayers, @dataTransport.seed)
 
     @scene = new enchant.Scene()
     @game.pushScene(@scene)
@@ -23,9 +23,10 @@ class BattleGame
 
     @count = 0
 
-    for bomberman in @field.bombermans
-      bombermanRenderer = new BombermanRenderer(@queue2, bomberman)
-      @queue2.store(bomberman.objectId, bombermanRenderer)
+    charaIds = @generateCharacterIds()
+    for bomberman, i in @field.bombermans
+      renderer = new BombermanRenderer(@queue2, bomberman, charaIds[i])
+      @queue2.store(bomberman.objectId, renderer)
 
     @updateQueue()
     @updateRemainingTime()
@@ -71,6 +72,17 @@ class BattleGame
         new ItemRenderer(@queue,  data)
       else
         throw Error("Unknown object")
+
+  generateCharacterIds: ->
+    hash = {}
+    ids = []
+
+    while ids.length < @numberOfPlayers
+      id = @field.getRandom(NUMBER_OF_CHARACTERS)
+      unless hash[id]
+        hash[id] = true
+        ids.push(id)
+    ids
 
   isFinished: ->
     @field.isFinished()
