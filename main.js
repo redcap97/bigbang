@@ -308,11 +308,11 @@
       this.queue2 = new RenderingQueue(this.game, this.scene2);
       this.fieldRenderer = new FieldRenderer(this.queue, this.field);
       this.fieldRenderer.update();
-      this.label = new enchant.Label();
-      this.label.color = "white";
-      this.label.x = 4;
-      this.label.y = 1;
-      this.scene2.addChild(this.label);
+      this.timer = new enchant.Label();
+      this.timer.color = "white";
+      this.timer.x = 4;
+      this.timer.y = 1;
+      this.scene2.addChild(this.timer);
       this.count = 0;
       charaIds = this.generateCharacterIds();
       _ref = this.field.bombermans;
@@ -355,7 +355,7 @@
       _ref = this.field.getRemainingTime(), min = _ref[0], sec = _ref[1];
       sm = min < 10 ? '0' + String(min) : String(min);
       ss = sec < 10 ? '0' + String(sec) : String(sec);
-      return this.label.text = "" + sm + ":" + ss;
+      return this.timer.text = "" + sm + ":" + ss;
     };
 
     BattleGame.prototype.sendInput = function(input) {

@@ -16,11 +16,11 @@ class BattleGame
     @fieldRenderer = new FieldRenderer(@queue, @field)
     @fieldRenderer.update()
 
-    @label = new enchant.Label()
-    @label.color = "white"
-    @label.x = 4
-    @label.y = 1
-    @scene2.addChild(@label)
+    @timer = new enchant.Label()
+    @timer.color = "white"
+    @timer.x = 4
+    @timer.y = 1
+    @scene2.addChild(@timer)
 
     @count = 0
 
@@ -56,7 +56,7 @@ class BattleGame
     [min, sec] = @field.getRemainingTime()
     sm = if min < 10 then ('0'+String(min)) else String(min)
     ss = if sec < 10 then ('0'+String(sec)) else String(sec)
-    @label.text = "#{sm}:#{ss}"
+    @timer.text = "#{sm}:#{ss}"
 
   sendInput: (input) ->
     @dataTransport.sendInput(input)
