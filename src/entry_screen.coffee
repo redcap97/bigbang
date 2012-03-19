@@ -10,13 +10,13 @@ class EntryScreen
     @title = new enchant.Label()
     @title.text = "Bigbang"
     @title.className = "game-title"
-    @title.x = 10
+    @title.x = 12
     @title.y = 20
 
     @caption = new enchant.Label()
     @caption.text = MESSAGE_ENTRY_GAME
     @caption.className = "game-caption"
-    @caption.x = 10
+    @caption.x = 12
     @caption.y = 130
 
     @scene.addChild(@title)

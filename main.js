@@ -828,12 +828,12 @@
       this.title = new enchant.Label();
       this.title.text = "Bigbang";
       this.title.className = "game-title";
-      this.title.x = 10;
+      this.title.x = 12;
       this.title.y = 20;
       this.caption = new enchant.Label();
       this.caption.text = MESSAGE_ENTRY_GAME;
       this.caption.className = "game-caption";
-      this.caption.x = 10;
+      this.caption.x = 12;
       this.caption.y = 130;
       this.scene.addChild(this.title);
       this.scene.addChild(this.caption);
