@@ -808,15 +808,31 @@
   })();
 
   EntryScreen = (function() {
+    var MESSAGE_CANCEL, MESSAGE_ENTRY_GAME, MESSAGE_WAIT;
+
+    MESSAGE_ENTRY_GAME = "Plese Input Z to Entry Game";
+
+    MESSAGE_CANCEL = "Canceling...";
+
+    MESSAGE_WAIT = "Please Wait... (X: Cancel)";
 
     function EntryScreen(game) {
       this.game = game;
       this.scene = new enchant.Scene();
-      this.label = new enchant.Label();
-      this.label.x = 4;
-      this.scene.addChild(this.label);
+      this.scene.backgroundColor = "#217821";
+      this.title = new enchant.Label();
+      this.title.text = "Bigbang";
+      this.title.className = "game-title";
+      this.title.x = 10;
+      this.title.y = 8;
+      this.caption = new enchant.Label();
+      this.caption.text = MESSAGE_ENTRY_GAME;
+      this.caption.className = "game-caption";
+      this.caption.x = 10;
+      this.caption.y = 120;
+      this.scene.addChild(this.title);
+      this.scene.addChild(this.caption);
       this.game.pushScene(this.scene);
-      this.setText("Plese input Z to start game");
       this.dataTransport = null;
       this.isCanceling = false;
       this.finished = false;
@@ -826,26 +842,22 @@
       var id,
         _this = this;
       if (this.game.input.a && this.dataTransport === null) {
-        this.setText("Please wait");
+        this.caption.text = MESSAGE_WAIT;
         this.dataTransport = new DataTransport();
       }
       if (this.game.input.b && this.dataTransport !== null && !this.isCanceling) {
-        this.setText("Canceling...");
+        this.caption.text = MESSAGE_CANCEL;
         this.dataTransport.release();
         this.isCanceling = true;
         return id = setInterval(function() {
           if (_this.dataTransport.isClosed()) {
-            _this.setText("Plese input Z to start game");
+            _this.caption.text = MESSAGE_ENTRY_GAME;
             _this.dataTransport = null;
             _this.isCanceling = false;
             return clearInterval(id);
           }
         }, 2 * 1000);
       }
-    };
-
-    EntryScreen.prototype.setText = function(text) {
-      return this.label.text = text;
     };
 
     EntryScreen.prototype.isFinished = function() {
@@ -1330,7 +1342,7 @@
 
   window.onload = function() {
     var game;
-    game = new enchant.Game(320, 320);
+    game = new enchant.Game(240, 208);
     game.scale = 3.0;
     game.preload(ENCHANTJS_IMAGE_PATH + 'map0.gif');
     game.preload(ENCHANTJS_IMAGE_PATH + 'effect0.gif');

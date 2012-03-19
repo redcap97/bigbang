@@ -1,14 +1,27 @@
 class EntryScreen
+  MESSAGE_ENTRY_GAME = "Plese Input Z to Entry Game"
+  MESSAGE_CANCEL = "Canceling..."
+  MESSAGE_WAIT = "Please Wait... (X: Cancel)"
+
   constructor: (@game) ->
     @scene = new enchant.Scene()
+    @scene.backgroundColor = "#217821"
 
-    @label = new enchant.Label()
-    @label.x = 4
+    @title = new enchant.Label()
+    @title.text = "Bigbang"
+    @title.className = "game-title"
+    @title.x = 10
+    @title.y = 8
 
-    @scene.addChild(@label)
+    @caption = new enchant.Label()
+    @caption.text = MESSAGE_ENTRY_GAME
+    @caption.className = "game-caption"
+    @caption.x = 10
+    @caption.y = 120
+
+    @scene.addChild(@title)
+    @scene.addChild(@caption)
     @game.pushScene(@scene)
-
-    @setText("Plese input Z to start game")
 
     @dataTransport = null
     @isCanceling = false
@@ -17,26 +30,23 @@ class EntryScreen
 
   update: ->
     if @game.input.a and @dataTransport == null
-      @setText("Please wait")
+      @caption.text = MESSAGE_WAIT
       @dataTransport = new DataTransport()
 
     if @game.input.b and @dataTransport != null and !@isCanceling
-      @setText("Canceling...")
+      @caption.text = MESSAGE_CANCEL
 
       @dataTransport.release()
       @isCanceling = true
 
       id = setInterval =>
         if @dataTransport.isClosed()
-          @setText("Plese input Z to start game")
+          @caption.text = MESSAGE_ENTRY_GAME
 
           @dataTransport = null
           @isCanceling = false
           clearInterval(id)
       , 2 * 1000
-
-  setText: (text) ->
-    @label.text = text
 
   isFinished: ->
     @dataTransport?.hasBattleData()
