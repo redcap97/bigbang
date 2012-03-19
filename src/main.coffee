@@ -32,9 +32,11 @@ window.onload = ->
         else if currentScene instanceof BattleGame
           gameResult = new GameResult(game)
           if currentScene.isDraw()
-            gameResult.setDraw()
+            gameResult.draw()
+          else if currentScene.getWinner() == currentScene.getPlayerId()
+            gameResult.win()
           else
-            gameResult.setWinner(currentScene.getWinner())
+            gameResult.lose()
 
           currentScene.release()
           currentScene = gameResult

@@ -403,6 +403,10 @@
       return this.field.getWinner();
     };
 
+    BattleGame.prototype.getPlayerId = function() {
+      return this.dataTransport.playerId;
+    };
+
     BattleGame.prototype.release = function() {
       this.game.removeScene(this.scene);
       this.game.removeScene(this.scene2);
@@ -1209,19 +1213,32 @@
     function GameResult(game) {
       this.game = game;
       this.scene = new enchant.Scene();
+      this.scene.backgroundColor = "#217821";
       this.label = new enchant.Label();
-      this.label.x = 4;
       this.scene.addChild(this.label);
       this.game.pushScene(this.scene);
       this.count = 0;
     }
 
-    GameResult.prototype.setWinner = function(pn) {
-      return this.label.text = "Winner: " + pn;
+    GameResult.prototype.win = function() {
+      this.label.text = "YOU WIN";
+      this.label.className = "result-win";
+      this.label.x = 18;
+      return this.label.y = 60;
     };
 
-    GameResult.prototype.setDraw = function() {
-      return this.label.text = "Draw";
+    GameResult.prototype.lose = function() {
+      this.label.text = "YOU LOSE";
+      this.label.className = "result-lose";
+      this.label.x = 6;
+      return this.label.y = 60;
+    };
+
+    GameResult.prototype.draw = function() {
+      this.label.text = "DRAW";
+      this.label.className = "result-draw";
+      this.label.x = 65;
+      return this.label.y = 60;
     };
 
     GameResult.prototype.update = function() {
@@ -1229,7 +1246,7 @@
     };
 
     GameResult.prototype.isFinished = function() {
-      return this.count > 60;
+      return this.count > 60 * 2;
     };
 
     GameResult.prototype.release = function() {
@@ -1367,9 +1384,11 @@
           } else if (currentScene instanceof BattleGame) {
             gameResult = new GameResult(game);
             if (currentScene.isDraw()) {
-              gameResult.setDraw();
+              gameResult.draw();
+            } else if (currentScene.getWinner() === currentScene.getPlayerId()) {
+              gameResult.win();
             } else {
-              gameResult.setWinner(currentScene.getWinner());
+              gameResult.lose();
             }
             currentScene.release();
             currentScene = gameResult;

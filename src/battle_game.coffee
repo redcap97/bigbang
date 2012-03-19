@@ -94,6 +94,9 @@ class BattleGame
   getWinner: ->
     @field.getWinner()
 
+  getPlayerId: ->
+    @dataTransport.playerId
+
   release: ->
     @game.removeScene(@scene)
     @game.removeScene(@scene2)
