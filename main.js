@@ -311,6 +311,7 @@
       this.label = new enchant.Label();
       this.label.color = "white";
       this.label.x = 4;
+      this.label.y = 1;
       this.scene2.addChild(this.label);
       this.count = 0;
       charaIds = this.generateCharacterIds();
@@ -824,12 +825,12 @@
       this.title.text = "Bigbang";
       this.title.className = "game-title";
       this.title.x = 10;
-      this.title.y = 8;
+      this.title.y = 20;
       this.caption = new enchant.Label();
       this.caption.text = MESSAGE_ENTRY_GAME;
       this.caption.className = "game-caption";
       this.caption.x = 10;
-      this.caption.y = 120;
+      this.caption.y = 130;
       this.scene.addChild(this.title);
       this.scene.addChild(this.caption);
       this.game.pushScene(this.scene);

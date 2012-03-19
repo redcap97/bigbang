@@ -19,6 +19,7 @@ class BattleGame
     @label = new enchant.Label()
     @label.color = "white"
     @label.x = 4
+    @label.y = 1
     @scene2.addChild(@label)
 
     @count = 0
