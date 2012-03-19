@@ -2,7 +2,11 @@ class BattleGame
   NUMBER_OF_CHARACTERS = 16
 
   constructor: (@game, @dataTransport) ->
-    @numberOfPlayers = @dataTransport.numberOfPlayers
+    {
+      playerId: @playerId
+      numberOfPlayers: @numberOfPlayers
+    } = @dataTransport
+
     @field = new BattleField(@numberOfPlayers, @dataTransport.seed)
 
     @scene = new enchant.Scene()
@@ -22,7 +26,32 @@ class BattleGame
     @timer.y = 1
     @scene2.addChild(@timer)
 
-    @count = 0
+    @startMessage = new enchant.Label()
+    @startMessage.className = "start-message"
+    @startMessage.text = "START!"
+    @startMessage.x = 45
+    @startMessage.y = 80
+    @scene2.addChild(@startMessage)
+
+    @screenTip = new enchant.Label()
+    @screenTip.className = "screen-tip"
+    @screenTip.text = "You"
+
+    p = ([
+      new Point(12,  34),
+      new Point(205, 162),
+      new Point(205, 34),
+      new Point(12,  162),
+    ])[@playerId]
+
+    @screenTip.x = p.x
+    @screenTip.y = p.y
+    @screenTip.width = 24
+    @scene2.addChild(@screenTip)
+
+    @parity = 0
+    @finalCount = 0
+    @isStarted = false
 
     charaIds = @generateCharacterIds()
     for bomberman, i in @field.bombermans
@@ -33,9 +62,18 @@ class BattleGame
     @updateRemainingTime()
 
   update: ->
+    if @field.getCount() > 0 and !@isStarted
+      @scene2.removeChild(@startMessage)
+      @scene2.removeChild(@screenTip)
+      @startMessage = true
+
+
     while @dataTransport.getBufferSize() > 0
+      @finalCount += 1 if @field.isFinished()
+
       inputs = @dataTransport.getInput()
       @field.update(inputs)
+
       @updateQueue()
       @updateRemainingTime()
 
@@ -45,8 +83,8 @@ class BattleGame
         if data and !@queue.contains(data.objectId)
           @queue.store(data.objectId, @createRenderer(data))
 
-    @count = (@count+1)%2
-    @sendInput(@game.input) if @count == 0
+    @parity = (@parity+1)%2
+    @sendInput(@game.input) if @parity == 0
 
   updateQueue: ->
     @queue.update()
@@ -77,7 +115,6 @@ class BattleGame
   generateCharacterIds: ->
     hash = {}
     ids = []
-
     while ids.length < @numberOfPlayers
       id = @field.getRandom(NUMBER_OF_CHARACTERS)
       unless hash[id]
@@ -86,7 +123,7 @@ class BattleGame
     ids
 
   isFinished: ->
-    @field.isFinished()
+    @field.isFinished() and @finalCount > 30
 
   isDraw: ->
     @field.isDraw()
@@ -95,7 +132,7 @@ class BattleGame
     @field.getWinner()
 
   getPlayerId: ->
-    @dataTransport.playerId
+    @playerId
 
   release: ->
     @game.removeScene(@scene)

@@ -43,14 +43,6 @@ class BattleField
 
     @count = 0
 
-    #@setMapData(4, 1, new Block(@, new Point(4, 1)))
-    #@setMapData(5, 5, new Block(@, new Point(5, 5)))
-    #@setMapData(5, 2, new Block(@, new Point(5, 2)))
-    #@setMapData(1, 2, new SpeedUp(@, new Point(1, 2)))
-    #@setMapData(1, 3, new FirePowerUp(@, new Point(1, 3)))
-    #@setMapData(1, 4, new BombUp(@, new Point(1, 4)))
-    #@setMapData(1, 5, new Remocon(@, new Point(1, 5)))
-    #@setMapData(1, 7, new BombKick(@, new Point(1, 7)))
     @createBlocks()
 
     @updateMap()
@@ -65,7 +57,7 @@ class BattleField
     @setMapData(x, y, null)
 
   update: (inputs) ->
-    @count += 1
+    @count += 1 unless @isFinished()
 
     for bomberman, i in @bombermans
       ix = bomberman.getCurrentIndex()
@@ -207,6 +199,9 @@ class BattleField
 
   isBarrier: (x, y) ->
     @getMapData(x, y).isBarrier
+
+  getCount: ->
+    @count
 
   getRemainingBombermans: ->
     remainingBombermans = []

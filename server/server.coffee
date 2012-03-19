@@ -77,7 +77,7 @@ class Group
 
         @sendInputs()
       , 1000/30.0
-    , 1000 * 1
+    , 1000 * 1.5
 
   clearBuffers: ->
     for player in @players
