@@ -7,17 +7,8 @@ class EntryScreen
     @scene = new enchant.Scene()
     @scene.backgroundColor = "#217821"
 
-    @title = new enchant.Label()
-    @title.text = "Bigbang"
-    @title.className = "game-title"
-    @title.x = 12
-    @title.y = 20
-
-    @caption = new enchant.Label()
-    @caption.text = MESSAGE_ENTRY_GAME
-    @caption.className = "game-caption"
-    @caption.x = 8
-    @caption.y = 130
+    @title = @createTitle()
+    @caption = @createCaption()
 
     @scene.addChild(@title)
     @scene.addChild(@caption)
@@ -50,6 +41,22 @@ class EntryScreen
           @isCanceling = false
           clearInterval(id)
       , 2 * 1000
+
+  createTitle: ->
+    title = new enchant.Label()
+    title.text = "Bigbang"
+    title.className = "game-title"
+    title.x = 12
+    title.y = 20
+    title
+
+  createCaption: ->
+    caption = new enchant.Label()
+    caption.text = MESSAGE_ENTRY_GAME
+    caption.className = "game-caption"
+    caption.x = 8
+    caption.y = 130
+    caption
 
   isFinished: ->
     @dataTransport?.hasBattleData()

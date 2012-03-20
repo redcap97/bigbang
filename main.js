@@ -318,9 +318,9 @@
       var _ref;
       this.game = game;
       this.dataTransport = dataTransport;
+      _ref = this.dataTransport, this.playerId = _ref.playerId, this.numberOfPlayers = _ref.numberOfPlayers;
       this.parity = this.finalCount = 0;
       this.isStarted = false;
-      _ref = this.dataTransport, this.playerId = _ref.playerId, this.numberOfPlayers = _ref.numberOfPlayers;
       this.field = new BattleField(this.numberOfPlayers, this.dataTransport.seed);
       this.lowerScene = new enchant.Scene();
       this.upperScene = new enchant.Scene();
@@ -453,10 +453,11 @@
     };
 
     BattleGame.prototype.createLowerQueue = function() {
-      var fieldRenderer;
-      fieldRenderer = new FieldRenderer(this.lowerQueue, this.field);
+      var fieldRenderer, lowerQueue;
+      lowerQueue = new RenderingQueue(this.game, this.lowerScene);
+      fieldRenderer = new FieldRenderer(lowerQueue, this.field);
       fieldRenderer.update();
-      return new RenderingQueue(this.game, this.lowerScene);
+      return lowerQueue;
     };
 
     BattleGame.prototype.generateCharacterIds = function() {
@@ -948,16 +949,8 @@
       this.game = game;
       this.scene = new enchant.Scene();
       this.scene.backgroundColor = "#217821";
-      this.title = new enchant.Label();
-      this.title.text = "Bigbang";
-      this.title.className = "game-title";
-      this.title.x = 12;
-      this.title.y = 20;
-      this.caption = new enchant.Label();
-      this.caption.text = MESSAGE_ENTRY_GAME;
-      this.caption.className = "game-caption";
-      this.caption.x = 8;
-      this.caption.y = 130;
+      this.title = this.createTitle();
+      this.caption = this.createCaption();
       this.scene.addChild(this.title);
       this.scene.addChild(this.caption);
       this.game.pushScene(this.scene);
@@ -988,6 +981,26 @@
           }
         }, 2 * 1000);
       }
+    };
+
+    EntryScreen.prototype.createTitle = function() {
+      var title;
+      title = new enchant.Label();
+      title.text = "Bigbang";
+      title.className = "game-title";
+      title.x = 12;
+      title.y = 20;
+      return title;
+    };
+
+    EntryScreen.prototype.createCaption = function() {
+      var caption;
+      caption = new enchant.Label();
+      caption.text = MESSAGE_ENTRY_GAME;
+      caption.className = "game-caption";
+      caption.x = 8;
+      caption.y = 130;
+      return caption;
     };
 
     EntryScreen.prototype.isFinished = function() {
