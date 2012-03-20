@@ -898,7 +898,7 @@
   EntryScreen = (function() {
     var MESSAGE_CANCEL, MESSAGE_ENTRY_GAME, MESSAGE_WAIT;
 
-    MESSAGE_ENTRY_GAME = "Please Input Z to Entry Game";
+    MESSAGE_ENTRY_GAME = "Please Input Z to Enter Game";
 
     MESSAGE_CANCEL = "Canceling...";
 
