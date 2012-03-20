@@ -1,4 +1,13 @@
 class DataTransport
+  INPUT_FLAGS =
+    left:  1
+    up:    2
+    right: 4
+    down:  8
+    a:     16
+    b:     32
+    none:  64
+
   constructor: ->
     @inputBuffer = []
     @playerId = @numberOfPlayers = @seed = null
@@ -32,13 +41,13 @@ class DataTransport
     byteArray = new Uint8Array(data)
     inputs = []
     for i in [0 ... byteArray.length]
-      inputs.push(Utils.decodeInput(byteArray[i]))
+      inputs.push(@decodeInput(byteArray[i]))
     @inputBuffer.push(inputs)
 
   sendInput: (input) ->
     return unless @isConnected()
 
-    v = Utils.encodeInput(input)
+    v = @encodeInput(input)
     byteArray = new Uint8Array(1)
     byteArray[0] = v
 
@@ -46,6 +55,26 @@ class DataTransport
       @socket.send(byteArray.buffer)
 
     @oldInput = v
+
+  encodeInput: (input) ->
+    value = 0
+    for own key, flag of INPUT_FLAGS
+      value |= flag if input[key]
+    value
+
+  decodeInput: (value) ->
+    return null if value & INPUT_FLAGS.none
+
+    input =
+      a:     false
+      b:     false
+      left:  false
+      up:    false
+      right: false
+      down:  false
+    for own key, flag of INPUT_FLAGS
+      input[key] = true if value & flag
+    input
 
   getInput: ->
     @inputBuffer.shift()

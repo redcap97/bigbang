@@ -1,13 +1,17 @@
 class BattleField
   OUTSIDE_OF_FIELD_ERROR = "Point is outside of the field"
 
-  FPS = 30
+  FPS        = 30
   TIME_LIMIT = FPS * 60 * 2
 
+  HEIGHT     = 13
+  WIDTH      = 15
+  TILE_SIZE  = 16
+
   constructor: (numberOfPlayers, seed) ->
-    @tileSize = 16
-    @height   = 13
-    @width    = 15
+    @height   = HEIGHT
+    @width    = WIDTH
+    @tileSize = TILE_SIZE
 
     @generateId = (->
       maxId = 0
@@ -59,6 +63,10 @@ class BattleField
   update: (inputs) ->
     @count += 1 unless @isFinished()
 
+    @updateBombermans(inputs)
+    @updateMap()
+
+  updateBombermans: (inputs) ->
     for bomberman, i in @bombermans
       ix = bomberman.getCurrentIndex()
       data = @getMapData(ix.x, ix.y)
@@ -72,8 +80,6 @@ class BattleField
 
       if inputs[i] and !bomberman.isDestroyed
         bomberman.update(inputs[i])
-
-    @updateMap()
 
   updateMap: ->
     for y in [0...@height]

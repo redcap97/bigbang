@@ -74,3 +74,5 @@ class InputManager
       @bDown = false
       @bUp = true
     @b = input.b
+
+Direction = InputManager

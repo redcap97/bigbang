@@ -1,11 +1,11 @@
 (function() {
-  var BattleField, BattleGame, Blast, BlastRenderer, Block, BlockRenderer, Bomb, BombKick, BombRenderer, BombUp, Bomberman, BombermanRenderer, DataTransport, Direction, ENCHANTJS_IMAGE_PATH, EntryScreen, FieldObject, FieldRenderer, FirePowerUp, GameResult, Ground, InputManager, Item, ItemRenderer, MAX_NUMBER_OF_PLAYERS, Point, Random, Rectangle, Remocon, Renderer, RenderingQueue, SpeedUp, Utils, WS_SUBPROTOCOL, WS_URI, Wall,
+  var BattleField, BattleGame, Blast, BlastRenderer, Block, BlockRenderer, Bomb, BombKick, BombRenderer, BombUp, Bomberman, BombermanRenderer, DataTransport, Direction, ENCHANTJS_IMAGE_PATH, EntryScreen, FieldObject, FieldRenderer, FirePowerUp, GameResult, Ground, InputManager, Item, ItemRenderer, MAX_NUMBER_OF_PLAYERS, Point, Random, Rectangle, Remocon, Renderer, RenderingQueue, SpeedUp, WS_SUBPROTOCOL, WS_URI, Wall,
     __slice = Array.prototype.slice,
     __hasProp = Object.prototype.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor; child.__super__ = parent.prototype; return child; };
 
   BattleField = (function() {
-    var FPS, OUTSIDE_OF_FIELD_ERROR, TIME_LIMIT;
+    var FPS, HEIGHT, OUTSIDE_OF_FIELD_ERROR, TILE_SIZE, TIME_LIMIT, WIDTH;
 
     OUTSIDE_OF_FIELD_ERROR = "Point is outside of the field";
 
@@ -13,11 +13,17 @@
 
     TIME_LIMIT = FPS * 60 * 2;
 
+    HEIGHT = 13;
+
+    WIDTH = 15;
+
+    TILE_SIZE = 16;
+
     function BattleField(numberOfPlayers, seed) {
       var g, i, j, w;
-      this.tileSize = 16;
-      this.height = 13;
-      this.width = 15;
+      this.height = HEIGHT;
+      this.width = WIDTH;
+      this.tileSize = TILE_SIZE;
       this.generateId = (function() {
         var maxId;
         maxId = 0;
@@ -64,9 +70,15 @@
     };
 
     BattleField.prototype.update = function(inputs) {
-      var bomberman, data, i, ix, _len, _ref;
       if (!this.isFinished()) this.count += 1;
+      this.updateBombermans(inputs);
+      return this.updateMap();
+    };
+
+    BattleField.prototype.updateBombermans = function(inputs) {
+      var bomberman, data, i, ix, _len, _ref, _results;
       _ref = this.bombermans;
+      _results = [];
       for (i = 0, _len = _ref.length; i < _len; i++) {
         bomberman = _ref[i];
         ix = bomberman.getCurrentIndex();
@@ -79,9 +91,13 @@
             data.exertEffectOn(bomberman);
             data.destroy();
         }
-        if (inputs[i] && !bomberman.isDestroyed) bomberman.update(inputs[i]);
+        if (inputs[i] && !bomberman.isDestroyed) {
+          _results.push(bomberman.update(inputs[i]));
+        } else {
+          _results.push(void 0);
+        }
       }
-      return this.updateMap();
+      return _results;
     };
 
     BattleField.prototype.updateMap = function() {
@@ -750,6 +766,17 @@
   })();
 
   DataTransport = (function() {
+    var INPUT_FLAGS;
+
+    INPUT_FLAGS = {
+      left: 1,
+      up: 2,
+      right: 4,
+      down: 8,
+      a: 16,
+      b: 32,
+      none: 64
+    };
 
     function DataTransport() {
       var _this = this;
@@ -786,7 +813,7 @@
       byteArray = new Uint8Array(data);
       inputs = [];
       for (i = 0, _ref = byteArray.length; 0 <= _ref ? i < _ref : i > _ref; 0 <= _ref ? i++ : i--) {
-        inputs.push(Utils.decodeInput(byteArray[i]));
+        inputs.push(this.decodeInput(byteArray[i]));
       }
       return this.inputBuffer.push(inputs);
     };
@@ -794,11 +821,41 @@
     DataTransport.prototype.sendInput = function(input) {
       var byteArray, v;
       if (!this.isConnected()) return;
-      v = Utils.encodeInput(input);
+      v = this.encodeInput(input);
       byteArray = new Uint8Array(1);
       byteArray[0] = v;
       if (!(v === 0 && this.oldInput === 0)) this.socket.send(byteArray.buffer);
       return this.oldInput = v;
+    };
+
+    DataTransport.prototype.encodeInput = function(input) {
+      var flag, key, value;
+      value = 0;
+      for (key in INPUT_FLAGS) {
+        if (!__hasProp.call(INPUT_FLAGS, key)) continue;
+        flag = INPUT_FLAGS[key];
+        if (input[key]) value |= flag;
+      }
+      return value;
+    };
+
+    DataTransport.prototype.decodeInput = function(value) {
+      var flag, input, key;
+      if (value & INPUT_FLAGS.none) return null;
+      input = {
+        a: false,
+        b: false,
+        left: false,
+        up: false,
+        right: false,
+        down: false
+      };
+      for (key in INPUT_FLAGS) {
+        if (!__hasProp.call(INPUT_FLAGS, key)) continue;
+        flag = INPUT_FLAGS[key];
+        if (value & flag) input[key] = true;
+      }
+      return input;
     };
 
     DataTransport.prototype.getInput = function() {
@@ -1378,6 +1435,8 @@
 
   })();
 
+  Direction = InputManager;
+
   WS_URI = 'ws://localhost:8080';
 
   WS_SUBPROTOCOL = 'bigbang';
@@ -1834,54 +1893,5 @@
     return RenderingQueue;
 
   })();
-
-  Utils = {
-    inputFlags: {
-      left: 1,
-      up: 2,
-      right: 4,
-      down: 8,
-      a: 16,
-      b: 32,
-      none: 64
-    },
-    encodeInput: function(input) {
-      var flag, key, value, _ref;
-      value = 0;
-      _ref = this.inputFlags;
-      for (key in _ref) {
-        if (!__hasProp.call(_ref, key)) continue;
-        flag = _ref[key];
-        if (input[key]) value |= flag;
-      }
-      return value;
-    },
-    decodeInput: function(value) {
-      var flag, input, key, _ref;
-      if (value & this.inputFlags.none) return null;
-      input = {
-        a: false,
-        b: false,
-        left: false,
-        up: false,
-        right: false,
-        down: false
-      };
-      _ref = this.inputFlags;
-      for (key in _ref) {
-        if (!__hasProp.call(_ref, key)) continue;
-        flag = _ref[key];
-        if (value & flag) input[key] = true;
-      }
-      return input;
-    }
-  };
-
-  Direction = {
-    LEFT: 0,
-    UP: 1,
-    RIGHT: 2,
-    DOWN: 3
-  };
 
 }).call(this);
