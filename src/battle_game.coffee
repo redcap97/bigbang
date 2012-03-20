@@ -2,13 +2,13 @@ class BattleGame
   NUMBER_OF_CHARACTERS = 16
 
   constructor: (@game, @dataTransport) ->
-    @parity = @finalCount = 0
-    @isStarted = false
-
     {
       playerId: @playerId
       numberOfPlayers: @numberOfPlayers
     } = @dataTransport
+
+    @parity = @finalCount = 0
+    @isStarted = false
 
     @field = new BattleField(@numberOfPlayers, @dataTransport.seed)
 
@@ -123,10 +123,10 @@ class BattleGame
     upperQueue
 
   createLowerQueue: ->
-    fieldRenderer = new FieldRenderer(@lowerQueue, @field)
+    lowerQueue = new RenderingQueue(@game, @lowerScene)
+    fieldRenderer = new FieldRenderer(lowerQueue, @field)
     fieldRenderer.update()
-
-    new RenderingQueue(@game, @lowerScene)
+    lowerQueue
 
   generateCharacterIds: ->
     hash = {}
