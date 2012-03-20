@@ -37,7 +37,7 @@ window.onload = ->
           currentScene.release()
           currentScene = new BattleGame(game, dataTransport)
         else if currentScene instanceof BattleGame
-          gameResult = createGameResult()
+          gameResult = createGameResult(game, currentScene)
           currentScene.release()
           currentScene = gameResult
         else if currentScene instanceof GameResult
