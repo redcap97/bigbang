@@ -3,11 +3,33 @@ MAX_CONNECTIONS = 100
 FPS = 30
 BATTLE_TIME_LIMIT = FPS * 60 * 3
 MAX_NUMBER_OF_PLAYERS = 4
-
 NONE_INPUT = 64
 
 WebSocketServer = require('websocket').server
 http = require('http')
+opts = require('opts')
+
+opts.parse([
+  {
+    short:    'p',
+    long:     'port',
+    value:    true,
+    required: false,
+  },
+  {
+    short:    'a',
+    long:     'allowed-origin',
+    value:    true,
+    required: false,
+  },
+])
+
+port = opts.get('port') ? 8080
+allowedOrigin = opts.get('allowed-origin') ? "null"
+
+console.log("Port: #{port}")
+console.log("Allowed origin: #{allowedOrigin}")
+console.log("")
 
 numberOfConnections = 0
 
@@ -128,7 +150,7 @@ webSocketServer = new WebSocketServer(
   autoAcceptConnections: false
 )
 
-originIsAllowed = (origin) -> true
+originIsAllowed = (origin) -> origin == allowedOrigin
 
 timerId = null
 group = new Group()
@@ -168,5 +190,5 @@ webSocketServer.on 'request', (request) ->
         group = new Group()
     , 3 * 1000
 
-httpServer.listen 8080, ->
+httpServer.listen port, ->
   console.log((new Date()) + ' Server is listening on port 8080')
