@@ -1,5 +1,5 @@
 (function() {
-  var BattleField, BattleGame, Blast, BlastRenderer, Block, BlockRenderer, Bomb, BombKick, BombRenderer, BombUp, Bomberman, BombermanRenderer, DataTransport, Direction, ENCHANTJS_IMAGE_PATH, EntryScreen, FieldObject, FieldRenderer, FirePowerUp, GameResult, Ground, InputManager, Item, ItemRenderer, MAX_NUMBER_OF_PLAYERS, Point, Random, Rectangle, Remocon, Renderer, RenderingQueue, SpeedUp, WS_SUBPROTOCOL, WS_URI, Wall,
+  var BattleField, BattleGame, Blast, BlastRenderer, Block, BlockRenderer, Bomb, BombKick, BombRenderer, BombUp, Bomberman, BombermanRenderer, DataTransport, Direction, ENCHANTJS_IMAGE_PATH, EntryScreen, FieldObject, FieldRenderer, FirePowerUp, GameResult, Ground, InputManager, Item, ItemRenderer, MAX_NUMBER_OF_PLAYERS, Point, Random, Rectangle, Remocon, Renderer, RenderingQueue, SpeedUp, WS_SUBPROTOCOL, Wall, createGameResult,
     __slice = Array.prototype.slice,
     __hasProp = Object.prototype.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor; child.__super__ = parent.prototype; return child; };
@@ -1475,13 +1475,24 @@
 
   Direction = InputManager;
 
-  WS_URI = 'ws://localhost:8080';
-
   WS_SUBPROTOCOL = 'bigbang';
 
   MAX_NUMBER_OF_PLAYERS = 4;
 
   ENCHANTJS_IMAGE_PATH = "enchantjs/images/";
+
+  createGameResult = function(game, currentScene) {
+    var gameResult;
+    gameResult = new GameResult(game);
+    if (currentScene.isDraw()) {
+      gameResult.draw();
+    } else if (currentScene.getWinner() === currentScene.getPlayerId()) {
+      gameResult.win();
+    } else {
+      gameResult.lose();
+    }
+    return gameResult;
+  };
 
   window.onload = function() {
     var game;
@@ -1507,14 +1518,7 @@
             currentScene.release();
             currentScene = new BattleGame(game, dataTransport);
           } else if (currentScene instanceof BattleGame) {
-            gameResult = new GameResult(game);
-            if (currentScene.isDraw()) {
-              gameResult.draw();
-            } else if (currentScene.getWinner() === currentScene.getPlayerId()) {
-              gameResult.win();
-            } else {
-              gameResult.lose();
-            }
+            gameResult = createGameResult();
             currentScene.release();
             currentScene = gameResult;
           } else if (currentScene instanceof GameResult) {
