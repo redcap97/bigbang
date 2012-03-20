@@ -841,7 +841,7 @@
   EntryScreen = (function() {
     var MESSAGE_CANCEL, MESSAGE_ENTRY_GAME, MESSAGE_WAIT;
 
-    MESSAGE_ENTRY_GAME = "Plese Input Z to Entry Game";
+    MESSAGE_ENTRY_GAME = "Please Input Z to Entry Game";
 
     MESSAGE_CANCEL = "Canceling...";
 
@@ -859,7 +859,7 @@
       this.caption = new enchant.Label();
       this.caption.text = MESSAGE_ENTRY_GAME;
       this.caption.className = "game-caption";
-      this.caption.x = 12;
+      this.caption.x = 8;
       this.caption.y = 130;
       this.scene.addChild(this.title);
       this.scene.addChild(this.caption);
@@ -874,6 +874,7 @@
         _this = this;
       if (this.game.input.a && this.dataTransport === null) {
         this.caption.text = MESSAGE_WAIT;
+        this.caption.x = 14;
         this.dataTransport = new DataTransport();
       }
       if (this.game.input.b && this.dataTransport !== null && !this.isCanceling) {
@@ -883,6 +884,7 @@
         return id = setInterval(function() {
           if (_this.dataTransport.isClosed()) {
             _this.caption.text = MESSAGE_ENTRY_GAME;
+            _this.caption.x = 8;
             _this.dataTransport = null;
             _this.isCanceling = false;
             return clearInterval(id);
