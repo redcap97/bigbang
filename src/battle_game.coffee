@@ -2,6 +2,9 @@ class BattleGame
   NUMBER_OF_CHARACTERS = 16
 
   constructor: (@game, @dataTransport) ->
+    @parity = @finalCount = 0
+    @isStarted = false
+
     {
       playerId: @playerId
       numberOfPlayers: @numberOfPlayers
@@ -9,86 +12,46 @@ class BattleGame
 
     @field = new BattleField(@numberOfPlayers, @dataTransport.seed)
 
-    @scene = new enchant.Scene()
-    @game.pushScene(@scene)
-    @queue = new RenderingQueue(@game, @scene)
+    @lowerScene = new enchant.Scene()
+    @upperScene = new enchant.Scene()
+    @game.pushScene(@lowerScene)
+    @game.pushScene(@upperScene)
 
-    @scene2 = new enchant.Scene()
-    @game.pushScene(@scene2)
-    @queue2 = new RenderingQueue(@game, @scene2)
+    @lowerQueue = @createLowerQueue()
+    @upperQueue = @createUpperQueue()
 
-    @fieldRenderer = new FieldRenderer(@queue, @field)
-    @fieldRenderer.update()
+    @timer = @createTimer()
+    @startMessage = @createStartMessage()
+    @screenTip = @createScreenTip()
 
-    @timer = new enchant.Label()
-    @timer.color = "white"
-    @timer.x = 4
-    @timer.y = 1
-    @scene2.addChild(@timer)
-
-    @startMessage = new enchant.Label()
-    @startMessage.className = "start-message"
-    @startMessage.text = "START!"
-    @startMessage.x = 45
-    @startMessage.y = 80
-    @scene2.addChild(@startMessage)
-
-    @screenTip = new enchant.Label()
-    @screenTip.className = "screen-tip"
-    @screenTip.text = "You"
-
-    p = ([
-      new Point(12,  34),
-      new Point(205, 162),
-      new Point(205, 34),
-      new Point(12,  162),
-    ])[@playerId]
-
-    @screenTip.x = p.x
-    @screenTip.y = p.y
-    @screenTip.width = 24
-    @scene2.addChild(@screenTip)
-
-    @parity = 0
-    @finalCount = 0
-    @isStarted = false
-
-    charaIds = @generateCharacterIds()
-    for bomberman, i in @field.bombermans
-      renderer = new BombermanRenderer(@queue2, bomberman, charaIds[i])
-      @queue2.store(bomberman.objectId, renderer)
+    @upperScene.addChild(@timer)
+    @upperScene.addChild(@startMessage)
+    @upperScene.addChild(@screenTip)
 
     @updateQueue()
     @updateRemainingTime()
 
   update: ->
     if @field.getCount() > 0 and !@isStarted
-      @scene2.removeChild(@startMessage)
-      @scene2.removeChild(@screenTip)
-      @startMessage = true
-
+      @upperScene.removeChild(@startMessage)
+      @upperScene.removeChild(@screenTip)
+      @isStarted = true
 
     while @dataTransport.getBufferSize() > 0
       @finalCount += 1 if @field.isFinished()
 
-      inputs = @dataTransport.getInput()
-      @field.update(inputs)
-
+      @field.update(@dataTransport.getInput())
       @updateQueue()
       @updateRemainingTime()
 
-    for i in [0 ... @field.height]
-      for j in [0 ... @field.width]
-        data = @field.mutableDataMap[i][j]
-        if data and !@queue.contains(data.objectId)
-          @queue.store(data.objectId, @createRenderer(data))
+    @storeNewRenderers()
 
     @parity = (@parity+1)%2
     @sendInput(@game.input) if @parity == 0
 
   updateQueue: ->
-    @queue.update()
-    @queue2.update()
+    @lowerQueue.update()
+    @upperQueue.update()
 
   updateRemainingTime: ->
     [min, sec] = @field.getRemainingTime()
@@ -102,15 +65,68 @@ class BattleGame
   createRenderer: (data) ->
     switch data.type
       when FieldObject.TYPE_BOMB
-        new BombRenderer(@queue,  data)
+        new BombRenderer(@lowerQueue,  data)
       when FieldObject.TYPE_BLAST
-        new BlastRenderer(@queue, data)
+        new BlastRenderer(@lowerQueue, data)
       when FieldObject.TYPE_BLOCK
-        new BlockRenderer(@queue, data)
+        new BlockRenderer(@lowerQueue, data)
       when FieldObject.TYPE_ITEM
-        new ItemRenderer(@queue,  data)
+        new ItemRenderer(@lowerQueue,  data)
       else
         throw Error("Unknown object")
+
+  storeNewRenderers: ->
+    for i in [0 ... @field.height]
+      for j in [0 ... @field.width]
+        data = @field.mutableDataMap[i][j]
+        if data and !@lowerQueue.contains(data.objectId)
+          @lowerQueue.store(data.objectId, @createRenderer(data))
+
+  createTimer: ->
+    timer = new enchant.Label()
+    timer.color = "white"
+    timer.x = 4
+    timer.y = 1
+    timer
+
+  createScreenTip: ->
+    screenTip = new enchant.Label()
+    screenTip.className = "screen-tip"
+    screenTip.text = "You"
+
+    p = ([
+      new Point(12,  34),
+      new Point(205, 162),
+      new Point(205, 34),
+      new Point(12,  162),
+    ])[@playerId]
+
+    screenTip.x = p.x
+    screenTip.y = p.y
+    screenTip.width = 24
+    screenTip
+
+  createStartMessage: ->
+    startMessage = new enchant.Label()
+    startMessage.className = "start-message"
+    startMessage.text = "START!"
+    startMessage.x = 45
+    startMessage.y = 80
+    startMessage
+
+  createUpperQueue: ->
+    upperQueue = new RenderingQueue(@game, @upperScene)
+    charaIds = @generateCharacterIds()
+    for bomberman, i in @field.bombermans
+      renderer = new BombermanRenderer(upperQueue, bomberman, charaIds[i])
+      upperQueue.store(bomberman.objectId, renderer)
+    upperQueue
+
+  createLowerQueue: ->
+    fieldRenderer = new FieldRenderer(@lowerQueue, @field)
+    fieldRenderer.update()
+
+    new RenderingQueue(@game, @lowerScene)
 
   generateCharacterIds: ->
     hash = {}
@@ -135,6 +151,6 @@ class BattleGame
     @playerId
 
   release: ->
-    @game.removeScene(@scene)
-    @game.removeScene(@scene2)
+    @game.removeScene(@lowerScene)
+    @game.removeScene(@upperScene)
     @dataTransport.release()

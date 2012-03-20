@@ -315,81 +315,49 @@
     NUMBER_OF_CHARACTERS = 16;
 
     function BattleGame(game, dataTransport) {
-      var bomberman, charaIds, i, p, renderer, _len, _ref, _ref2;
+      var _ref;
       this.game = game;
       this.dataTransport = dataTransport;
+      this.parity = this.finalCount = 0;
+      this.isStarted = false;
       _ref = this.dataTransport, this.playerId = _ref.playerId, this.numberOfPlayers = _ref.numberOfPlayers;
       this.field = new BattleField(this.numberOfPlayers, this.dataTransport.seed);
-      this.scene = new enchant.Scene();
-      this.game.pushScene(this.scene);
-      this.queue = new RenderingQueue(this.game, this.scene);
-      this.scene2 = new enchant.Scene();
-      this.game.pushScene(this.scene2);
-      this.queue2 = new RenderingQueue(this.game, this.scene2);
-      this.fieldRenderer = new FieldRenderer(this.queue, this.field);
-      this.fieldRenderer.update();
-      this.timer = new enchant.Label();
-      this.timer.color = "white";
-      this.timer.x = 4;
-      this.timer.y = 1;
-      this.scene2.addChild(this.timer);
-      this.startMessage = new enchant.Label();
-      this.startMessage.className = "start-message";
-      this.startMessage.text = "START!";
-      this.startMessage.x = 45;
-      this.startMessage.y = 80;
-      this.scene2.addChild(this.startMessage);
-      this.screenTip = new enchant.Label();
-      this.screenTip.className = "screen-tip";
-      this.screenTip.text = "You";
-      p = [new Point(12, 34), new Point(205, 162), new Point(205, 34), new Point(12, 162)][this.playerId];
-      this.screenTip.x = p.x;
-      this.screenTip.y = p.y;
-      this.screenTip.width = 24;
-      this.scene2.addChild(this.screenTip);
-      this.parity = 0;
-      this.finalCount = 0;
-      this.isStarted = false;
-      charaIds = this.generateCharacterIds();
-      _ref2 = this.field.bombermans;
-      for (i = 0, _len = _ref2.length; i < _len; i++) {
-        bomberman = _ref2[i];
-        renderer = new BombermanRenderer(this.queue2, bomberman, charaIds[i]);
-        this.queue2.store(bomberman.objectId, renderer);
-      }
+      this.lowerScene = new enchant.Scene();
+      this.upperScene = new enchant.Scene();
+      this.game.pushScene(this.lowerScene);
+      this.game.pushScene(this.upperScene);
+      this.lowerQueue = this.createLowerQueue();
+      this.upperQueue = this.createUpperQueue();
+      this.timer = this.createTimer();
+      this.startMessage = this.createStartMessage();
+      this.screenTip = this.createScreenTip();
+      this.upperScene.addChild(this.timer);
+      this.upperScene.addChild(this.startMessage);
+      this.upperScene.addChild(this.screenTip);
       this.updateQueue();
       this.updateRemainingTime();
     }
 
     BattleGame.prototype.update = function() {
-      var data, i, inputs, j, _ref, _ref2;
       if (this.field.getCount() > 0 && !this.isStarted) {
-        this.scene2.removeChild(this.startMessage);
-        this.scene2.removeChild(this.screenTip);
-        this.startMessage = true;
+        this.upperScene.removeChild(this.startMessage);
+        this.upperScene.removeChild(this.screenTip);
+        this.isStarted = true;
       }
       while (this.dataTransport.getBufferSize() > 0) {
         if (this.field.isFinished()) this.finalCount += 1;
-        inputs = this.dataTransport.getInput();
-        this.field.update(inputs);
+        this.field.update(this.dataTransport.getInput());
         this.updateQueue();
         this.updateRemainingTime();
       }
-      for (i = 0, _ref = this.field.height; 0 <= _ref ? i < _ref : i > _ref; 0 <= _ref ? i++ : i--) {
-        for (j = 0, _ref2 = this.field.width; 0 <= _ref2 ? j < _ref2 : j > _ref2; 0 <= _ref2 ? j++ : j--) {
-          data = this.field.mutableDataMap[i][j];
-          if (data && !this.queue.contains(data.objectId)) {
-            this.queue.store(data.objectId, this.createRenderer(data));
-          }
-        }
-      }
+      this.storeNewRenderers();
       this.parity = (this.parity + 1) % 2;
       if (this.parity === 0) return this.sendInput(this.game.input);
     };
 
     BattleGame.prototype.updateQueue = function() {
-      this.queue.update();
-      return this.queue2.update();
+      this.lowerQueue.update();
+      return this.upperQueue.update();
     };
 
     BattleGame.prototype.updateRemainingTime = function() {
@@ -407,16 +375,88 @@
     BattleGame.prototype.createRenderer = function(data) {
       switch (data.type) {
         case FieldObject.TYPE_BOMB:
-          return new BombRenderer(this.queue, data);
+          return new BombRenderer(this.lowerQueue, data);
         case FieldObject.TYPE_BLAST:
-          return new BlastRenderer(this.queue, data);
+          return new BlastRenderer(this.lowerQueue, data);
         case FieldObject.TYPE_BLOCK:
-          return new BlockRenderer(this.queue, data);
+          return new BlockRenderer(this.lowerQueue, data);
         case FieldObject.TYPE_ITEM:
-          return new ItemRenderer(this.queue, data);
+          return new ItemRenderer(this.lowerQueue, data);
         default:
           throw Error("Unknown object");
       }
+    };
+
+    BattleGame.prototype.storeNewRenderers = function() {
+      var data, i, j, _ref, _results;
+      _results = [];
+      for (i = 0, _ref = this.field.height; 0 <= _ref ? i < _ref : i > _ref; 0 <= _ref ? i++ : i--) {
+        _results.push((function() {
+          var _ref2, _results2;
+          _results2 = [];
+          for (j = 0, _ref2 = this.field.width; 0 <= _ref2 ? j < _ref2 : j > _ref2; 0 <= _ref2 ? j++ : j--) {
+            data = this.field.mutableDataMap[i][j];
+            if (data && !this.lowerQueue.contains(data.objectId)) {
+              _results2.push(this.lowerQueue.store(data.objectId, this.createRenderer(data)));
+            } else {
+              _results2.push(void 0);
+            }
+          }
+          return _results2;
+        }).call(this));
+      }
+      return _results;
+    };
+
+    BattleGame.prototype.createTimer = function() {
+      var timer;
+      timer = new enchant.Label();
+      timer.color = "white";
+      timer.x = 4;
+      timer.y = 1;
+      return timer;
+    };
+
+    BattleGame.prototype.createScreenTip = function() {
+      var p, screenTip;
+      screenTip = new enchant.Label();
+      screenTip.className = "screen-tip";
+      screenTip.text = "You";
+      p = [new Point(12, 34), new Point(205, 162), new Point(205, 34), new Point(12, 162)][this.playerId];
+      screenTip.x = p.x;
+      screenTip.y = p.y;
+      screenTip.width = 24;
+      return screenTip;
+    };
+
+    BattleGame.prototype.createStartMessage = function() {
+      var startMessage;
+      startMessage = new enchant.Label();
+      startMessage.className = "start-message";
+      startMessage.text = "START!";
+      startMessage.x = 45;
+      startMessage.y = 80;
+      return startMessage;
+    };
+
+    BattleGame.prototype.createUpperQueue = function() {
+      var bomberman, charaIds, i, renderer, upperQueue, _len, _ref;
+      upperQueue = new RenderingQueue(this.game, this.upperScene);
+      charaIds = this.generateCharacterIds();
+      _ref = this.field.bombermans;
+      for (i = 0, _len = _ref.length; i < _len; i++) {
+        bomberman = _ref[i];
+        renderer = new BombermanRenderer(upperQueue, bomberman, charaIds[i]);
+        upperQueue.store(bomberman.objectId, renderer);
+      }
+      return upperQueue;
+    };
+
+    BattleGame.prototype.createLowerQueue = function() {
+      var fieldRenderer;
+      fieldRenderer = new FieldRenderer(this.lowerQueue, this.field);
+      fieldRenderer.update();
+      return new RenderingQueue(this.game, this.lowerScene);
     };
 
     BattleGame.prototype.generateCharacterIds = function() {
@@ -450,8 +490,8 @@
     };
 
     BattleGame.prototype.release = function() {
-      this.game.removeScene(this.scene);
-      this.game.removeScene(this.scene2);
+      this.game.removeScene(this.lowerScene);
+      this.game.removeScene(this.upperScene);
       return this.dataTransport.release();
     };
 
