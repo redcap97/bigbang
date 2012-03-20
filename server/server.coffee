@@ -1,6 +1,8 @@
 BUFFER_LIMIT = 1200
-BATTLE_TIME_LIMIT = 30 * 60 * 3
 MAX_CONNECTIONS = 100
+FPS = 30
+BATTLE_TIME_LIMIT = FPS * 60 * 3
+MAX_NUMBER_OF_PLAYERS = 4
 
 NONE_INPUT = 64
 
@@ -76,7 +78,7 @@ class Group
           return
 
         @sendInputs()
-      , 1000/30.0
+      , 1000 / FPS
     , 1000 * 1.5
 
   clearBuffers: ->
@@ -103,7 +105,7 @@ class Group
     player.sendBytes(buffer) for player in @players
 
   canStartGame: ->
-    @players.length == 4
+    @players.length == MAX_NUMBER_OF_PLAYERS
 
   getNumberOfPlayers: ->
     @players.length
