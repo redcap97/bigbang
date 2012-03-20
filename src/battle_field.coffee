@@ -111,29 +111,30 @@ class BattleField
         if data.type == FieldObject.TYPE_GROUND
           @setMapData(x, y, new Block(@, new Point(x, y)))
 
-    @removeMapData(1, 1)
-    @removeMapData(1, 2)
-    @removeMapData(1, 3)
-    @removeMapData(2, 1)
-    @removeMapData(3, 1)
+    positions = [
+      new Point(1, 1),
+      new Point(1, 2),
+      new Point(1, 3),
+      new Point(2, 1),
+      new Point(3, 1),
+      new Point(@width-2, 1),
+      new Point(@width-2, 2),
+      new Point(@width-2, 3),
+      new Point(@width-3, 1),
+      new Point(@width-4, 1),
+      new Point(1, @height-2),
+      new Point(1, @height-3),
+      new Point(1, @height-4),
+      new Point(2, @height-2),
+      new Point(3, @height-2),
+      new Point(@width-2, @height-2),
+      new Point(@width-2, @height-3),
+      new Point(@width-2, @height-4),
+      new Point(@width-3, @height-2),
+      new Point(@width-4, @height-2),
+    ]
 
-    @removeMapData(@width-2, 1)
-    @removeMapData(@width-2, 2)
-    @removeMapData(@width-2, 3)
-    @removeMapData(@width-3, 1)
-    @removeMapData(@width-4, 1)
-
-    @removeMapData(1, @height-2)
-    @removeMapData(1, @height-3)
-    @removeMapData(1, @height-4)
-    @removeMapData(2, @height-2)
-    @removeMapData(3, @height-2)
-
-    @removeMapData(@width-2, @height-2)
-    @removeMapData(@width-2, @height-3)
-    @removeMapData(@width-2, @height-4)
-    @removeMapData(@width-3, @height-2)
-    @removeMapData(@width-4, @height-2)
+    @removeMapData(p.x, p.y) for p in positions
 
     n = 0
     while n < 11

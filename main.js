@@ -132,7 +132,7 @@
     };
 
     BattleField.prototype.createBlocks = function() {
-      var data, n, x, y, _ref, _ref2, _results;
+      var data, n, p, positions, x, y, _i, _len, _ref, _ref2, _results;
       for (y = 0, _ref = this.height; 0 <= _ref ? y < _ref : y > _ref; 0 <= _ref ? y++ : y--) {
         for (x = 0, _ref2 = this.width; 0 <= _ref2 ? x < _ref2 : x > _ref2; 0 <= _ref2 ? x++ : x--) {
           data = this.getMapData(x, y);
@@ -141,26 +141,11 @@
           }
         }
       }
-      this.removeMapData(1, 1);
-      this.removeMapData(1, 2);
-      this.removeMapData(1, 3);
-      this.removeMapData(2, 1);
-      this.removeMapData(3, 1);
-      this.removeMapData(this.width - 2, 1);
-      this.removeMapData(this.width - 2, 2);
-      this.removeMapData(this.width - 2, 3);
-      this.removeMapData(this.width - 3, 1);
-      this.removeMapData(this.width - 4, 1);
-      this.removeMapData(1, this.height - 2);
-      this.removeMapData(1, this.height - 3);
-      this.removeMapData(1, this.height - 4);
-      this.removeMapData(2, this.height - 2);
-      this.removeMapData(3, this.height - 2);
-      this.removeMapData(this.width - 2, this.height - 2);
-      this.removeMapData(this.width - 2, this.height - 3);
-      this.removeMapData(this.width - 2, this.height - 4);
-      this.removeMapData(this.width - 3, this.height - 2);
-      this.removeMapData(this.width - 4, this.height - 2);
+      positions = [new Point(1, 1), new Point(1, 2), new Point(1, 3), new Point(2, 1), new Point(3, 1), new Point(this.width - 2, 1), new Point(this.width - 2, 2), new Point(this.width - 2, 3), new Point(this.width - 3, 1), new Point(this.width - 4, 1), new Point(1, this.height - 2), new Point(1, this.height - 3), new Point(1, this.height - 4), new Point(2, this.height - 2), new Point(3, this.height - 2), new Point(this.width - 2, this.height - 2), new Point(this.width - 2, this.height - 3), new Point(this.width - 2, this.height - 4), new Point(this.width - 3, this.height - 2), new Point(this.width - 4, this.height - 2)];
+      for (_i = 0, _len = positions.length; _i < _len; _i++) {
+        p = positions[_i];
+        this.removeMapData(p.x, p.y);
+      }
       n = 0;
       _results = [];
       while (n < 11) {
