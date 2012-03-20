@@ -1,5 +1,5 @@
 class EntryScreen
-  MESSAGE_ENTRY_GAME = "Please Input Z to Entry Game"
+  MESSAGE_ENTRY_GAME = "Please Input Z to Enter Game"
   MESSAGE_CANCEL = "Canceling..."
   MESSAGE_WAIT = "Please Wait... (X: Cancel)"
 
