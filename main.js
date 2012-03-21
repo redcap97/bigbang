@@ -1,5 +1,5 @@
 (function() {
-  var BattleField, BattleGame, Blast, BlastRenderer, Block, BlockRenderer, Bomb, BombKick, BombRenderer, BombUp, Bomberman, BombermanRenderer, DataTransport, Direction, ENCHANTJS_IMAGE_PATH, EntryScreen, FieldObject, FieldRenderer, FirePowerUp, GameResult, Ground, InputManager, Item, ItemRenderer, MAX_NUMBER_OF_PLAYERS, Point, Random, Rectangle, Remocon, Renderer, RenderingQueue, SpeedUp, TimerRenderer, WS_SUBPROTOCOL, Wall, createGameResult,
+  var BattleField, BattleGame, Blast, BlastRenderer, Block, BlockRenderer, Bomb, BombKick, BombRenderer, BombUp, Bomberman, BombermanRenderer, DataTransport, Direction, ENCHANTJS_IMAGE_PATH, EntryScreen, FieldObject, FieldRenderer, FirePowerUp, GameResult, Ground, InputManager, Item, ItemRenderer, MAX_NUMBER_OF_PLAYERS, Point, RESOURCES, Random, Rectangle, Remocon, Renderer, RenderingQueue, SpeedUp, TimerRenderer, WS_SUBPROTOCOL, Wall, createGameResult,
     __slice = Array.prototype.slice,
     __hasProp = Object.prototype.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor; child.__super__ = parent.prototype; return child; };
@@ -1462,6 +1462,8 @@
 
   ENCHANTJS_IMAGE_PATH = "enchantjs/images/";
 
+  RESOURCES = [ENCHANTJS_IMAGE_PATH + 'map0.gif', ENCHANTJS_IMAGE_PATH + 'effect0.gif', ENCHANTJS_IMAGE_PATH + 'icon0.gif', 'image/map0.png', 'image/icon0.png', 'image/char0.png'];
+
   createGameResult = function(game, currentScene) {
     var gameResult;
     gameResult = new GameResult(game);
@@ -1476,15 +1478,13 @@
   };
 
   window.onload = function() {
-    var game;
+    var game, resource, _i, _len;
     game = new enchant.Game(240, 208);
     game.scale = 3.0;
-    game.preload(ENCHANTJS_IMAGE_PATH + 'map0.gif');
-    game.preload(ENCHANTJS_IMAGE_PATH + 'effect0.gif');
-    game.preload(ENCHANTJS_IMAGE_PATH + 'icon0.gif');
-    game.preload('image/map0.png');
-    game.preload('image/icon0.png');
-    game.preload('image/char0.png');
+    for (_i = 0, _len = RESOURCES.length; _i < _len; _i++) {
+      resource = RESOURCES[_i];
+      game.preload(resource);
+    }
     game.fps = 60;
     game.keybind("Z".charCodeAt(0), 'a');
     game.keybind("X".charCodeAt(0), 'b');
