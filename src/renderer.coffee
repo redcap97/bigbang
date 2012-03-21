@@ -32,6 +32,23 @@ class FieldRenderer extends Renderer
         data = @field.staticDataMap[i][j]
         if data.type == FieldObject.TYPE_GROUND then 1 else 0
 
+class TimerRenderer extends Renderer
+  constructor: (@queue, @field) ->
+    super(@queue)
+
+    @timer = new enchant.Label()
+    @timer.color = "white"
+    @timer.x = 4
+    @timer.y = 1
+
+    @addNode(@timer)
+
+  update: ->
+    [min, sec] = @field.getRemainingTime()
+    sm = if min < 10 then ('0'+String(min)) else String(min)
+    ss = if sec < 10 then ('0'+String(sec)) else String(sec)
+    @timer.text = "#{sm}:#{ss}"
+
 class BombermanRenderer extends Renderer
   constructor: (@queue, @bomberman, characterId) ->
     super(@queue)

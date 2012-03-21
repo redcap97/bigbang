@@ -29,6 +29,9 @@ window.onload = ->
   game.keybind("X".charCodeAt(0), 'b')
 
   game.onload = ->
+    window.onerror = (msg, url, line) ->
+      game.stop() and false
+
     currentScene = new EntryScreen(game)
     game.addEventListener 'enterframe', ->
       if currentScene.isFinished()

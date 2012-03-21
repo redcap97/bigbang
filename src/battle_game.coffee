@@ -20,16 +20,13 @@ class BattleGame
     @lowerQueue = @createLowerQueue()
     @upperQueue = @createUpperQueue()
 
-    @timer = @createTimer()
     @startMessage = @createStartMessage()
     @screenTip = @createScreenTip()
 
-    @upperScene.addChild(@timer)
     @upperScene.addChild(@startMessage)
     @upperScene.addChild(@screenTip)
 
     @updateQueue()
-    @updateRemainingTime()
 
   update: ->
     if @field.getCount() > 0 and !@isStarted
@@ -42,7 +39,6 @@ class BattleGame
 
       @field.update(@dataTransport.getInput())
       @updateQueue()
-      @updateRemainingTime()
 
     @storeNewRenderers()
 
@@ -52,12 +48,6 @@ class BattleGame
   updateQueue: ->
     @lowerQueue.update()
     @upperQueue.update()
-
-  updateRemainingTime: ->
-    [min, sec] = @field.getRemainingTime()
-    sm = if min < 10 then ('0'+String(min)) else String(min)
-    ss = if sec < 10 then ('0'+String(sec)) else String(sec)
-    @timer.text = "#{sm}:#{ss}"
 
   sendInput: (input) ->
     @dataTransport.sendInput(input)
@@ -81,13 +71,6 @@ class BattleGame
         data = @field.mutableDataMap[i][j]
         if data and !@lowerQueue.contains(data.objectId)
           @lowerQueue.store(data.objectId, @createRenderer(data))
-
-  createTimer: ->
-    timer = new enchant.Label()
-    timer.color = "white"
-    timer.x = 4
-    timer.y = 1
-    timer
 
   createScreenTip: ->
     screenTip = new enchant.Label()
@@ -120,6 +103,10 @@ class BattleGame
     for bomberman, i in @field.bombermans
       renderer = new BombermanRenderer(upperQueue, bomberman, charaIds[i])
       upperQueue.store(bomberman.objectId, renderer)
+
+    timerRenderer = new TimerRenderer(upperQueue, @field)
+    upperQueue.store(timerRenderer.objectId, timerRenderer)
+
     upperQueue
 
   createLowerQueue: ->

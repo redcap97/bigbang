@@ -1,5 +1,5 @@
 (function() {
-  var BattleField, BattleGame, Blast, BlastRenderer, Block, BlockRenderer, Bomb, BombKick, BombRenderer, BombUp, Bomberman, BombermanRenderer, DataTransport, Direction, ENCHANTJS_IMAGE_PATH, EntryScreen, FieldObject, FieldRenderer, FirePowerUp, GameResult, Ground, InputManager, Item, ItemRenderer, MAX_NUMBER_OF_PLAYERS, Point, Random, Rectangle, Remocon, Renderer, RenderingQueue, SpeedUp, WS_SUBPROTOCOL, Wall, createGameResult,
+  var BattleField, BattleGame, Blast, BlastRenderer, Block, BlockRenderer, Bomb, BombKick, BombRenderer, BombUp, Bomberman, BombermanRenderer, DataTransport, Direction, ENCHANTJS_IMAGE_PATH, EntryScreen, FieldObject, FieldRenderer, FirePowerUp, GameResult, Ground, InputManager, Item, ItemRenderer, MAX_NUMBER_OF_PLAYERS, Point, Random, Rectangle, Remocon, Renderer, RenderingQueue, SpeedUp, TimerRenderer, WS_SUBPROTOCOL, Wall, createGameResult,
     __slice = Array.prototype.slice,
     __hasProp = Object.prototype.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor; child.__super__ = parent.prototype; return child; };
@@ -313,14 +313,11 @@
       this.game.pushScene(this.upperScene);
       this.lowerQueue = this.createLowerQueue();
       this.upperQueue = this.createUpperQueue();
-      this.timer = this.createTimer();
       this.startMessage = this.createStartMessage();
       this.screenTip = this.createScreenTip();
-      this.upperScene.addChild(this.timer);
       this.upperScene.addChild(this.startMessage);
       this.upperScene.addChild(this.screenTip);
       this.updateQueue();
-      this.updateRemainingTime();
     }
 
     BattleGame.prototype.update = function() {
@@ -333,7 +330,6 @@
         if (this.field.isFinished()) this.finalCount += 1;
         this.field.update(this.dataTransport.getInput());
         this.updateQueue();
-        this.updateRemainingTime();
       }
       this.storeNewRenderers();
       this.parity = (this.parity + 1) % 2;
@@ -343,14 +339,6 @@
     BattleGame.prototype.updateQueue = function() {
       this.lowerQueue.update();
       return this.upperQueue.update();
-    };
-
-    BattleGame.prototype.updateRemainingTime = function() {
-      var min, sec, sm, ss, _ref;
-      _ref = this.field.getRemainingTime(), min = _ref[0], sec = _ref[1];
-      sm = min < 10 ? '0' + String(min) : String(min);
-      ss = sec < 10 ? '0' + String(sec) : String(sec);
-      return this.timer.text = "" + sm + ":" + ss;
     };
 
     BattleGame.prototype.sendInput = function(input) {
@@ -393,15 +381,6 @@
       return _results;
     };
 
-    BattleGame.prototype.createTimer = function() {
-      var timer;
-      timer = new enchant.Label();
-      timer.color = "white";
-      timer.x = 4;
-      timer.y = 1;
-      return timer;
-    };
-
     BattleGame.prototype.createScreenTip = function() {
       var p, screenTip;
       screenTip = new enchant.Label();
@@ -425,7 +404,7 @@
     };
 
     BattleGame.prototype.createUpperQueue = function() {
-      var bomberman, charaIds, i, renderer, upperQueue, _len, _ref;
+      var bomberman, charaIds, i, renderer, timerRenderer, upperQueue, _len, _ref;
       upperQueue = new RenderingQueue(this.game, this.upperScene);
       charaIds = this.generateCharacterIds();
       _ref = this.field.bombermans;
@@ -434,6 +413,8 @@
         renderer = new BombermanRenderer(upperQueue, bomberman, charaIds[i]);
         upperQueue.store(bomberman.objectId, renderer);
       }
+      timerRenderer = new TimerRenderer(upperQueue, this.field);
+      upperQueue.store(timerRenderer.objectId, timerRenderer);
       return upperQueue;
     };
 
@@ -1509,6 +1490,9 @@
     game.keybind("X".charCodeAt(0), 'b');
     game.onload = function() {
       var currentScene;
+      window.onerror = function(msg, url, line) {
+        return game.stop() && false;
+      };
       currentScene = new EntryScreen(game);
       return game.addEventListener('enterframe', function() {
         var dataTransport, gameResult;
@@ -1677,6 +1661,33 @@
     };
 
     return FieldRenderer;
+
+  })(Renderer);
+
+  TimerRenderer = (function(_super) {
+
+    __extends(TimerRenderer, _super);
+
+    function TimerRenderer(queue, field) {
+      this.queue = queue;
+      this.field = field;
+      TimerRenderer.__super__.constructor.call(this, this.queue);
+      this.timer = new enchant.Label();
+      this.timer.color = "white";
+      this.timer.x = 4;
+      this.timer.y = 1;
+      this.addNode(this.timer);
+    }
+
+    TimerRenderer.prototype.update = function() {
+      var min, sec, sm, ss, _ref;
+      _ref = this.field.getRemainingTime(), min = _ref[0], sec = _ref[1];
+      sm = min < 10 ? '0' + String(min) : String(min);
+      ss = sec < 10 ? '0' + String(sec) : String(sec);
+      return this.timer.text = "" + sm + ":" + ss;
+    };
+
+    return TimerRenderer;
 
   })(Renderer);
 
