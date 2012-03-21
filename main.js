@@ -1,298 +1,8 @@
 (function() {
-  var BattleField, BattleGame, Blast, BlastRenderer, Block, BlockRenderer, Bomb, BombKick, BombRenderer, BombUp, Bomberman, BombermanRenderer, DataTransport, Direction, ENCHANTJS_IMAGE_PATH, EntryScreen, FieldObject, FieldRenderer, FirePowerUp, GameResult, Ground, InitialNoticeRenderer, InputManager, Item, ItemRenderer, MAX_NUMBER_OF_PLAYERS, Point, RESOURCES, Random, Rectangle, Remocon, Renderer, RenderingQueue, SpeedUp, TimerRenderer, WS_SUBPROTOCOL, Wall, createGameResult,
-    __slice = Array.prototype.slice,
+  var BattleGame, Blast, BlastRenderer, Block, BlockRenderer, Bomb, BombKick, BombRenderer, BombUp, Bomberman, BombermanRenderer, DataTransport, Direction, ENCHANTJS_IMAGE_PATH, EntryScreen, Field, FieldObject, FieldRenderer, FirePowerUp, GameResult, Ground, InitialNoticeRenderer, InputManager, Item, ItemRenderer, MAX_NUMBER_OF_PLAYERS, Point, RESOURCES, Random, Rectangle, Remocon, Renderer, RenderingQueue, SpeedUp, TimerRenderer, WS_SUBPROTOCOL, Wall, createGameResult,
     __hasProp = Object.prototype.hasOwnProperty,
+    __slice = Array.prototype.slice,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor; child.__super__ = parent.prototype; return child; };
-
-  BattleField = (function() {
-    var FPS, HEIGHT, OUTSIDE_OF_FIELD_ERROR, TILE_SIZE, TIME_LIMIT, WIDTH;
-
-    OUTSIDE_OF_FIELD_ERROR = "Point is outside of the field";
-
-    FPS = 30;
-
-    TIME_LIMIT = FPS * 60 * 2;
-
-    HEIGHT = 13;
-
-    WIDTH = 15;
-
-    TILE_SIZE = 16;
-
-    function BattleField(numberOfPlayers, seed) {
-      var g, i, j, w;
-      this.height = HEIGHT;
-      this.width = WIDTH;
-      this.tileSize = TILE_SIZE;
-      this.generateId = (function() {
-        var maxId;
-        maxId = 0;
-        return function() {
-          maxId += 1;
-          return maxId;
-        };
-      })();
-      this.random = new Random(seed);
-      this.bombermans = this.createBombermans(numberOfPlayers);
-      w = new Wall(this);
-      g = new Ground(this);
-      this.staticDataMap = [[w, w, w, w, w, w, w, w, w, w, w, w, w, w, w], [w, g, g, g, g, g, g, g, g, g, g, g, g, g, w], [w, g, w, g, w, g, w, g, w, g, w, g, w, g, w], [w, g, g, g, g, g, g, g, g, g, g, g, g, g, w], [w, g, w, g, w, g, w, g, w, g, w, g, w, g, w], [w, g, g, g, g, g, g, g, g, g, g, g, g, g, w], [w, g, w, g, w, g, w, g, w, g, w, g, w, g, w], [w, g, g, g, g, g, g, g, g, g, g, g, g, g, w], [w, g, w, g, w, g, w, g, w, g, w, g, w, g, w], [w, g, g, g, g, g, g, g, g, g, g, g, g, g, w], [w, g, w, g, w, g, w, g, w, g, w, g, w, g, w], [w, g, g, g, g, g, g, g, g, g, g, g, g, g, w], [w, w, w, w, w, w, w, w, w, w, w, w, w, w, w]];
-      this.mutableDataMap = (function() {
-        var _ref, _results;
-        _results = [];
-        for (i = 0, _ref = this.height; 0 <= _ref ? i < _ref : i > _ref; 0 <= _ref ? i++ : i--) {
-          _results.push((function() {
-            var _ref2, _results2;
-            _results2 = [];
-            for (j = 0, _ref2 = this.width; 0 <= _ref2 ? j < _ref2 : j > _ref2; 0 <= _ref2 ? j++ : j--) {
-              _results2.push(null);
-            }
-            return _results2;
-          }).call(this));
-        }
-        return _results;
-      }).call(this);
-      this.count = 0;
-      this.createBlocks();
-      this.updateMap();
-    }
-
-    BattleField.prototype.getMapData = function(x, y) {
-      return this.mutableDataMap[y][x] || this.staticDataMap[y][x];
-    };
-
-    BattleField.prototype.setMapData = function(x, y, data) {
-      return this.mutableDataMap[y][x] = data;
-    };
-
-    BattleField.prototype.removeMapData = function(x, y) {
-      return this.setMapData(x, y, null);
-    };
-
-    BattleField.prototype.update = function(inputs) {
-      if (!this.isFinished()) this.count += 1;
-      this.updateBombermans(inputs);
-      return this.updateMap();
-    };
-
-    BattleField.prototype.updateBombermans = function(inputs) {
-      var bomberman, data, i, ix, _len, _ref, _results;
-      _ref = this.bombermans;
-      _results = [];
-      for (i = 0, _len = _ref.length; i < _len; i++) {
-        bomberman = _ref[i];
-        ix = bomberman.getCurrentIndex();
-        data = this.getMapData(ix.x, ix.y);
-        switch (data.type) {
-          case FieldObject.TYPE_BLAST:
-            bomberman.destroy();
-            break;
-          case FieldObject.TYPE_ITEM:
-            data.exertEffectOn(bomberman);
-            data.destroy();
-        }
-        if (inputs[i] && !bomberman.isDestroyed) {
-          _results.push(bomberman.update(inputs[i]));
-        } else {
-          _results.push(void 0);
-        }
-      }
-      return _results;
-    };
-
-    BattleField.prototype.updateMap = function() {
-      var x, y, _ref, _results;
-      _results = [];
-      for (y = 0, _ref = this.height; 0 <= _ref ? y < _ref : y > _ref; 0 <= _ref ? y++ : y--) {
-        _results.push((function() {
-          var _ref2, _results2;
-          _results2 = [];
-          for (x = 0, _ref2 = this.width; 0 <= _ref2 ? x < _ref2 : x > _ref2; 0 <= _ref2 ? x++ : x--) {
-            _results2.push(this.getMapData(x, y).update());
-          }
-          return _results2;
-        }).call(this));
-      }
-      return _results;
-    };
-
-    BattleField.prototype.createBombermans = function(n) {
-      var bombermans, i, positions, x, y;
-      if (n < 2 && n > MAX_NUMBER_OF_PLAYERS) {
-        throw Error("Cannot create bombermans");
-      }
-      positions = [new Point(1, 1), new Point(13, 11), new Point(13, 1), new Point(1, 11)];
-      bombermans = [];
-      for (i = 0; 0 <= n ? i < n : i > n; 0 <= n ? i++ : i--) {
-        x = positions[i].x;
-        y = positions[i].y;
-        bombermans.push(new Bomberman(this, this.tileSize * x, this.tileSize * y));
-      }
-      return bombermans;
-    };
-
-    BattleField.prototype.createBlocks = function() {
-      var data, n, p, positions, x, y, _i, _len, _ref, _ref2, _results;
-      for (y = 0, _ref = this.height; 0 <= _ref ? y < _ref : y > _ref; 0 <= _ref ? y++ : y--) {
-        for (x = 0, _ref2 = this.width; 0 <= _ref2 ? x < _ref2 : x > _ref2; 0 <= _ref2 ? x++ : x--) {
-          data = this.getMapData(x, y);
-          if (data.type === FieldObject.TYPE_GROUND) {
-            this.setMapData(x, y, new Block(this, new Point(x, y)));
-          }
-        }
-      }
-      positions = [new Point(1, 1), new Point(1, 2), new Point(1, 3), new Point(2, 1), new Point(3, 1), new Point(this.width - 2, 1), new Point(this.width - 2, 2), new Point(this.width - 2, 3), new Point(this.width - 3, 1), new Point(this.width - 4, 1), new Point(1, this.height - 2), new Point(1, this.height - 3), new Point(1, this.height - 4), new Point(2, this.height - 2), new Point(3, this.height - 2), new Point(this.width - 2, this.height - 2), new Point(this.width - 2, this.height - 3), new Point(this.width - 2, this.height - 4), new Point(this.width - 3, this.height - 2), new Point(this.width - 4, this.height - 2)];
-      for (_i = 0, _len = positions.length; _i < _len; _i++) {
-        p = positions[_i];
-        this.removeMapData(p.x, p.y);
-      }
-      n = 0;
-      _results = [];
-      while (n < 11) {
-        x = this.getRandom(this.width);
-        y = this.getRandom(this.height);
-        data = this.getMapData(x, y);
-        if (data.type === FieldObject.TYPE_BLOCK) {
-          this.removeMapData(x, y);
-          _results.push(n += 1);
-        } else {
-          _results.push(void 0);
-        }
-      }
-      return _results;
-    };
-
-    BattleField.prototype.getIndex = function(x, y) {
-      if (x < 0 || x >= this.tileSize * this.width || y < 0 || y >= this.tileSize * this.height) {
-        throw new Error(OUTSIDE_OF_FIELD_ERROR);
-      }
-      return new Point(x / this.tileSize | 0, y / this.tileSize | 0);
-    };
-
-    BattleField.prototype.getXIndexes = function() {
-      var rs, x, xs, _i, _len;
-      xs = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
-      rs = [];
-      for (_i = 0, _len = xs.length; _i < _len; _i++) {
-        x = xs[_i];
-        if (x < 0 || x >= this.tileSize * this.width) {
-          throw new Error(OUTSIDE_OF_FIELD_ERROR);
-        }
-        rs.push(x / this.tileSize | 0);
-      }
-      return rs;
-    };
-
-    BattleField.prototype.getYIndexes = function() {
-      var rs, y, ys, _i, _len;
-      ys = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
-      rs = [];
-      for (_i = 0, _len = ys.length; _i < _len; _i++) {
-        y = ys[_i];
-        if (y < 0 || y >= this.tileSize * this.height) {
-          throw new Error(OUTSIDE_OF_FIELD_ERROR);
-        }
-        rs.push(y / this.tileSize | 0);
-      }
-      return rs;
-    };
-
-    BattleField.prototype.getRectangleIndex = function(r) {
-      var ib, il, ir, it, _ref, _ref2;
-      _ref = this.getXIndexes(r.getLeft(), r.getRight()), il = _ref[0], ir = _ref[1];
-      _ref2 = this.getYIndexes(r.getTop(), r.getBottom()), it = _ref2[0], ib = _ref2[1];
-      return [il, it, ir, ib];
-    };
-
-    BattleField.prototype.getNearestIndex = function(r) {
-      var ib, il, ir, it, ix, _ref, _ref2;
-      ix = new Point();
-      _ref = this.getXIndexes(r.getLeft(), r.getRight()), il = _ref[0], ir = _ref[1];
-      if (il === ir) {
-        ix.x = il;
-      } else {
-        if (((ir * this.tileSize) - r.x) > (r.width / 2 | 0)) {
-          ix.x = il;
-        } else {
-          ix.x = ir;
-        }
-      }
-      _ref2 = this.getYIndexes(r.getTop(), r.getBottom()), it = _ref2[0], ib = _ref2[1];
-      if (it === ib) {
-        ix.y = it;
-      } else {
-        if (((ib * this.tileSize) - r.y) > (r.height / 2 | 0)) {
-          ix.y = it;
-        } else {
-          ix.y = ib;
-        }
-      }
-      return ix;
-    };
-
-    BattleField.prototype.bombermanExists = function(ix) {
-      var bomberman, _i, _len, _ref;
-      _ref = this.bombermans;
-      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-        bomberman = _ref[_i];
-        if (!bomberman.isDestroyed && ix.equals(bomberman.getCurrentIndex())) {
-          return true;
-        }
-      }
-      return false;
-    };
-
-    BattleField.prototype.getRandom = function(max) {
-      return this.random.getRandom(max);
-    };
-
-    BattleField.prototype.isBarrier = function(x, y) {
-      return this.getMapData(x, y).isBarrier;
-    };
-
-    BattleField.prototype.getCount = function() {
-      return this.count;
-    };
-
-    BattleField.prototype.getRemainingBombermans = function() {
-      var bomberman, remainingBombermans, _i, _len, _ref;
-      remainingBombermans = [];
-      _ref = this.bombermans;
-      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-        bomberman = _ref[_i];
-        if (bomberman.isDestroyed === false) remainingBombermans.push(bomberman);
-      }
-      return remainingBombermans;
-    };
-
-    BattleField.prototype.isFinished = function() {
-      return this.count > TIME_LIMIT || this.getRemainingBombermans().length < 2;
-    };
-
-    BattleField.prototype.isDraw = function() {
-      return this.count > TIME_LIMIT || this.getRemainingBombermans().length === 0;
-    };
-
-    BattleField.prototype.getWinner = function() {
-      var bomberman, i, _len, _ref;
-      if (!this.isFinished()) throw new Error("Battle is not finished");
-      _ref = this.bombermans;
-      for (i = 0, _len = _ref.length; i < _len; i++) {
-        bomberman = _ref[i];
-        if (!bomberman.isDestroyed) return i;
-      }
-    };
-
-    BattleField.prototype.getRemainingTime = function() {
-      var v;
-      if (this.count > TIME_LIMIT) return [0, 0];
-      v = (TIME_LIMIT - this.count) / FPS;
-      return [Math.floor(v / 60), Math.floor(v % 60)];
-    };
-
-    return BattleField;
-
-  })();
 
   BattleGame = (function() {
     var NUMBER_OF_CHARACTERS;
@@ -305,7 +15,7 @@
       this.dataTransport = dataTransport;
       _ref = this.dataTransport, this.playerId = _ref.playerId, this.numberOfPlayers = _ref.numberOfPlayers;
       this.parity = this.finalCount = 0;
-      this.field = new BattleField(this.numberOfPlayers, this.dataTransport.seed);
+      this.field = new Field(this.numberOfPlayers, this.dataTransport.seed);
       this.lowerScene = new enchant.Scene();
       this.upperScene = new enchant.Scene();
       this.game.pushScene(this.lowerScene);
@@ -953,6 +663,296 @@
     };
 
     return EntryScreen;
+
+  })();
+
+  Field = (function() {
+    var FPS, HEIGHT, OUTSIDE_OF_FIELD_ERROR, TILE_SIZE, TIME_LIMIT, WIDTH;
+
+    OUTSIDE_OF_FIELD_ERROR = "Point is outside of the field";
+
+    FPS = 30;
+
+    TIME_LIMIT = FPS * 60 * 2;
+
+    HEIGHT = 13;
+
+    WIDTH = 15;
+
+    TILE_SIZE = 16;
+
+    function Field(numberOfPlayers, seed) {
+      var g, i, j, w;
+      this.height = HEIGHT;
+      this.width = WIDTH;
+      this.tileSize = TILE_SIZE;
+      this.generateId = (function() {
+        var maxId;
+        maxId = 0;
+        return function() {
+          maxId += 1;
+          return maxId;
+        };
+      })();
+      this.random = new Random(seed);
+      this.bombermans = this.createBombermans(numberOfPlayers);
+      w = new Wall(this);
+      g = new Ground(this);
+      this.staticDataMap = [[w, w, w, w, w, w, w, w, w, w, w, w, w, w, w], [w, g, g, g, g, g, g, g, g, g, g, g, g, g, w], [w, g, w, g, w, g, w, g, w, g, w, g, w, g, w], [w, g, g, g, g, g, g, g, g, g, g, g, g, g, w], [w, g, w, g, w, g, w, g, w, g, w, g, w, g, w], [w, g, g, g, g, g, g, g, g, g, g, g, g, g, w], [w, g, w, g, w, g, w, g, w, g, w, g, w, g, w], [w, g, g, g, g, g, g, g, g, g, g, g, g, g, w], [w, g, w, g, w, g, w, g, w, g, w, g, w, g, w], [w, g, g, g, g, g, g, g, g, g, g, g, g, g, w], [w, g, w, g, w, g, w, g, w, g, w, g, w, g, w], [w, g, g, g, g, g, g, g, g, g, g, g, g, g, w], [w, w, w, w, w, w, w, w, w, w, w, w, w, w, w]];
+      this.mutableDataMap = (function() {
+        var _ref, _results;
+        _results = [];
+        for (i = 0, _ref = this.height; 0 <= _ref ? i < _ref : i > _ref; 0 <= _ref ? i++ : i--) {
+          _results.push((function() {
+            var _ref2, _results2;
+            _results2 = [];
+            for (j = 0, _ref2 = this.width; 0 <= _ref2 ? j < _ref2 : j > _ref2; 0 <= _ref2 ? j++ : j--) {
+              _results2.push(null);
+            }
+            return _results2;
+          }).call(this));
+        }
+        return _results;
+      }).call(this);
+      this.count = 0;
+      this.createBlocks();
+      this.updateMap();
+    }
+
+    Field.prototype.getMapData = function(x, y) {
+      return this.mutableDataMap[y][x] || this.staticDataMap[y][x];
+    };
+
+    Field.prototype.setMapData = function(x, y, data) {
+      return this.mutableDataMap[y][x] = data;
+    };
+
+    Field.prototype.removeMapData = function(x, y) {
+      return this.setMapData(x, y, null);
+    };
+
+    Field.prototype.update = function(inputs) {
+      if (!this.isFinished()) this.count += 1;
+      this.updateBombermans(inputs);
+      return this.updateMap();
+    };
+
+    Field.prototype.updateBombermans = function(inputs) {
+      var bomberman, data, i, ix, _len, _ref, _results;
+      _ref = this.bombermans;
+      _results = [];
+      for (i = 0, _len = _ref.length; i < _len; i++) {
+        bomberman = _ref[i];
+        ix = bomberman.getCurrentIndex();
+        data = this.getMapData(ix.x, ix.y);
+        switch (data.type) {
+          case FieldObject.TYPE_BLAST:
+            bomberman.destroy();
+            break;
+          case FieldObject.TYPE_ITEM:
+            data.exertEffectOn(bomberman);
+            data.destroy();
+        }
+        if (inputs[i] && !bomberman.isDestroyed) {
+          _results.push(bomberman.update(inputs[i]));
+        } else {
+          _results.push(void 0);
+        }
+      }
+      return _results;
+    };
+
+    Field.prototype.updateMap = function() {
+      var x, y, _ref, _results;
+      _results = [];
+      for (y = 0, _ref = this.height; 0 <= _ref ? y < _ref : y > _ref; 0 <= _ref ? y++ : y--) {
+        _results.push((function() {
+          var _ref2, _results2;
+          _results2 = [];
+          for (x = 0, _ref2 = this.width; 0 <= _ref2 ? x < _ref2 : x > _ref2; 0 <= _ref2 ? x++ : x--) {
+            _results2.push(this.getMapData(x, y).update());
+          }
+          return _results2;
+        }).call(this));
+      }
+      return _results;
+    };
+
+    Field.prototype.createBombermans = function(n) {
+      var bombermans, i, positions, x, y;
+      if (n < 2 && n > MAX_NUMBER_OF_PLAYERS) {
+        throw Error("Cannot create bombermans");
+      }
+      positions = [new Point(1, 1), new Point(13, 11), new Point(13, 1), new Point(1, 11)];
+      bombermans = [];
+      for (i = 0; 0 <= n ? i < n : i > n; 0 <= n ? i++ : i--) {
+        x = positions[i].x;
+        y = positions[i].y;
+        bombermans.push(new Bomberman(this, this.tileSize * x, this.tileSize * y));
+      }
+      return bombermans;
+    };
+
+    Field.prototype.createBlocks = function() {
+      var data, n, p, positions, x, y, _i, _len, _ref, _ref2, _results;
+      for (y = 0, _ref = this.height; 0 <= _ref ? y < _ref : y > _ref; 0 <= _ref ? y++ : y--) {
+        for (x = 0, _ref2 = this.width; 0 <= _ref2 ? x < _ref2 : x > _ref2; 0 <= _ref2 ? x++ : x--) {
+          data = this.getMapData(x, y);
+          if (data.type === FieldObject.TYPE_GROUND) {
+            this.setMapData(x, y, new Block(this, new Point(x, y)));
+          }
+        }
+      }
+      positions = [new Point(1, 1), new Point(1, 2), new Point(1, 3), new Point(2, 1), new Point(3, 1), new Point(this.width - 2, 1), new Point(this.width - 2, 2), new Point(this.width - 2, 3), new Point(this.width - 3, 1), new Point(this.width - 4, 1), new Point(1, this.height - 2), new Point(1, this.height - 3), new Point(1, this.height - 4), new Point(2, this.height - 2), new Point(3, this.height - 2), new Point(this.width - 2, this.height - 2), new Point(this.width - 2, this.height - 3), new Point(this.width - 2, this.height - 4), new Point(this.width - 3, this.height - 2), new Point(this.width - 4, this.height - 2)];
+      for (_i = 0, _len = positions.length; _i < _len; _i++) {
+        p = positions[_i];
+        this.removeMapData(p.x, p.y);
+      }
+      n = 0;
+      _results = [];
+      while (n < 11) {
+        x = this.getRandom(this.width);
+        y = this.getRandom(this.height);
+        data = this.getMapData(x, y);
+        if (data.type === FieldObject.TYPE_BLOCK) {
+          this.removeMapData(x, y);
+          _results.push(n += 1);
+        } else {
+          _results.push(void 0);
+        }
+      }
+      return _results;
+    };
+
+    Field.prototype.getIndex = function(x, y) {
+      if (x < 0 || x >= this.tileSize * this.width || y < 0 || y >= this.tileSize * this.height) {
+        throw new Error(OUTSIDE_OF_FIELD_ERROR);
+      }
+      return new Point(x / this.tileSize | 0, y / this.tileSize | 0);
+    };
+
+    Field.prototype.getXIndexes = function() {
+      var rs, x, xs, _i, _len;
+      xs = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
+      rs = [];
+      for (_i = 0, _len = xs.length; _i < _len; _i++) {
+        x = xs[_i];
+        if (x < 0 || x >= this.tileSize * this.width) {
+          throw new Error(OUTSIDE_OF_FIELD_ERROR);
+        }
+        rs.push(x / this.tileSize | 0);
+      }
+      return rs;
+    };
+
+    Field.prototype.getYIndexes = function() {
+      var rs, y, ys, _i, _len;
+      ys = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
+      rs = [];
+      for (_i = 0, _len = ys.length; _i < _len; _i++) {
+        y = ys[_i];
+        if (y < 0 || y >= this.tileSize * this.height) {
+          throw new Error(OUTSIDE_OF_FIELD_ERROR);
+        }
+        rs.push(y / this.tileSize | 0);
+      }
+      return rs;
+    };
+
+    Field.prototype.getRectangleIndex = function(r) {
+      var ib, il, ir, it, _ref, _ref2;
+      _ref = this.getXIndexes(r.getLeft(), r.getRight()), il = _ref[0], ir = _ref[1];
+      _ref2 = this.getYIndexes(r.getTop(), r.getBottom()), it = _ref2[0], ib = _ref2[1];
+      return [il, it, ir, ib];
+    };
+
+    Field.prototype.getNearestIndex = function(r) {
+      var ib, il, ir, it, ix, _ref, _ref2;
+      ix = new Point();
+      _ref = this.getXIndexes(r.getLeft(), r.getRight()), il = _ref[0], ir = _ref[1];
+      if (il === ir) {
+        ix.x = il;
+      } else {
+        if (((ir * this.tileSize) - r.x) > (r.width / 2 | 0)) {
+          ix.x = il;
+        } else {
+          ix.x = ir;
+        }
+      }
+      _ref2 = this.getYIndexes(r.getTop(), r.getBottom()), it = _ref2[0], ib = _ref2[1];
+      if (it === ib) {
+        ix.y = it;
+      } else {
+        if (((ib * this.tileSize) - r.y) > (r.height / 2 | 0)) {
+          ix.y = it;
+        } else {
+          ix.y = ib;
+        }
+      }
+      return ix;
+    };
+
+    Field.prototype.bombermanExists = function(ix) {
+      var bomberman, _i, _len, _ref;
+      _ref = this.bombermans;
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        bomberman = _ref[_i];
+        if (!bomberman.isDestroyed && ix.equals(bomberman.getCurrentIndex())) {
+          return true;
+        }
+      }
+      return false;
+    };
+
+    Field.prototype.getRandom = function(max) {
+      return this.random.getRandom(max);
+    };
+
+    Field.prototype.isBarrier = function(x, y) {
+      return this.getMapData(x, y).isBarrier;
+    };
+
+    Field.prototype.getCount = function() {
+      return this.count;
+    };
+
+    Field.prototype.getRemainingBombermans = function() {
+      var bomberman, remainingBombermans, _i, _len, _ref;
+      remainingBombermans = [];
+      _ref = this.bombermans;
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        bomberman = _ref[_i];
+        if (bomberman.isDestroyed === false) remainingBombermans.push(bomberman);
+      }
+      return remainingBombermans;
+    };
+
+    Field.prototype.isFinished = function() {
+      return this.count > TIME_LIMIT || this.getRemainingBombermans().length < 2;
+    };
+
+    Field.prototype.isDraw = function() {
+      return this.count > TIME_LIMIT || this.getRemainingBombermans().length === 0;
+    };
+
+    Field.prototype.getWinner = function() {
+      var bomberman, i, _len, _ref;
+      if (!this.isFinished()) throw new Error("Battle is not finished");
+      _ref = this.bombermans;
+      for (i = 0, _len = _ref.length; i < _len; i++) {
+        bomberman = _ref[i];
+        if (!bomberman.isDestroyed) return i;
+      }
+    };
+
+    Field.prototype.getRemainingTime = function() {
+      var v;
+      if (this.count > TIME_LIMIT) return [0, 0];
+      v = (TIME_LIMIT - this.count) / FPS;
+      return [Math.floor(v / 60), Math.floor(v % 60)];
+    };
+
+    return Field;
 
   })();
 

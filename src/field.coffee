@@ -1,4 +1,4 @@
-class BattleField
+class Field
   OUTSIDE_OF_FIELD_ERROR = "Point is outside of the field"
 
   FPS        = 30

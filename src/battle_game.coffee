@@ -9,7 +9,7 @@ class BattleGame
 
     @parity = @finalCount = 0
 
-    @field = new BattleField(@numberOfPlayers, @dataTransport.seed)
+    @field = new Field(@numberOfPlayers, @dataTransport.seed)
 
     @lowerScene = new enchant.Scene()
     @upperScene = new enchant.Scene()
