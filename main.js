@@ -1,670 +1,179 @@
 (function() {
   var BattleGame, Blast, BlastRenderer, Block, BlockRenderer, Bomb, BombKick, BombRenderer, BombUp, Bomberman, BombermanRenderer, DataTransport, Direction, ENCHANTJS_IMAGE_PATH, EntryScreen, Field, FieldObject, FieldRenderer, FirePowerUp, GameResult, Ground, InitialNoticeRenderer, InputManager, Item, ItemRenderer, MAX_NUMBER_OF_PLAYERS, Point, PressureBlock, PressureBlockRenderer, PressureBlockSetter, RESOURCES, Random, Rectangle, Remocon, Renderer, RenderingQueue, SpeedUp, TimerRenderer, WS_SUBPROTOCOL, Wall, createGameResult,
-    __hasProp = Object.prototype.hasOwnProperty,
     __slice = Array.prototype.slice,
+    __hasProp = Object.prototype.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor; child.__super__ = parent.prototype; return child; };
 
-  BattleGame = (function() {
-    var NUMBER_OF_CHARACTERS;
+  Point = (function() {
 
-    NUMBER_OF_CHARACTERS = 16;
-
-    function BattleGame(game, dataTransport) {
-      var _ref;
-      this.game = game;
-      this.dataTransport = dataTransport;
-      _ref = this.dataTransport, this.playerId = _ref.playerId, this.numberOfPlayers = _ref.numberOfPlayers;
-      this.parity = this.finalCount = 0;
-      this.field = new Field(this.numberOfPlayers, this.dataTransport.seed);
-      this.lowerScene = new enchant.Scene();
-      this.upperScene = new enchant.Scene();
-      this.game.pushScene(this.lowerScene);
-      this.game.pushScene(this.upperScene);
-      this.lowerQueue = this.createLowerQueue();
-      this.upperQueue = this.createUpperQueue();
-      this.updateQueue();
-    }
-
-    BattleGame.prototype.update = function() {
-      while (this.dataTransport.getBufferSize() > 0) {
-        if (this.field.isFinished()) this.finalCount += 1;
-        this.field.update(this.dataTransport.getInput());
-        this.updateQueue();
-      }
-      this.storeNewRenderers();
-      this.parity = (this.parity + 1) % 2;
-      if (this.parity === 0) return this.sendInput(this.game.input);
-    };
-
-    BattleGame.prototype.updateQueue = function() {
-      this.lowerQueue.update();
-      return this.upperQueue.update();
-    };
-
-    BattleGame.prototype.sendInput = function(input) {
-      return this.dataTransport.sendInput(input);
-    };
-
-    BattleGame.prototype.createRenderer = function(data) {
-      switch (data.type) {
-        case FieldObject.TYPE_BOMB:
-          return new BombRenderer(this.lowerQueue, data);
-        case FieldObject.TYPE_BLAST:
-          return new BlastRenderer(this.lowerQueue, data);
-        case FieldObject.TYPE_BLOCK:
-          return new BlockRenderer(this.lowerQueue, data);
-        case FieldObject.TYPE_PBLOCK:
-          return new PressureBlockRenderer(this.lowerQueue, data);
-        case FieldObject.TYPE_ITEM:
-          return new ItemRenderer(this.lowerQueue, data);
-        default:
-          throw Error("Unknown object");
-      }
-    };
-
-    BattleGame.prototype.storeNewRenderers = function() {
-      var data, i, j, _ref, _results;
-      _results = [];
-      for (i = 0, _ref = this.field.height; 0 <= _ref ? i < _ref : i > _ref; 0 <= _ref ? i++ : i--) {
-        _results.push((function() {
-          var _ref2, _results2;
-          _results2 = [];
-          for (j = 0, _ref2 = this.field.width; 0 <= _ref2 ? j < _ref2 : j > _ref2; 0 <= _ref2 ? j++ : j--) {
-            data = this.field.mutableDataMap[i][j];
-            if (data && !this.lowerQueue.contains(data.objectId)) {
-              _results2.push(this.lowerQueue.store(data.objectId, this.createRenderer(data)));
-            } else {
-              _results2.push(void 0);
-            }
-          }
-          return _results2;
-        }).call(this));
-      }
-      return _results;
-    };
-
-    BattleGame.prototype.createUpperQueue = function() {
-      var bomberman, charaIds, i, initialNoticeRenderer, renderer, timerRenderer, upperQueue, _len, _ref;
-      upperQueue = new RenderingQueue(this.game, this.upperScene);
-      charaIds = this.generateCharacterIds();
-      _ref = this.field.bombermans;
-      for (i = 0, _len = _ref.length; i < _len; i++) {
-        bomberman = _ref[i];
-        renderer = new BombermanRenderer(upperQueue, bomberman, charaIds[i]);
-        upperQueue.store(bomberman.objectId, renderer);
-      }
-      timerRenderer = new TimerRenderer(upperQueue, this.field);
-      upperQueue.store(timerRenderer.id, timerRenderer);
-      initialNoticeRenderer = new InitialNoticeRenderer(upperQueue, this.field, this.playerId);
-      upperQueue.store(initialNoticeRenderer.id, initialNoticeRenderer);
-      return upperQueue;
-    };
-
-    BattleGame.prototype.createLowerQueue = function() {
-      var fieldRenderer, lowerQueue;
-      lowerQueue = new RenderingQueue(this.game, this.lowerScene);
-      fieldRenderer = new FieldRenderer(lowerQueue, this.field);
-      fieldRenderer.update();
-      return lowerQueue;
-    };
-
-    BattleGame.prototype.generateCharacterIds = function() {
-      var hash, id, ids;
-      hash = {};
-      ids = [];
-      while (ids.length < this.numberOfPlayers) {
-        id = this.field.getRandom(NUMBER_OF_CHARACTERS);
-        if (!hash[id]) {
-          hash[id] = true;
-          ids.push(id);
-        }
-      }
-      return ids;
-    };
-
-    BattleGame.prototype.isFinished = function() {
-      return this.field.isFinished() && this.finalCount > 30;
-    };
-
-    BattleGame.prototype.isDraw = function() {
-      return this.field.isDraw();
-    };
-
-    BattleGame.prototype.getWinner = function() {
-      return this.field.getWinner();
-    };
-
-    BattleGame.prototype.getPlayerId = function() {
-      return this.playerId;
-    };
-
-    BattleGame.prototype.release = function() {
-      this.game.removeScene(this.lowerScene);
-      this.game.removeScene(this.upperScene);
-      return this.dataTransport.release();
-    };
-
-    return BattleGame;
-
-  })();
-
-  Bomberman = (function() {
-
-    function Bomberman(field, x, y) {
-      this.field = field;
+    function Point(x, y) {
       this.x = x;
       this.y = y;
-      this.objectId = this.field.generateId();
-      this.width = this.height = this.field.tileSize;
-      this.isDestroyed = false;
-      this.speed = 2;
-      this.power = 1;
-      this.bombCapacity = 1;
-      this.usedBomb = 0;
-      this.hasRemocon = false;
-      this.canKick = false;
-      this.inputManager = new InputManager();
-      this.inputCount = 0;
     }
 
-    Bomberman.prototype.update = function(input) {
-      this.inputManager.update(input);
-      if (this.inputManager.aDown) this.putBomb();
-      if (this.inputManager.bDown && this.hasRemocon) this.explodeBomb();
-      return this.move();
+    Point.prototype.equals = function(other) {
+      return this.x === other.x && this.y === other.y;
     };
 
-    Bomberman.prototype.incrementSpeed = function() {
-      if (this.speed < 8) return this.speed += 1;
+    Point.prototype.clone = function() {
+      return new Point(this.x, this.y);
     };
 
-    Bomberman.prototype.incrementPower = function() {
-      if (this.power < 9) return this.power += 1;
-    };
-
-    Bomberman.prototype.incrementBombCapacity = function() {
-      if (this.bombCapacity < 9) return this.bombCapacity += 1;
-    };
-
-    Bomberman.prototype.move = function() {
-      switch (this.inputManager.direction) {
-        case InputManager.LEFT:
-          this.moveLeft();
-          break;
-        case InputManager.UP:
-          this.moveUp();
-          break;
-        case InputManager.RIGHT:
-          this.moveRight();
-          break;
-        case InputManager.DOWN:
-          this.moveDown();
-      }
-      if (this.inputManager.direction === InputManager.NONE) {
-        return this.inputCount = 0;
-      } else {
-        return this.inputCount += 1;
-      }
-    };
-
-    Bomberman.prototype.changePosition = function(r) {
-      return this.x = r.x, this.y = r.y, r;
-    };
-
-    Bomberman.prototype.putBomb = function() {
-      var ix;
-      if (this.canPutBomb() && this.usedBomb < this.bombCapacity) {
-        ix = this.getCurrentIndex();
-        this.usedBomb += 1;
-        return this.field.setMapData(ix.x, ix.y, new Bomb(this.field, ix, this));
-      }
-    };
-
-    Bomberman.prototype.explodeBomb = function() {
-      var data, x, y, _ref, _results;
-      _results = [];
-      for (y = 0, _ref = this.field.height; 0 <= _ref ? y < _ref : y > _ref; 0 <= _ref ? y++ : y--) {
-        _results.push((function() {
-          var _ref2, _results2;
-          _results2 = [];
-          for (x = 0, _ref2 = this.field.width; 0 <= _ref2 ? x < _ref2 : x > _ref2; 0 <= _ref2 ? x++ : x--) {
-            data = this.field.getMapData(x, y);
-            if (data.type === FieldObject.TYPE_BOMB && data.bomberman.objectId === this.objectId) {
-              _results2.push(data.destroy());
-            } else {
-              _results2.push(void 0);
-            }
-          }
-          return _results2;
-        }).call(this));
-      }
-      return _results;
-    };
-
-    Bomberman.prototype.canPutBomb = function() {
-      var data, ib, il, ir, it, ix, _ref;
-      ix = this.getCurrentIndex();
-      data = this.field.getMapData(ix.x, ix.y);
-      if (data.type !== FieldObject.TYPE_GROUND) return false;
-      _ref = this.field.getRectangleIndex(this.getRectangle()), il = _ref[0], it = _ref[1], ir = _ref[2], ib = _ref[3];
-      if (il === ir && it === ib) return true;
-      if ((ix.equals(new Point(il, it)) && !this.field.isBarrier(ir, ib)) || (ix.equals(new Point(ir, ib)) && !this.field.isBarrier(il, it))) {
-        return true;
-      }
-      return false;
-    };
-
-    Bomberman.prototype.canMoveOnBomb = function(ni) {
-      var oi;
-      oi = this.getCurrentIndex();
-      return this.field.isBarrier(oi.x, oi.y) && oi.equals(ni);
-    };
-
-    Bomberman.prototype.moveRight = function() {
-      var bound, data, ib, il, ir, it, new_rect, old_rect, _ref;
-      new_rect = this.getRectangle(this.speed, 0);
-      _ref = this.field.getRectangleIndex(new_rect), il = _ref[0], it = _ref[1], ir = _ref[2], ib = _ref[3];
-      if (il !== ir && it === ib && this.field.isBarrier(il, it) && this.field.isBarrier(ir, ib)) {
-        return false;
-      }
-      if ((!this.field.isBarrier(ir, it) && !this.field.isBarrier(ir, ib)) || ((il === ir || it === ib) && this.canMoveOnBomb(this.getIndex(new_rect)))) {
-        this.changePosition(new_rect);
-        return true;
-      }
-      bound = ir * this.field.tileSize - 1;
-      old_rect = this.getRectangle();
-      if (bound === old_rect.getRight()) {
-        if (it === ib && this.canKick) {
-          data = this.field.getMapData(ir, it);
-          data.kick(Direction.RIGHT);
-          return false;
-        }
-        new_rect = this.getRectangle(0, -this.speed);
-        if (!this.field.isBarrier(ir, it) && (!this.field.isBarrier(il, it) || this.canMoveOnBomb(this.getIndex(new_rect)))) {
-          if (it * this.field.tileSize > new_rect.getTop()) {
-            new_rect.y = it * this.field.tileSize;
-          }
-          this.changePosition(new_rect);
-          return true;
-        }
-        new_rect = this.getRectangle(0, this.speed);
-        if (!this.field.isBarrier(ir, ib) && (!this.field.isBarrier(il, ib) || this.canMoveOnBomb(this.getIndex(new_rect)))) {
-          if (ib * this.field.tileSize < new_rect.getTop()) {
-            new_rect.y = ib * this.field.tileSize;
-          }
-          this.changePosition(new_rect);
-          return true;
-        }
-      } else if (bound > old_rect.getRight()) {
-        this.changePosition(this.getRectangle(bound - old_rect.getRight(), 0));
-        return true;
-      }
-      return false;
-    };
-
-    Bomberman.prototype.moveDown = function() {
-      var bound, data, ib, il, ir, it, new_rect, old_rect, _ref;
-      new_rect = this.getRectangle(0, this.speed);
-      _ref = this.field.getRectangleIndex(new_rect), il = _ref[0], it = _ref[1], ir = _ref[2], ib = _ref[3];
-      if (it !== ib && il === ir && this.field.isBarrier(il, it) && this.field.isBarrier(ir, ib)) {
-        return false;
-      }
-      if ((!this.field.isBarrier(il, ib) && !this.field.isBarrier(ir, ib)) || ((il === ir || it === ib) && this.canMoveOnBomb(this.getIndex(new_rect)))) {
-        this.changePosition(new_rect);
-        return true;
-      }
-      bound = ib * this.field.tileSize - 1;
-      old_rect = this.getRectangle();
-      if (bound === old_rect.getBottom()) {
-        if (ir === il && this.canKick) {
-          data = this.field.getMapData(ir, ib);
-          data.kick(Direction.DOWN);
-          return false;
-        }
-        new_rect = this.getRectangle(-this.speed, 0);
-        if (!this.field.isBarrier(il, ib) && (!this.field.isBarrier(il, it) || this.canMoveOnBomb(this.getIndex(new_rect)))) {
-          if (il * this.field.tileSize > new_rect.getLeft()) {
-            new_rect.x = il * this.field.tileSize;
-          }
-          this.changePosition(new_rect);
-          return true;
-        }
-        new_rect = this.getRectangle(this.speed, 0);
-        if (!this.field.isBarrier(ir, ib) && (!this.field.isBarrier(ir, it) || this.canMoveOnBomb(this.getIndex(new_rect)))) {
-          if (ir * this.field.tileSize < new_rect.getLeft()) {
-            new_rect.x = ir * this.field.tileSize;
-          }
-          this.changePosition(new_rect);
-          return true;
-        }
-      } else if (bound > old_rect.getBottom()) {
-        this.changePosition(this.getRectangle(0, bound - old_rect.getBottom()));
-        return true;
-      }
-      return false;
-    };
-
-    Bomberman.prototype.moveLeft = function() {
-      var bound, data, ib, il, ir, it, new_rect, old_rect, _ref;
-      new_rect = this.getRectangle(-this.speed, 0);
-      _ref = this.field.getRectangleIndex(new_rect), il = _ref[0], it = _ref[1], ir = _ref[2], ib = _ref[3];
-      if (il !== ir && it === ib && this.field.isBarrier(il, it) && this.field.isBarrier(ir, ib)) {
-        return false;
-      }
-      if ((!this.field.isBarrier(il, it) && !this.field.isBarrier(il, ib)) || ((il === ir || it === ib) && this.canMoveOnBomb(this.getIndex(new_rect)))) {
-        this.changePosition(new_rect);
-        return true;
-      }
-      bound = ir * this.field.tileSize;
-      old_rect = this.getRectangle();
-      if (bound === old_rect.getLeft()) {
-        if (it === ib && this.canKick) {
-          data = this.field.getMapData(il, it);
-          data.kick(Direction.LEFT);
-          return false;
-        }
-        new_rect = this.getRectangle(0, -this.speed);
-        if (!this.field.isBarrier(il, it) && (!this.field.isBarrier(ir, it) || this.canMoveOnBomb(this.getIndex(new_rect)))) {
-          if (it * this.field.tileSize > new_rect.getTop()) {
-            new_rect.y = it * this.field.tileSize;
-          }
-          this.changePosition(new_rect);
-          return true;
-        }
-        new_rect = this.getRectangle(0, this.speed);
-        if (!this.field.isBarrier(il, ib) && (!this.field.isBarrier(ir, ib) || this.canMoveOnBomb(this.getIndex(new_rect)))) {
-          if (ib * this.field.tileSize < new_rect.getTop()) {
-            new_rect.y = ib * this.field.tileSize;
-          }
-          this.changePosition(new_rect);
-          return true;
-        }
-      } else if (bound < old_rect.getLeft()) {
-        this.changePosition(this.getRectangle(bound - old_rect.getLeft(), 0));
-        return true;
-      }
-      return false;
-    };
-
-    Bomberman.prototype.moveUp = function() {
-      var bound, data, ib, il, ir, it, new_rect, old_rect, _ref;
-      new_rect = this.getRectangle(0, -this.speed);
-      _ref = this.field.getRectangleIndex(new_rect), il = _ref[0], it = _ref[1], ir = _ref[2], ib = _ref[3];
-      if (it !== ib && il === ir && this.field.isBarrier(il, it) && this.field.isBarrier(ir, ib)) {
-        return false;
-      }
-      if ((!this.field.isBarrier(il, it) && !this.field.isBarrier(ir, it)) || ((il === ir || it === ib) && this.canMoveOnBomb(this.getIndex(new_rect)))) {
-        this.changePosition(new_rect);
-        return true;
-      }
-      bound = ib * this.field.tileSize;
-      old_rect = this.getRectangle();
-      if (bound === old_rect.getTop()) {
-        if (ir === il && this.canKick) {
-          data = this.field.getMapData(ir, it);
-          data.kick(Direction.UP);
-          return false;
-        }
-        new_rect = this.getRectangle(-this.speed, 0);
-        if (!this.field.isBarrier(il, it) && (!this.field.isBarrier(il, ib) || this.canMoveOnBomb(this.getIndex(new_rect)))) {
-          if (il * this.field.tileSize > new_rect.getLeft()) {
-            new_rect.x = il * this.field.tileSize;
-          }
-          this.changePosition(new_rect);
-          return true;
-        }
-        new_rect = this.getRectangle(this.speed, 0);
-        if (!this.field.isBarrier(ir, it) && (!this.field.isBarrier(ir, ib) || this.canMoveOnBomb(this.getIndex(new_rect)))) {
-          if (ir * this.field.tileSize < new_rect.getLeft()) {
-            new_rect.x = ir * this.field.tileSize;
-          }
-          this.changePosition(new_rect);
-          return true;
-        }
-      } else if (bound < old_rect.getTop()) {
-        this.changePosition(this.getRectangle(0, bound - old_rect.getTop()));
-        return true;
-      }
-      return false;
-    };
-
-    Bomberman.prototype.getRectangle = function(dx, dy) {
-      if (dx == null) dx = 0;
-      if (dy == null) dy = 0;
-      return new Rectangle(this.x + dx, this.y + dy, this.width, this.height);
-    };
-
-    Bomberman.prototype.getIndex = function(r) {
-      return this.field.getNearestIndex(r);
-    };
-
-    Bomberman.prototype.getCurrentIndex = function() {
-      return this.getIndex(this.getRectangle());
-    };
-
-    Bomberman.prototype.getInputDirection = function() {
-      return this.inputManager.direction;
-    };
-
-    Bomberman.prototype.destroy = function() {
-      return this.isDestroyed = true;
-    };
-
-    return Bomberman;
+    return Point;
 
   })();
 
-  DataTransport = (function() {
-    var INPUT_FLAGS;
+  Rectangle = (function() {
 
-    INPUT_FLAGS = {
-      left: 1,
-      up: 2,
-      right: 4,
-      down: 8,
-      a: 16,
-      b: 32,
-      none: 64
+    function Rectangle(x, y, width, height) {
+      this.x = x;
+      this.y = y;
+      this.width = width;
+      this.height = height;
+    }
+
+    Rectangle.prototype.getLeft = function() {
+      return this.x;
     };
 
-    function DataTransport() {
-      var _this = this;
-      this.inputBuffer = [];
-      this.playerId = this.numberOfPlayers = this.seed = null;
-      this.oldInput = 0;
-      this.socket = new WebSocket(WS_URI, WS_SUBPROTOCOL);
-      this.socket.binaryType = 'arraybuffer';
-      this.socket.onmessage = function(event) {
-        if (!_this.hasBattleData()) {
-          return _this.receiveBattleData(event.data);
+    Rectangle.prototype.getRight = function() {
+      return this.x + this.width - 1;
+    };
+
+    Rectangle.prototype.getTop = function() {
+      return this.y;
+    };
+
+    Rectangle.prototype.getBottom = function() {
+      return this.y + this.height - 1;
+    };
+
+    Rectangle.prototype.getTopLeft = function() {
+      return new Point(this.getLeft(), this.getTop());
+    };
+
+    Rectangle.prototype.getTopRight = function() {
+      return new Point(this.getRight(), this.getTop());
+    };
+
+    Rectangle.prototype.getBottomLeft = function() {
+      return new Point(this.getLeft(), this.getBottom());
+    };
+
+    Rectangle.prototype.getBottomRight = function() {
+      return new Point(this.getRight(), this.getBottom());
+    };
+
+    return Rectangle;
+
+  })();
+
+  InputManager = (function() {
+
+    InputManager.LEFT = 0;
+
+    InputManager.UP = 1;
+
+    InputManager.RIGHT = 2;
+
+    InputManager.DOWN = 3;
+
+    InputManager.NONE = 4;
+
+    function InputManager() {
+      this.a = this.b = false;
+      this.aDown = this.aUp = false;
+      this.bDown = this.bUp = false;
+      this.direction = this.oldDirection = InputManager.NONE;
+      this.up = this.down = this.left = this.right = false;
+    }
+
+    InputManager.prototype.update = function(input) {
+      this.updateDirection(input);
+      this.updateAButton(input);
+      return this.updateBButton(input);
+    };
+
+    InputManager.prototype.isSamePreviousDirections = function(dirs) {
+      return (this.direction === dirs[0] && this.oldDirection === dirs[1]) || (this.direction === dirs[1] && this.oldDirection === dirs[0]);
+    };
+
+    InputManager.prototype.getInputDirections = function(input) {
+      var dirs;
+      dirs = [];
+      if (input.left) dirs.push(InputManager.LEFT);
+      if (input.up) dirs.push(InputManager.UP);
+      if (input.right) dirs.push(InputManager.RIGHT);
+      if (input.down) dirs.push(InputManager.DOWN);
+      return dirs.slice(0, 2);
+    };
+
+    InputManager.prototype.updateDirection = function(input) {
+      var dirs;
+      dirs = this.getInputDirections(input);
+      if (dirs.length === 0) {
+        this.direction = InputManager.NONE;
+        return this.oldDirection = InputManager.NONE;
+      } else if (dirs.length === 1) {
+        this.direction = dirs[0];
+        return this.oldDirection = InputManager.NONE;
+      } else if (!this.isSamePreviousDirections(dirs)) {
+        if (this.direction === dirs[0]) {
+          this.oldDirection = this.direction;
+          return this.direction = dirs[1];
+        } else if (this.direction === dirs[1]) {
+          this.oldDirection = this.direction;
+          return this.direction = dirs[0];
         } else {
-          return _this.receiveInputs(event.data);
+          this.direction = dirs[0];
+          return this.oldDirection = dirs[1];
         }
-      };
-    }
-
-    DataTransport.prototype.receiveBattleData = function(data) {
-      var _ref;
-      try {
-        _ref = JSON.parse(data), this.seed = _ref.seed, this.numberOfPlayers = _ref.numberOfPlayers, this.playerId = _ref.playerId;
-      } catch (e) {
-        this.release();
-        throw e;
-      }
-      if (!this.validateBattleData()) {
-        this.release();
-        throw Error("Invalid battle data");
       }
     };
 
-    DataTransport.prototype.receiveInputs = function(data) {
-      var byteArray, i, inputs, _ref;
-      byteArray = new Uint8Array(data);
-      inputs = [];
-      for (i = 0, _ref = byteArray.length; 0 <= _ref ? i < _ref : i > _ref; 0 <= _ref ? i++ : i--) {
-        inputs.push(this.decodeInput(byteArray[i]));
+    InputManager.prototype.updateAButton = function(input) {
+      if (this.a === input.a) {
+        this.aDown = this.aUp = false;
+      } else if (input.a === true) {
+        this.aDown = true;
+        this.aUp = false;
+      } else if (input.a === false) {
+        this.aDown = false;
+        this.aUp = true;
       }
-      return this.inputBuffer.push(inputs);
+      return this.a = input.a;
     };
 
-    DataTransport.prototype.sendInput = function(input) {
-      var byteArray, v;
-      if (!this.isConnected()) return;
-      v = this.encodeInput(input);
-      byteArray = new Uint8Array(1);
-      byteArray[0] = v;
-      if (!(v === 0 && this.oldInput === 0)) this.socket.send(byteArray.buffer);
-      return this.oldInput = v;
-    };
-
-    DataTransport.prototype.encodeInput = function(input) {
-      var flag, key, value;
-      value = 0;
-      for (key in INPUT_FLAGS) {
-        if (!__hasProp.call(INPUT_FLAGS, key)) continue;
-        flag = INPUT_FLAGS[key];
-        if (input[key]) value |= flag;
+    InputManager.prototype.updateBButton = function(input) {
+      if (this.b === input.b) {
+        this.bDown = this.bUp = false;
+      } else if (input.b === true) {
+        this.bDown = true;
+        this.bUp = false;
+      } else if (input.b === false) {
+        this.bDown = false;
+        this.bUp = true;
       }
-      return value;
+      return this.b = input.b;
     };
 
-    DataTransport.prototype.decodeInput = function(value) {
-      var flag, input, key;
-      if (value & INPUT_FLAGS.none) return null;
-      input = {
-        a: false,
-        b: false,
-        left: false,
-        up: false,
-        right: false,
-        down: false
-      };
-      for (key in INPUT_FLAGS) {
-        if (!__hasProp.call(INPUT_FLAGS, key)) continue;
-        flag = INPUT_FLAGS[key];
-        if (value & flag) input[key] = true;
-      }
-      return input;
-    };
-
-    DataTransport.prototype.getInput = function() {
-      return this.inputBuffer.shift();
-    };
-
-    DataTransport.prototype.getBufferSize = function() {
-      return this.inputBuffer.length;
-    };
-
-    DataTransport.prototype.clearBuffer = function() {
-      return this.inputBuffer.length = 0;
-    };
-
-    DataTransport.prototype.hasBattleData = function() {
-      return (this.playerId != null) && (this.numberOfPlayers != null);
-    };
-
-    DataTransport.prototype.validateBattleData = function() {
-      return (this.seed != null) && this.numberOfPlayers >= 2 && this.numberOfPlayers <= MAX_NUMBER_OF_PLAYERS && this.playerId >= 0 && this.playerId < this.numberOfPlayers;
-    };
-
-    DataTransport.prototype.isConnected = function() {
-      return this.socket.readyState === WebSocket.OPEN;
-    };
-
-    DataTransport.prototype.isClosed = function() {
-      return this.socket.readyState === WebSocket.CLOSED;
-    };
-
-    DataTransport.prototype.release = function() {
-      this.clearBuffer();
-      return this.socket.close();
-    };
-
-    return DataTransport;
+    return InputManager;
 
   })();
 
-  EntryScreen = (function() {
-    var MESSAGE_CANCEL, MESSAGE_ENTRY_GAME, MESSAGE_WAIT;
+  Direction = InputManager;
 
-    MESSAGE_ENTRY_GAME = "Please Input Z to Enter Game";
+  Random = (function() {
 
-    MESSAGE_CANCEL = "Canceling...";
-
-    MESSAGE_WAIT = "Please Wait... (X: Cancel)";
-
-    function EntryScreen(game) {
-      this.game = game;
-      this.scene = new enchant.Scene();
-      this.scene.backgroundColor = "#217821";
-      this.title = this.createTitle();
-      this.caption = this.createCaption();
-      this.scene.addChild(this.title);
-      this.scene.addChild(this.caption);
-      this.game.pushScene(this.scene);
-      this.dataTransport = null;
-      this.isCanceling = false;
-      this.finished = false;
+    function Random(seed) {
+      this.mt19937 = new MersenneTwister(seed);
     }
 
-    EntryScreen.prototype.update = function() {
-      var id,
-        _this = this;
-      if (this.game.input.a && this.dataTransport === null) {
-        this.caption.text = MESSAGE_WAIT;
-        this.caption.x = 14;
-        this.dataTransport = new DataTransport();
-      }
-      if (this.game.input.b && this.dataTransport !== null && !this.isCanceling) {
-        this.caption.text = MESSAGE_CANCEL;
-        this.dataTransport.release();
-        this.isCanceling = true;
-        return id = setInterval(function() {
-          if (_this.dataTransport.isClosed()) {
-            _this.caption.text = MESSAGE_ENTRY_GAME;
-            _this.caption.x = 8;
-            _this.dataTransport = null;
-            _this.isCanceling = false;
-            return clearInterval(id);
-          }
-        }, 2 * 1000);
-      }
+    Random.prototype.getRandom = function(max) {
+      return this.mt19937.nextInt(max);
     };
 
-    EntryScreen.prototype.createTitle = function() {
-      var title;
-      title = new enchant.Label();
-      title.text = "Bigbang";
-      title.className = "game-title";
-      title.x = 12;
-      title.y = 20;
-      return title;
-    };
-
-    EntryScreen.prototype.createCaption = function() {
-      var caption;
-      caption = new enchant.Label();
-      caption.text = MESSAGE_ENTRY_GAME;
-      caption.className = "game-caption";
-      caption.x = 8;
-      caption.y = 130;
-      return caption;
-    };
-
-    EntryScreen.prototype.isFinished = function() {
-      var _ref;
-      return (_ref = this.dataTransport) != null ? _ref.hasBattleData() : void 0;
-    };
-
-    EntryScreen.prototype.getDataTransport = function() {
-      return this.dataTransport;
-    };
-
-    EntryScreen.prototype.release = function() {
-      return this.game.removeScene(this.scene);
-    };
-
-    return EntryScreen;
+    return Random;
 
   })();
 
@@ -1304,228 +813,309 @@
 
   })(Item);
 
-  GameResult = (function() {
+  Bomberman = (function() {
 
-    function GameResult(game) {
-      this.game = game;
-      this.scene = new enchant.Scene();
-      this.scene.backgroundColor = "#217821";
-      this.label = new enchant.Label();
-      this.scene.addChild(this.label);
-      this.game.pushScene(this.scene);
-      this.count = 0;
-    }
-
-    GameResult.prototype.win = function() {
-      this.label.text = "YOU WIN";
-      this.label.className = "result-win";
-      this.label.x = 18;
-      return this.label.y = 60;
-    };
-
-    GameResult.prototype.lose = function() {
-      this.label.text = "YOU LOSE";
-      this.label.className = "result-lose";
-      this.label.x = 6;
-      return this.label.y = 60;
-    };
-
-    GameResult.prototype.draw = function() {
-      this.label.text = "DRAW";
-      this.label.className = "result-draw";
-      this.label.x = 65;
-      return this.label.y = 60;
-    };
-
-    GameResult.prototype.update = function() {
-      return this.count += 1;
-    };
-
-    GameResult.prototype.isFinished = function() {
-      return this.count > 60 * 2;
-    };
-
-    GameResult.prototype.release = function() {
-      return this.game.removeScene(this.scene);
-    };
-
-    return GameResult;
-
-  })();
-
-  InputManager = (function() {
-
-    InputManager.LEFT = 0;
-
-    InputManager.UP = 1;
-
-    InputManager.RIGHT = 2;
-
-    InputManager.DOWN = 3;
-
-    InputManager.NONE = 4;
-
-    function InputManager() {
-      this.a = this.b = false;
-      this.aDown = this.aUp = false;
-      this.bDown = this.bUp = false;
-      this.direction = this.oldDirection = InputManager.NONE;
-      this.up = this.down = this.left = this.right = false;
-    }
-
-    InputManager.prototype.update = function(input) {
-      this.updateDirection(input);
-      this.updateAButton(input);
-      return this.updateBButton(input);
-    };
-
-    InputManager.prototype.isSamePreviousDirections = function(dirs) {
-      return (this.direction === dirs[0] && this.oldDirection === dirs[1]) || (this.direction === dirs[1] && this.oldDirection === dirs[0]);
-    };
-
-    InputManager.prototype.getInputDirections = function(input) {
-      var dirs;
-      dirs = [];
-      if (input.left) dirs.push(InputManager.LEFT);
-      if (input.up) dirs.push(InputManager.UP);
-      if (input.right) dirs.push(InputManager.RIGHT);
-      if (input.down) dirs.push(InputManager.DOWN);
-      return dirs.slice(0, 2);
-    };
-
-    InputManager.prototype.updateDirection = function(input) {
-      var dirs;
-      dirs = this.getInputDirections(input);
-      if (dirs.length === 0) {
-        this.direction = InputManager.NONE;
-        return this.oldDirection = InputManager.NONE;
-      } else if (dirs.length === 1) {
-        this.direction = dirs[0];
-        return this.oldDirection = InputManager.NONE;
-      } else if (!this.isSamePreviousDirections(dirs)) {
-        if (this.direction === dirs[0]) {
-          this.oldDirection = this.direction;
-          return this.direction = dirs[1];
-        } else if (this.direction === dirs[1]) {
-          this.oldDirection = this.direction;
-          return this.direction = dirs[0];
-        } else {
-          this.direction = dirs[0];
-          return this.oldDirection = dirs[1];
-        }
-      }
-    };
-
-    InputManager.prototype.updateAButton = function(input) {
-      if (this.a === input.a) {
-        this.aDown = this.aUp = false;
-      } else if (input.a === true) {
-        this.aDown = true;
-        this.aUp = false;
-      } else if (input.a === false) {
-        this.aDown = false;
-        this.aUp = true;
-      }
-      return this.a = input.a;
-    };
-
-    InputManager.prototype.updateBButton = function(input) {
-      if (this.b === input.b) {
-        this.bDown = this.bUp = false;
-      } else if (input.b === true) {
-        this.bDown = true;
-        this.bUp = false;
-      } else if (input.b === false) {
-        this.bDown = false;
-        this.bUp = true;
-      }
-      return this.b = input.b;
-    };
-
-    return InputManager;
-
-  })();
-
-  Direction = InputManager;
-
-  WS_SUBPROTOCOL = 'bigbang';
-
-  MAX_NUMBER_OF_PLAYERS = 4;
-
-  ENCHANTJS_IMAGE_PATH = "enchantjs/images/";
-
-  RESOURCES = [ENCHANTJS_IMAGE_PATH + 'map0.gif', ENCHANTJS_IMAGE_PATH + 'effect0.gif', ENCHANTJS_IMAGE_PATH + 'icon0.gif', 'image/map0.png', 'image/icon0.png', 'image/char0.png'];
-
-  createGameResult = function(game, currentScene) {
-    var gameResult;
-    gameResult = new GameResult(game);
-    if (currentScene.isDraw()) {
-      gameResult.draw();
-    } else if (currentScene.getWinner() === currentScene.getPlayerId()) {
-      gameResult.win();
-    } else {
-      gameResult.lose();
-    }
-    return gameResult;
-  };
-
-  window.onload = function() {
-    var game, resource, _i, _len;
-    game = new enchant.Game(240, 208);
-    game.scale = 3.0;
-    for (_i = 0, _len = RESOURCES.length; _i < _len; _i++) {
-      resource = RESOURCES[_i];
-      game.preload(resource);
-    }
-    game.fps = 60;
-    game.keybind("Z".charCodeAt(0), 'a');
-    game.keybind("X".charCodeAt(0), 'b');
-    game.onload = function() {
-      var currentScene;
-      window.onerror = function(msg, url, line) {
-        return game.stop() && false;
-      };
-      currentScene = new EntryScreen(game);
-      return game.addEventListener('enterframe', function() {
-        var dataTransport, gameResult;
-        if (currentScene.isFinished()) {
-          if (currentScene instanceof EntryScreen) {
-            dataTransport = currentScene.getDataTransport();
-            currentScene.release();
-            currentScene = new BattleGame(game, dataTransport);
-          } else if (currentScene instanceof BattleGame) {
-            gameResult = createGameResult(game, currentScene);
-            currentScene.release();
-            currentScene = gameResult;
-          } else if (currentScene instanceof GameResult) {
-            currentScene.release();
-            currentScene = new EntryScreen(game);
-          } else {
-            throw new Error("Unknown scene");
-          }
-        }
-        return currentScene.update();
-      });
-    };
-    return game.start();
-  };
-
-  Point = (function() {
-
-    function Point(x, y) {
+    function Bomberman(field, x, y) {
+      this.field = field;
       this.x = x;
       this.y = y;
+      this.objectId = this.field.generateId();
+      this.width = this.height = this.field.tileSize;
+      this.isDestroyed = false;
+      this.speed = 2;
+      this.power = 1;
+      this.bombCapacity = 1;
+      this.usedBomb = 0;
+      this.hasRemocon = false;
+      this.canKick = false;
+      this.inputManager = new InputManager();
+      this.inputCount = 0;
     }
 
-    Point.prototype.equals = function(other) {
-      return this.x === other.x && this.y === other.y;
+    Bomberman.prototype.update = function(input) {
+      this.inputManager.update(input);
+      if (this.inputManager.aDown) this.putBomb();
+      if (this.inputManager.bDown && this.hasRemocon) this.explodeBomb();
+      return this.move();
     };
 
-    Point.prototype.clone = function() {
-      return new Point(this.x, this.y);
+    Bomberman.prototype.incrementSpeed = function() {
+      if (this.speed < 8) return this.speed += 1;
     };
 
-    return Point;
+    Bomberman.prototype.incrementPower = function() {
+      if (this.power < 9) return this.power += 1;
+    };
+
+    Bomberman.prototype.incrementBombCapacity = function() {
+      if (this.bombCapacity < 9) return this.bombCapacity += 1;
+    };
+
+    Bomberman.prototype.move = function() {
+      switch (this.inputManager.direction) {
+        case InputManager.LEFT:
+          this.moveLeft();
+          break;
+        case InputManager.UP:
+          this.moveUp();
+          break;
+        case InputManager.RIGHT:
+          this.moveRight();
+          break;
+        case InputManager.DOWN:
+          this.moveDown();
+      }
+      if (this.inputManager.direction === InputManager.NONE) {
+        return this.inputCount = 0;
+      } else {
+        return this.inputCount += 1;
+      }
+    };
+
+    Bomberman.prototype.changePosition = function(r) {
+      return this.x = r.x, this.y = r.y, r;
+    };
+
+    Bomberman.prototype.putBomb = function() {
+      var ix;
+      if (this.canPutBomb() && this.usedBomb < this.bombCapacity) {
+        ix = this.getCurrentIndex();
+        this.usedBomb += 1;
+        return this.field.setMapData(ix.x, ix.y, new Bomb(this.field, ix, this));
+      }
+    };
+
+    Bomberman.prototype.explodeBomb = function() {
+      var data, x, y, _ref, _results;
+      _results = [];
+      for (y = 0, _ref = this.field.height; 0 <= _ref ? y < _ref : y > _ref; 0 <= _ref ? y++ : y--) {
+        _results.push((function() {
+          var _ref2, _results2;
+          _results2 = [];
+          for (x = 0, _ref2 = this.field.width; 0 <= _ref2 ? x < _ref2 : x > _ref2; 0 <= _ref2 ? x++ : x--) {
+            data = this.field.getMapData(x, y);
+            if (data.type === FieldObject.TYPE_BOMB && data.bomberman.objectId === this.objectId) {
+              _results2.push(data.destroy());
+            } else {
+              _results2.push(void 0);
+            }
+          }
+          return _results2;
+        }).call(this));
+      }
+      return _results;
+    };
+
+    Bomberman.prototype.canPutBomb = function() {
+      var data, ib, il, ir, it, ix, _ref;
+      ix = this.getCurrentIndex();
+      data = this.field.getMapData(ix.x, ix.y);
+      if (data.type !== FieldObject.TYPE_GROUND) return false;
+      _ref = this.field.getRectangleIndex(this.getRectangle()), il = _ref[0], it = _ref[1], ir = _ref[2], ib = _ref[3];
+      if (il === ir && it === ib) return true;
+      if ((ix.equals(new Point(il, it)) && !this.field.isBarrier(ir, ib)) || (ix.equals(new Point(ir, ib)) && !this.field.isBarrier(il, it))) {
+        return true;
+      }
+      return false;
+    };
+
+    Bomberman.prototype.canMoveOnBomb = function(ni) {
+      var oi;
+      oi = this.getCurrentIndex();
+      return this.field.isBarrier(oi.x, oi.y) && oi.equals(ni);
+    };
+
+    Bomberman.prototype.moveRight = function() {
+      var bound, data, ib, il, ir, it, new_rect, old_rect, _ref;
+      new_rect = this.getRectangle(this.speed, 0);
+      _ref = this.field.getRectangleIndex(new_rect), il = _ref[0], it = _ref[1], ir = _ref[2], ib = _ref[3];
+      if (il !== ir && it === ib && this.field.isBarrier(il, it) && this.field.isBarrier(ir, ib)) {
+        return false;
+      }
+      if ((!this.field.isBarrier(ir, it) && !this.field.isBarrier(ir, ib)) || ((il === ir || it === ib) && this.canMoveOnBomb(this.getIndex(new_rect)))) {
+        this.changePosition(new_rect);
+        return true;
+      }
+      bound = ir * this.field.tileSize - 1;
+      old_rect = this.getRectangle();
+      if (bound === old_rect.getRight()) {
+        if (it === ib && this.canKick) {
+          data = this.field.getMapData(ir, it);
+          data.kick(Direction.RIGHT);
+          return false;
+        }
+        new_rect = this.getRectangle(0, -this.speed);
+        if (!this.field.isBarrier(ir, it) && (!this.field.isBarrier(il, it) || this.canMoveOnBomb(this.getIndex(new_rect)))) {
+          if (it * this.field.tileSize > new_rect.getTop()) {
+            new_rect.y = it * this.field.tileSize;
+          }
+          this.changePosition(new_rect);
+          return true;
+        }
+        new_rect = this.getRectangle(0, this.speed);
+        if (!this.field.isBarrier(ir, ib) && (!this.field.isBarrier(il, ib) || this.canMoveOnBomb(this.getIndex(new_rect)))) {
+          if (ib * this.field.tileSize < new_rect.getTop()) {
+            new_rect.y = ib * this.field.tileSize;
+          }
+          this.changePosition(new_rect);
+          return true;
+        }
+      } else if (bound > old_rect.getRight()) {
+        this.changePosition(this.getRectangle(bound - old_rect.getRight(), 0));
+        return true;
+      }
+      return false;
+    };
+
+    Bomberman.prototype.moveDown = function() {
+      var bound, data, ib, il, ir, it, new_rect, old_rect, _ref;
+      new_rect = this.getRectangle(0, this.speed);
+      _ref = this.field.getRectangleIndex(new_rect), il = _ref[0], it = _ref[1], ir = _ref[2], ib = _ref[3];
+      if (it !== ib && il === ir && this.field.isBarrier(il, it) && this.field.isBarrier(ir, ib)) {
+        return false;
+      }
+      if ((!this.field.isBarrier(il, ib) && !this.field.isBarrier(ir, ib)) || ((il === ir || it === ib) && this.canMoveOnBomb(this.getIndex(new_rect)))) {
+        this.changePosition(new_rect);
+        return true;
+      }
+      bound = ib * this.field.tileSize - 1;
+      old_rect = this.getRectangle();
+      if (bound === old_rect.getBottom()) {
+        if (ir === il && this.canKick) {
+          data = this.field.getMapData(ir, ib);
+          data.kick(Direction.DOWN);
+          return false;
+        }
+        new_rect = this.getRectangle(-this.speed, 0);
+        if (!this.field.isBarrier(il, ib) && (!this.field.isBarrier(il, it) || this.canMoveOnBomb(this.getIndex(new_rect)))) {
+          if (il * this.field.tileSize > new_rect.getLeft()) {
+            new_rect.x = il * this.field.tileSize;
+          }
+          this.changePosition(new_rect);
+          return true;
+        }
+        new_rect = this.getRectangle(this.speed, 0);
+        if (!this.field.isBarrier(ir, ib) && (!this.field.isBarrier(ir, it) || this.canMoveOnBomb(this.getIndex(new_rect)))) {
+          if (ir * this.field.tileSize < new_rect.getLeft()) {
+            new_rect.x = ir * this.field.tileSize;
+          }
+          this.changePosition(new_rect);
+          return true;
+        }
+      } else if (bound > old_rect.getBottom()) {
+        this.changePosition(this.getRectangle(0, bound - old_rect.getBottom()));
+        return true;
+      }
+      return false;
+    };
+
+    Bomberman.prototype.moveLeft = function() {
+      var bound, data, ib, il, ir, it, new_rect, old_rect, _ref;
+      new_rect = this.getRectangle(-this.speed, 0);
+      _ref = this.field.getRectangleIndex(new_rect), il = _ref[0], it = _ref[1], ir = _ref[2], ib = _ref[3];
+      if (il !== ir && it === ib && this.field.isBarrier(il, it) && this.field.isBarrier(ir, ib)) {
+        return false;
+      }
+      if ((!this.field.isBarrier(il, it) && !this.field.isBarrier(il, ib)) || ((il === ir || it === ib) && this.canMoveOnBomb(this.getIndex(new_rect)))) {
+        this.changePosition(new_rect);
+        return true;
+      }
+      bound = ir * this.field.tileSize;
+      old_rect = this.getRectangle();
+      if (bound === old_rect.getLeft()) {
+        if (it === ib && this.canKick) {
+          data = this.field.getMapData(il, it);
+          data.kick(Direction.LEFT);
+          return false;
+        }
+        new_rect = this.getRectangle(0, -this.speed);
+        if (!this.field.isBarrier(il, it) && (!this.field.isBarrier(ir, it) || this.canMoveOnBomb(this.getIndex(new_rect)))) {
+          if (it * this.field.tileSize > new_rect.getTop()) {
+            new_rect.y = it * this.field.tileSize;
+          }
+          this.changePosition(new_rect);
+          return true;
+        }
+        new_rect = this.getRectangle(0, this.speed);
+        if (!this.field.isBarrier(il, ib) && (!this.field.isBarrier(ir, ib) || this.canMoveOnBomb(this.getIndex(new_rect)))) {
+          if (ib * this.field.tileSize < new_rect.getTop()) {
+            new_rect.y = ib * this.field.tileSize;
+          }
+          this.changePosition(new_rect);
+          return true;
+        }
+      } else if (bound < old_rect.getLeft()) {
+        this.changePosition(this.getRectangle(bound - old_rect.getLeft(), 0));
+        return true;
+      }
+      return false;
+    };
+
+    Bomberman.prototype.moveUp = function() {
+      var bound, data, ib, il, ir, it, new_rect, old_rect, _ref;
+      new_rect = this.getRectangle(0, -this.speed);
+      _ref = this.field.getRectangleIndex(new_rect), il = _ref[0], it = _ref[1], ir = _ref[2], ib = _ref[3];
+      if (it !== ib && il === ir && this.field.isBarrier(il, it) && this.field.isBarrier(ir, ib)) {
+        return false;
+      }
+      if ((!this.field.isBarrier(il, it) && !this.field.isBarrier(ir, it)) || ((il === ir || it === ib) && this.canMoveOnBomb(this.getIndex(new_rect)))) {
+        this.changePosition(new_rect);
+        return true;
+      }
+      bound = ib * this.field.tileSize;
+      old_rect = this.getRectangle();
+      if (bound === old_rect.getTop()) {
+        if (ir === il && this.canKick) {
+          data = this.field.getMapData(ir, it);
+          data.kick(Direction.UP);
+          return false;
+        }
+        new_rect = this.getRectangle(-this.speed, 0);
+        if (!this.field.isBarrier(il, it) && (!this.field.isBarrier(il, ib) || this.canMoveOnBomb(this.getIndex(new_rect)))) {
+          if (il * this.field.tileSize > new_rect.getLeft()) {
+            new_rect.x = il * this.field.tileSize;
+          }
+          this.changePosition(new_rect);
+          return true;
+        }
+        new_rect = this.getRectangle(this.speed, 0);
+        if (!this.field.isBarrier(ir, it) && (!this.field.isBarrier(ir, ib) || this.canMoveOnBomb(this.getIndex(new_rect)))) {
+          if (ir * this.field.tileSize < new_rect.getLeft()) {
+            new_rect.x = ir * this.field.tileSize;
+          }
+          this.changePosition(new_rect);
+          return true;
+        }
+      } else if (bound < old_rect.getTop()) {
+        this.changePosition(this.getRectangle(0, bound - old_rect.getTop()));
+        return true;
+      }
+      return false;
+    };
+
+    Bomberman.prototype.getRectangle = function(dx, dy) {
+      if (dx == null) dx = 0;
+      if (dy == null) dy = 0;
+      return new Rectangle(this.x + dx, this.y + dy, this.width, this.height);
+    };
+
+    Bomberman.prototype.getIndex = function(r) {
+      return this.field.getNearestIndex(r);
+    };
+
+    Bomberman.prototype.getCurrentIndex = function() {
+      return this.getIndex(this.getRectangle());
+    };
+
+    Bomberman.prototype.getInputDirection = function() {
+      return this.inputManager.direction;
+    };
+
+    Bomberman.prototype.destroy = function() {
+      return this.isDestroyed = true;
+    };
+
+    return Bomberman;
 
   })();
 
@@ -1591,65 +1181,6 @@
     };
 
     return PressureBlockSetter;
-
-  })();
-
-  Random = (function() {
-
-    function Random(seed) {
-      this.mt19937 = new MersenneTwister(seed);
-    }
-
-    Random.prototype.getRandom = function(max) {
-      return this.mt19937.nextInt(max);
-    };
-
-    return Random;
-
-  })();
-
-  Rectangle = (function() {
-
-    function Rectangle(x, y, width, height) {
-      this.x = x;
-      this.y = y;
-      this.width = width;
-      this.height = height;
-    }
-
-    Rectangle.prototype.getLeft = function() {
-      return this.x;
-    };
-
-    Rectangle.prototype.getRight = function() {
-      return this.x + this.width - 1;
-    };
-
-    Rectangle.prototype.getTop = function() {
-      return this.y;
-    };
-
-    Rectangle.prototype.getBottom = function() {
-      return this.y + this.height - 1;
-    };
-
-    Rectangle.prototype.getTopLeft = function() {
-      return new Point(this.getLeft(), this.getTop());
-    };
-
-    Rectangle.prototype.getTopRight = function() {
-      return new Point(this.getRight(), this.getTop());
-    };
-
-    Rectangle.prototype.getBottomLeft = function() {
-      return new Point(this.getLeft(), this.getBottom());
-    };
-
-    Rectangle.prototype.getBottomRight = function() {
-      return new Point(this.getRight(), this.getBottom());
-    };
-
-    return Rectangle;
 
   })();
 
@@ -2076,5 +1607,479 @@
     return RenderingQueue;
 
   })();
+
+  DataTransport = (function() {
+    var INPUT_FLAGS;
+
+    INPUT_FLAGS = {
+      left: 1,
+      up: 2,
+      right: 4,
+      down: 8,
+      a: 16,
+      b: 32,
+      none: 64
+    };
+
+    function DataTransport() {
+      var _this = this;
+      this.inputBuffer = [];
+      this.playerId = this.numberOfPlayers = this.seed = null;
+      this.oldInput = 0;
+      this.socket = new WebSocket(WS_URI, WS_SUBPROTOCOL);
+      this.socket.binaryType = 'arraybuffer';
+      this.socket.onmessage = function(event) {
+        if (!_this.hasBattleData()) {
+          return _this.receiveBattleData(event.data);
+        } else {
+          return _this.receiveInputs(event.data);
+        }
+      };
+    }
+
+    DataTransport.prototype.receiveBattleData = function(data) {
+      var _ref;
+      try {
+        _ref = JSON.parse(data), this.seed = _ref.seed, this.numberOfPlayers = _ref.numberOfPlayers, this.playerId = _ref.playerId;
+      } catch (e) {
+        this.release();
+        throw e;
+      }
+      if (!this.validateBattleData()) {
+        this.release();
+        throw Error("Invalid battle data");
+      }
+    };
+
+    DataTransport.prototype.receiveInputs = function(data) {
+      var byteArray, i, inputs, _ref;
+      byteArray = new Uint8Array(data);
+      inputs = [];
+      for (i = 0, _ref = byteArray.length; 0 <= _ref ? i < _ref : i > _ref; 0 <= _ref ? i++ : i--) {
+        inputs.push(this.decodeInput(byteArray[i]));
+      }
+      return this.inputBuffer.push(inputs);
+    };
+
+    DataTransport.prototype.sendInput = function(input) {
+      var byteArray, v;
+      if (!this.isConnected()) return;
+      v = this.encodeInput(input);
+      byteArray = new Uint8Array(1);
+      byteArray[0] = v;
+      if (!(v === 0 && this.oldInput === 0)) this.socket.send(byteArray.buffer);
+      return this.oldInput = v;
+    };
+
+    DataTransport.prototype.encodeInput = function(input) {
+      var flag, key, value;
+      value = 0;
+      for (key in INPUT_FLAGS) {
+        if (!__hasProp.call(INPUT_FLAGS, key)) continue;
+        flag = INPUT_FLAGS[key];
+        if (input[key]) value |= flag;
+      }
+      return value;
+    };
+
+    DataTransport.prototype.decodeInput = function(value) {
+      var flag, input, key;
+      if (value & INPUT_FLAGS.none) return null;
+      input = {
+        a: false,
+        b: false,
+        left: false,
+        up: false,
+        right: false,
+        down: false
+      };
+      for (key in INPUT_FLAGS) {
+        if (!__hasProp.call(INPUT_FLAGS, key)) continue;
+        flag = INPUT_FLAGS[key];
+        if (value & flag) input[key] = true;
+      }
+      return input;
+    };
+
+    DataTransport.prototype.getInput = function() {
+      return this.inputBuffer.shift();
+    };
+
+    DataTransport.prototype.getBufferSize = function() {
+      return this.inputBuffer.length;
+    };
+
+    DataTransport.prototype.clearBuffer = function() {
+      return this.inputBuffer.length = 0;
+    };
+
+    DataTransport.prototype.hasBattleData = function() {
+      return (this.playerId != null) && (this.numberOfPlayers != null);
+    };
+
+    DataTransport.prototype.validateBattleData = function() {
+      return (this.seed != null) && this.numberOfPlayers >= 2 && this.numberOfPlayers <= MAX_NUMBER_OF_PLAYERS && this.playerId >= 0 && this.playerId < this.numberOfPlayers;
+    };
+
+    DataTransport.prototype.isConnected = function() {
+      return this.socket.readyState === WebSocket.OPEN;
+    };
+
+    DataTransport.prototype.isClosed = function() {
+      return this.socket.readyState === WebSocket.CLOSED;
+    };
+
+    DataTransport.prototype.release = function() {
+      this.clearBuffer();
+      return this.socket.close();
+    };
+
+    return DataTransport;
+
+  })();
+
+  EntryScreen = (function() {
+    var MESSAGE_CANCEL, MESSAGE_ENTRY_GAME, MESSAGE_WAIT;
+
+    MESSAGE_ENTRY_GAME = "Please Input Z to Enter Game";
+
+    MESSAGE_CANCEL = "Canceling...";
+
+    MESSAGE_WAIT = "Please Wait... (X: Cancel)";
+
+    function EntryScreen(game) {
+      this.game = game;
+      this.scene = new enchant.Scene();
+      this.scene.backgroundColor = "#217821";
+      this.title = this.createTitle();
+      this.caption = this.createCaption();
+      this.scene.addChild(this.title);
+      this.scene.addChild(this.caption);
+      this.game.pushScene(this.scene);
+      this.dataTransport = null;
+      this.isCanceling = false;
+      this.finished = false;
+    }
+
+    EntryScreen.prototype.update = function() {
+      var id,
+        _this = this;
+      if (this.game.input.a && this.dataTransport === null) {
+        this.caption.text = MESSAGE_WAIT;
+        this.caption.x = 14;
+        this.dataTransport = new DataTransport();
+      }
+      if (this.game.input.b && this.dataTransport !== null && !this.isCanceling) {
+        this.caption.text = MESSAGE_CANCEL;
+        this.dataTransport.release();
+        this.isCanceling = true;
+        return id = setInterval(function() {
+          if (_this.dataTransport.isClosed()) {
+            _this.caption.text = MESSAGE_ENTRY_GAME;
+            _this.caption.x = 8;
+            _this.dataTransport = null;
+            _this.isCanceling = false;
+            return clearInterval(id);
+          }
+        }, 2 * 1000);
+      }
+    };
+
+    EntryScreen.prototype.createTitle = function() {
+      var title;
+      title = new enchant.Label();
+      title.text = "Bigbang";
+      title.className = "game-title";
+      title.x = 12;
+      title.y = 20;
+      return title;
+    };
+
+    EntryScreen.prototype.createCaption = function() {
+      var caption;
+      caption = new enchant.Label();
+      caption.text = MESSAGE_ENTRY_GAME;
+      caption.className = "game-caption";
+      caption.x = 8;
+      caption.y = 130;
+      return caption;
+    };
+
+    EntryScreen.prototype.isFinished = function() {
+      var _ref;
+      return (_ref = this.dataTransport) != null ? _ref.hasBattleData() : void 0;
+    };
+
+    EntryScreen.prototype.getDataTransport = function() {
+      return this.dataTransport;
+    };
+
+    EntryScreen.prototype.release = function() {
+      return this.game.removeScene(this.scene);
+    };
+
+    return EntryScreen;
+
+  })();
+
+  BattleGame = (function() {
+    var NUMBER_OF_CHARACTERS, RENDERER_TABLE;
+
+    NUMBER_OF_CHARACTERS = 16;
+
+    RENDERER_TABLE = {};
+
+    RENDERER_TABLE[FieldObject.TYPE_BLAST] = BlastRenderer;
+
+    RENDERER_TABLE[FieldObject.TYPE_BLOCK] = BlockRenderer;
+
+    RENDERER_TABLE[FieldObject.TYPE_BOMB] = BombRenderer;
+
+    RENDERER_TABLE[FieldObject.TYPE_ITEM] = ItemRenderer;
+
+    RENDERER_TABLE[FieldObject.TYPE_PBLOCK] = PressureBlockRenderer;
+
+    function BattleGame(game, dataTransport) {
+      var _ref;
+      this.game = game;
+      this.dataTransport = dataTransport;
+      _ref = this.dataTransport, this.playerId = _ref.playerId, this.numberOfPlayers = _ref.numberOfPlayers;
+      this.parity = this.finalCount = 0;
+      this.field = new Field(this.numberOfPlayers, this.dataTransport.seed);
+      this.lowerScene = new enchant.Scene();
+      this.upperScene = new enchant.Scene();
+      this.game.pushScene(this.lowerScene);
+      this.game.pushScene(this.upperScene);
+      this.lowerQueue = this.createLowerQueue();
+      this.upperQueue = this.createUpperQueue();
+      this.updateQueue();
+    }
+
+    BattleGame.prototype.update = function() {
+      while (this.dataTransport.getBufferSize() > 0) {
+        if (this.field.isFinished()) this.finalCount += 1;
+        this.field.update(this.dataTransport.getInput());
+        this.updateQueue();
+      }
+      this.storeNewRenderers();
+      this.parity = (this.parity + 1) % 2;
+      if (this.parity === 0) return this.sendInput(this.game.input);
+    };
+
+    BattleGame.prototype.updateQueue = function() {
+      this.lowerQueue.update();
+      return this.upperQueue.update();
+    };
+
+    BattleGame.prototype.sendInput = function(input) {
+      return this.dataTransport.sendInput(input);
+    };
+
+    BattleGame.prototype.createRenderer = function(data) {
+      var klass;
+      klass = RENDERER_TABLE[data.type];
+      if (klass != null) {
+        return new klass(this.lowerQueue, data);
+      } else {
+        throw Error("Unknown object");
+      }
+    };
+
+    BattleGame.prototype.storeNewRenderers = function() {
+      var data, i, j, _ref, _results;
+      _results = [];
+      for (i = 0, _ref = this.field.height; 0 <= _ref ? i < _ref : i > _ref; 0 <= _ref ? i++ : i--) {
+        _results.push((function() {
+          var _ref2, _results2;
+          _results2 = [];
+          for (j = 0, _ref2 = this.field.width; 0 <= _ref2 ? j < _ref2 : j > _ref2; 0 <= _ref2 ? j++ : j--) {
+            data = this.field.mutableDataMap[i][j];
+            if (data && !this.lowerQueue.contains(data.objectId)) {
+              _results2.push(this.lowerQueue.store(data.objectId, this.createRenderer(data)));
+            } else {
+              _results2.push(void 0);
+            }
+          }
+          return _results2;
+        }).call(this));
+      }
+      return _results;
+    };
+
+    BattleGame.prototype.createUpperQueue = function() {
+      var bomberman, charaIds, i, initialNoticeRenderer, renderer, timerRenderer, upperQueue, _len, _ref;
+      upperQueue = new RenderingQueue(this.game, this.upperScene);
+      charaIds = this.generateCharacterIds();
+      _ref = this.field.bombermans;
+      for (i = 0, _len = _ref.length; i < _len; i++) {
+        bomberman = _ref[i];
+        renderer = new BombermanRenderer(upperQueue, bomberman, charaIds[i]);
+        upperQueue.store(bomberman.objectId, renderer);
+      }
+      timerRenderer = new TimerRenderer(upperQueue, this.field);
+      upperQueue.store(timerRenderer.id, timerRenderer);
+      initialNoticeRenderer = new InitialNoticeRenderer(upperQueue, this.field, this.playerId);
+      upperQueue.store(initialNoticeRenderer.id, initialNoticeRenderer);
+      return upperQueue;
+    };
+
+    BattleGame.prototype.createLowerQueue = function() {
+      var fieldRenderer, lowerQueue;
+      lowerQueue = new RenderingQueue(this.game, this.lowerScene);
+      fieldRenderer = new FieldRenderer(lowerQueue, this.field);
+      fieldRenderer.update();
+      return lowerQueue;
+    };
+
+    BattleGame.prototype.generateCharacterIds = function() {
+      var hash, id, ids;
+      hash = {};
+      ids = [];
+      while (ids.length < this.numberOfPlayers) {
+        id = this.field.getRandom(NUMBER_OF_CHARACTERS);
+        if (!hash[id]) {
+          hash[id] = true;
+          ids.push(id);
+        }
+      }
+      return ids;
+    };
+
+    BattleGame.prototype.isFinished = function() {
+      return this.field.isFinished() && this.finalCount > 30;
+    };
+
+    BattleGame.prototype.isDraw = function() {
+      return this.field.isDraw();
+    };
+
+    BattleGame.prototype.getWinner = function() {
+      return this.field.getWinner();
+    };
+
+    BattleGame.prototype.getPlayerId = function() {
+      return this.playerId;
+    };
+
+    BattleGame.prototype.release = function() {
+      this.game.removeScene(this.lowerScene);
+      this.game.removeScene(this.upperScene);
+      return this.dataTransport.release();
+    };
+
+    return BattleGame;
+
+  })();
+
+  GameResult = (function() {
+
+    function GameResult(game) {
+      this.game = game;
+      this.scene = new enchant.Scene();
+      this.scene.backgroundColor = "#217821";
+      this.label = new enchant.Label();
+      this.scene.addChild(this.label);
+      this.game.pushScene(this.scene);
+      this.count = 0;
+    }
+
+    GameResult.prototype.win = function() {
+      this.label.text = "YOU WIN";
+      this.label.className = "result-win";
+      this.label.x = 18;
+      return this.label.y = 60;
+    };
+
+    GameResult.prototype.lose = function() {
+      this.label.text = "YOU LOSE";
+      this.label.className = "result-lose";
+      this.label.x = 6;
+      return this.label.y = 60;
+    };
+
+    GameResult.prototype.draw = function() {
+      this.label.text = "DRAW";
+      this.label.className = "result-draw";
+      this.label.x = 65;
+      return this.label.y = 60;
+    };
+
+    GameResult.prototype.update = function() {
+      return this.count += 1;
+    };
+
+    GameResult.prototype.isFinished = function() {
+      return this.count > 60 * 2;
+    };
+
+    GameResult.prototype.release = function() {
+      return this.game.removeScene(this.scene);
+    };
+
+    return GameResult;
+
+  })();
+
+  WS_SUBPROTOCOL = 'bigbang';
+
+  MAX_NUMBER_OF_PLAYERS = 4;
+
+  ENCHANTJS_IMAGE_PATH = "enchantjs/images/";
+
+  RESOURCES = [ENCHANTJS_IMAGE_PATH + 'map0.gif', ENCHANTJS_IMAGE_PATH + 'effect0.gif', ENCHANTJS_IMAGE_PATH + 'icon0.gif', 'image/map0.png', 'image/icon0.png', 'image/char0.png'];
+
+  createGameResult = function(game, currentScene) {
+    var gameResult;
+    gameResult = new GameResult(game);
+    if (currentScene.isDraw()) {
+      gameResult.draw();
+    } else if (currentScene.getWinner() === currentScene.getPlayerId()) {
+      gameResult.win();
+    } else {
+      gameResult.lose();
+    }
+    return gameResult;
+  };
+
+  window.onload = function() {
+    var game, resource, _i, _len;
+    game = new enchant.Game(240, 208);
+    game.scale = 3.0;
+    for (_i = 0, _len = RESOURCES.length; _i < _len; _i++) {
+      resource = RESOURCES[_i];
+      game.preload(resource);
+    }
+    game.fps = 60;
+    game.keybind("Z".charCodeAt(0), 'a');
+    game.keybind("X".charCodeAt(0), 'b');
+    game.onload = function() {
+      var currentScene;
+      window.onerror = function(msg, url, line) {
+        return game.stop() && false;
+      };
+      currentScene = new EntryScreen(game);
+      return game.addEventListener('enterframe', function() {
+        var dataTransport, gameResult;
+        if (currentScene.isFinished()) {
+          if (currentScene instanceof EntryScreen) {
+            dataTransport = currentScene.getDataTransport();
+            currentScene.release();
+            currentScene = new BattleGame(game, dataTransport);
+          } else if (currentScene instanceof BattleGame) {
+            gameResult = createGameResult(game, currentScene);
+            currentScene.release();
+            currentScene = gameResult;
+          } else if (currentScene instanceof GameResult) {
+            currentScene.release();
+            currentScene = new EntryScreen(game);
+          } else {
+            throw new Error("Unknown scene");
+          }
+        }
+        return currentScene.update();
+      });
+    };
+    return game.start();
+  };
 
 }).call(this);

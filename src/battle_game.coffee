@@ -1,6 +1,13 @@
 class BattleGame
   NUMBER_OF_CHARACTERS = 16
 
+  RENDERER_TABLE = {}
+  RENDERER_TABLE[FieldObject.TYPE_BLAST]  = BlastRenderer
+  RENDERER_TABLE[FieldObject.TYPE_BLOCK]  = BlockRenderer
+  RENDERER_TABLE[FieldObject.TYPE_BOMB]   = BombRenderer
+  RENDERER_TABLE[FieldObject.TYPE_ITEM]   = ItemRenderer
+  RENDERER_TABLE[FieldObject.TYPE_PBLOCK] = PressureBlockRenderer
+
   constructor: (@game, @dataTransport) ->
     {
       playerId: @playerId
@@ -41,19 +48,11 @@ class BattleGame
     @dataTransport.sendInput(input)
 
   createRenderer: (data) ->
-    switch data.type
-      when FieldObject.TYPE_BOMB
-        new BombRenderer(@lowerQueue, data)
-      when FieldObject.TYPE_BLAST
-        new BlastRenderer(@lowerQueue, data)
-      when FieldObject.TYPE_BLOCK
-        new BlockRenderer(@lowerQueue, data)
-      when FieldObject.TYPE_PBLOCK
-        new PressureBlockRenderer(@lowerQueue, data)
-      when FieldObject.TYPE_ITEM
-        new ItemRenderer(@lowerQueue, data)
-      else
-        throw Error("Unknown object")
+    klass = RENDERER_TABLE[data.type]
+    if klass?
+      new klass(@lowerQueue, data)
+    else
+      throw Error("Unknown object")
 
   storeNewRenderers: ->
     for i in [0 ... @field.height]
