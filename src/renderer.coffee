@@ -151,6 +151,18 @@ class BombermanRenderer extends Renderer
     @sprite.x = @bomberman.x
     @sprite.y = @bomberman.y
 
+class PressureBlockRenderer extends Renderer
+  constructor: (@queue, @pressureBlock) ->
+    super(@queue)
+
+    @sprite = new enchant.Sprite(16, 16)
+    @sprite.image = @game.assets['image/map0.png']
+    @sprite.frame = 0
+    @sprite.x = @pressureBlock.x
+    @sprite.y = @pressureBlock.y
+
+    @addNode(@sprite)
+
 class BombRenderer extends Renderer
   constructor: (@queue, @bomb) ->
     super(@queue)

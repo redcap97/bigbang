@@ -43,13 +43,15 @@ class BattleGame
   createRenderer: (data) ->
     switch data.type
       when FieldObject.TYPE_BOMB
-        new BombRenderer(@lowerQueue,  data)
+        new BombRenderer(@lowerQueue, data)
       when FieldObject.TYPE_BLAST
         new BlastRenderer(@lowerQueue, data)
       when FieldObject.TYPE_BLOCK
         new BlockRenderer(@lowerQueue, data)
+      when FieldObject.TYPE_PBLOCK
+        new PressureBlockRenderer(@lowerQueue, data)
       when FieldObject.TYPE_ITEM
-        new ItemRenderer(@lowerQueue,  data)
+        new ItemRenderer(@lowerQueue, data)
       else
         throw Error("Unknown object")
 

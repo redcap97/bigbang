@@ -1,5 +1,5 @@
 (function() {
-  var BattleGame, Blast, BlastRenderer, Block, BlockRenderer, Bomb, BombKick, BombRenderer, BombUp, Bomberman, BombermanRenderer, DataTransport, Direction, ENCHANTJS_IMAGE_PATH, EntryScreen, Field, FieldObject, FieldRenderer, FirePowerUp, GameResult, Ground, InitialNoticeRenderer, InputManager, Item, ItemRenderer, MAX_NUMBER_OF_PLAYERS, Point, RESOURCES, Random, Rectangle, Remocon, Renderer, RenderingQueue, SpeedUp, TimerRenderer, WS_SUBPROTOCOL, Wall, createGameResult,
+  var BattleGame, Blast, BlastRenderer, Block, BlockRenderer, Bomb, BombKick, BombRenderer, BombUp, Bomberman, BombermanRenderer, DataTransport, Direction, ENCHANTJS_IMAGE_PATH, EntryScreen, Field, FieldObject, FieldRenderer, FirePowerUp, GameResult, Ground, InitialNoticeRenderer, InputManager, Item, ItemRenderer, MAX_NUMBER_OF_PLAYERS, Point, PressureBlock, PressureBlockRenderer, PressureBlockSetter, RESOURCES, Random, Rectangle, Remocon, Renderer, RenderingQueue, SpeedUp, TimerRenderer, WS_SUBPROTOCOL, Wall, createGameResult,
     __hasProp = Object.prototype.hasOwnProperty,
     __slice = Array.prototype.slice,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor; child.__super__ = parent.prototype; return child; };
@@ -53,6 +53,8 @@
           return new BlastRenderer(this.lowerQueue, data);
         case FieldObject.TYPE_BLOCK:
           return new BlockRenderer(this.lowerQueue, data);
+        case FieldObject.TYPE_PBLOCK:
+          return new PressureBlockRenderer(this.lowerQueue, data);
         case FieldObject.TYPE_ITEM:
           return new ItemRenderer(this.lowerQueue, data);
         default:
@@ -666,6 +668,71 @@
 
   })();
 
+  PressureBlockSetter = (function() {
+
+    function PressureBlockSetter(field, interval) {
+      this.field = field;
+      this.interval = interval;
+      this.count = 0;
+      this.indexes = [];
+      this.width = this.field.width;
+      this.height = this.field.height;
+      this.createIndexes();
+    }
+
+    PressureBlockSetter.prototype.set = function(index) {
+      var data, pressureBlock;
+      data = this.field.getMapData(index.x, index.y);
+      data.destroy();
+      pressureBlock = new PressureBlock(this.field, index);
+      return this.field.setMapData(index.x, index.y, pressureBlock);
+    };
+
+    PressureBlockSetter.prototype.update = function() {
+      var index;
+      if (this.count === this.interval) {
+        this.count = 0;
+        index = this.indexes.shift();
+        if (index) this.set(index);
+      }
+      return this.count += 1;
+    };
+
+    PressureBlockSetter.prototype.createIndexes = function() {
+      var i, x, y, _ref, _ref2, _ref3, _ref4, _ref5, _ref6, _results;
+      _results = [];
+      for (i = 0; i <= 1; i++) {
+        for (y = _ref = this.height - 2 - i, _ref2 = 2 + i; _ref <= _ref2 ? y <= _ref2 : y >= _ref2; _ref <= _ref2 ? y++ : y--) {
+          this.addIndex(new Point(1 + i, y));
+        }
+        for (x = _ref3 = 1 + i, _ref4 = this.width - 3 - i; _ref3 <= _ref4 ? x <= _ref4 : x >= _ref4; _ref3 <= _ref4 ? x++ : x--) {
+          this.addIndex(new Point(x, 1 + i));
+        }
+        for (y = _ref5 = 1 + i, _ref6 = this.height - 3 - i; _ref5 <= _ref6 ? y <= _ref6 : y >= _ref6; _ref5 <= _ref6 ? y++ : y--) {
+          this.addIndex(new Point(this.width - 2 - i, y));
+        }
+        _results.push((function() {
+          var _ref7, _ref8, _results2;
+          _results2 = [];
+          for (x = _ref7 = this.width - 2 - i, _ref8 = 2 + i; _ref7 <= _ref8 ? x <= _ref8 : x >= _ref8; _ref7 <= _ref8 ? x++ : x--) {
+            _results2.push(this.addIndex(new Point(x, this.height - 2 - i)));
+          }
+          return _results2;
+        }).call(this));
+      }
+      return _results;
+    };
+
+    PressureBlockSetter.prototype.addIndex = function(index) {
+      var data;
+      data = this.field.getMapData(index.x, index.y);
+      if (data.type !== FieldObject.TYPE_WALL) return this.indexes.push(index);
+    };
+
+    return PressureBlockSetter;
+
+  })();
+
   Field = (function() {
     var FPS, HEIGHT, OUTSIDE_OF_FIELD_ERROR, TILE_SIZE, TIME_LIMIT, WIDTH;
 
@@ -686,6 +753,7 @@
       this.height = HEIGHT;
       this.width = WIDTH;
       this.tileSize = TILE_SIZE;
+      this.count = 0;
       this.generateId = (function() {
         var maxId;
         maxId = 0;
@@ -714,7 +782,7 @@
         }
         return _results;
       }).call(this);
-      this.count = 0;
+      this.pressureBlockSetter = new PressureBlockSetter(this, FPS / 2);
       this.createBlocks();
       this.updateMap();
     }
@@ -733,6 +801,7 @@
 
     Field.prototype.update = function(inputs) {
       if (!this.isFinished()) this.count += 1;
+      if (this.count > FPS * 60) this.pressureBlockSetter.update();
       this.updateBombermans(inputs);
       return this.updateMap();
     };
@@ -747,6 +816,7 @@
         data = this.getMapData(ix.x, ix.y);
         switch (data.type) {
           case FieldObject.TYPE_BLAST:
+          case FieldObject.TYPE_PBLOCK:
             bomberman.destroy();
             break;
           case FieldObject.TYPE_ITEM:
@@ -970,6 +1040,8 @@
 
     FieldObject.TYPE_ITEM = 5;
 
+    FieldObject.TYPE_PBLOCK = 6;
+
     function FieldObject(field, type, isBarrier) {
       this.field = field;
       this.type = type;
@@ -1009,6 +1081,21 @@
     }
 
     return Ground;
+
+  })(FieldObject);
+
+  PressureBlock = (function(_super) {
+
+    __extends(PressureBlock, _super);
+
+    function PressureBlock(field, index) {
+      this.index = index;
+      PressureBlock.__super__.constructor.call(this, field, FieldObject.TYPE_PBLOCK, true);
+      this.x = this.field.tileSize * this.index.x;
+      this.y = this.field.tileSize * this.index.y;
+    }
+
+    return PressureBlock;
 
   })(FieldObject);
 
@@ -1771,6 +1858,26 @@
     };
 
     return BombermanRenderer;
+
+  })(Renderer);
+
+  PressureBlockRenderer = (function(_super) {
+
+    __extends(PressureBlockRenderer, _super);
+
+    function PressureBlockRenderer(queue, pressureBlock) {
+      this.queue = queue;
+      this.pressureBlock = pressureBlock;
+      PressureBlockRenderer.__super__.constructor.call(this, this.queue);
+      this.sprite = new enchant.Sprite(16, 16);
+      this.sprite.image = this.game.assets['image/map0.png'];
+      this.sprite.frame = 0;
+      this.sprite.x = this.pressureBlock.x;
+      this.sprite.y = this.pressureBlock.y;
+      this.addNode(this.sprite);
+    }
+
+    return PressureBlockRenderer;
 
   })(Renderer);
 

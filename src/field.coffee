@@ -1,3 +1,44 @@
+class PressureBlockSetter
+  constructor: (@field, @interval) ->
+    @count = 0
+    @indexes = []
+    @width = @field.width
+    @height = @field.height
+
+    @createIndexes()
+
+  set: (index) ->
+    data = @field.getMapData(index.x, index.y)
+    data.destroy()
+
+    pressureBlock = new PressureBlock(@field, index)
+    @field.setMapData(index.x, index.y, pressureBlock)
+
+  update: ->
+    if @count == @interval
+      @count = 0
+      index = @indexes.shift()
+      @set(index) if index
+    @count += 1
+
+  createIndexes: ->
+    for i in [0 .. 1]
+      for y in [(@height-2-i) .. (2+i)]
+        @addIndex(new Point(1+i, y))
+
+      for x in [(1+i) .. (@width-3-i)]
+        @addIndex(new Point(x, 1+i))
+
+      for y in [(1+i) .. (@height-3-i)]
+        @addIndex(new Point((@width-2-i), y))
+
+      for x in [(@width-2-i) .. (2+i)]
+        @addIndex(new Point(x, (@height-2-i)))
+
+  addIndex: (index) ->
+    data = @field.getMapData(index.x, index.y)
+    @indexes.push(index) if data.type != FieldObject.TYPE_WALL
+
 class Field
   OUTSIDE_OF_FIELD_ERROR = "Point is outside of the field"
 
@@ -12,6 +53,8 @@ class Field
     @height   = HEIGHT
     @width    = WIDTH
     @tileSize = TILE_SIZE
+
+    @count = 0
 
     @generateId = (->
       maxId = 0
@@ -45,10 +88,9 @@ class Field
 
     @mutableDataMap = ((null for j in [0 ... @width]) for i in [0 ... @height])
 
-    @count = 0
+    @pressureBlockSetter = new PressureBlockSetter(@, FPS/2)
 
     @createBlocks()
-
     @updateMap()
 
   getMapData: (x, y) ->
@@ -63,6 +105,9 @@ class Field
   update: (inputs) ->
     @count += 1 unless @isFinished()
 
+    if @count > FPS * 60
+      @pressureBlockSetter.update()
+
     @updateBombermans(inputs)
     @updateMap()
 
@@ -72,7 +117,7 @@ class Field
       data = @getMapData(ix.x, ix.y)
 
       switch data.type
-        when FieldObject.TYPE_BLAST
+        when FieldObject.TYPE_BLAST, FieldObject.TYPE_PBLOCK
           bomberman.destroy()
         when FieldObject.TYPE_ITEM
           data.exertEffectOn(bomberman)

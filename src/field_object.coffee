@@ -5,6 +5,7 @@ class FieldObject
   @TYPE_BOMB   = 3
   @TYPE_BLAST  = 4
   @TYPE_ITEM   = 5
+  @TYPE_PBLOCK = 6
 
   constructor: (@field, @type, @isBarrier) ->
     @objectId = @field.generateId()
@@ -21,6 +22,12 @@ class Wall extends FieldObject
 class Ground extends FieldObject
   constructor: (field) ->
     super(field, FieldObject.TYPE_GROUND, false)
+
+class PressureBlock extends FieldObject
+  constructor: (field, @index) ->
+    super(field, FieldObject.TYPE_PBLOCK, true)
+    @x = @field.tileSize * @index.x
+    @y = @field.tileSize * @index.y
 
 class Blast extends FieldObject
   DURATION: 10
