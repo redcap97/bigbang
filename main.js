@@ -178,7 +178,7 @@
   })();
 
   Field = (function() {
-    var FPS, HEIGHT, OUTSIDE_OF_FIELD_ERROR, TILE_SIZE, TIME_LIMIT, WIDTH;
+    var FPS, HEIGHT, INITIAL_PLAYER_INDEXES, NUMBER_OF_RANDOM_SPACES, OUTSIDE_OF_FIELD_ERROR, TILE_SIZE, TIME_LIMIT, WIDTH;
 
     OUTSIDE_OF_FIELD_ERROR = "Point is outside of the field";
 
@@ -191,6 +191,10 @@
     WIDTH = 15;
 
     TILE_SIZE = 16;
+
+    INITIAL_PLAYER_INDEXES = [new Point(1, 1), new Point(13, 11), new Point(13, 1), new Point(1, 11)];
+
+    NUMBER_OF_RANDOM_SPACES = 11;
 
     function Field(numberOfPlayers, seed) {
       var g, i, j, w;
@@ -293,22 +297,21 @@
     };
 
     Field.prototype.createBombermans = function(n) {
-      var bombermans, i, positions, x, y;
+      var bombermans, i, x, y;
       if (n < 2 && n > MAX_NUMBER_OF_PLAYERS) {
         throw Error("Cannot create bombermans");
       }
-      positions = [new Point(1, 1), new Point(13, 11), new Point(13, 1), new Point(1, 11)];
       bombermans = [];
       for (i = 0; 0 <= n ? i < n : i > n; 0 <= n ? i++ : i--) {
-        x = positions[i].x;
-        y = positions[i].y;
+        x = INITIAL_PLAYER_INDEXES[i].x;
+        y = INITIAL_PLAYER_INDEXES[i].y;
         bombermans.push(new Bomberman(this, this.tileSize * x, this.tileSize * y));
       }
       return bombermans;
     };
 
     Field.prototype.createBlocks = function() {
-      var data, n, p, positions, x, y, _i, _len, _ref, _ref2, _results;
+      var data, fixedSpaceIndexes, index, n, x, y, _i, _len, _ref, _ref2, _results;
       for (y = 0, _ref = this.height; 0 <= _ref ? y < _ref : y > _ref; 0 <= _ref ? y++ : y--) {
         for (x = 0, _ref2 = this.width; 0 <= _ref2 ? x < _ref2 : x > _ref2; 0 <= _ref2 ? x++ : x--) {
           data = this.getMapData(x, y);
@@ -317,14 +320,14 @@
           }
         }
       }
-      positions = [new Point(1, 1), new Point(1, 2), new Point(1, 3), new Point(2, 1), new Point(3, 1), new Point(this.width - 2, 1), new Point(this.width - 2, 2), new Point(this.width - 2, 3), new Point(this.width - 3, 1), new Point(this.width - 4, 1), new Point(1, this.height - 2), new Point(1, this.height - 3), new Point(1, this.height - 4), new Point(2, this.height - 2), new Point(3, this.height - 2), new Point(this.width - 2, this.height - 2), new Point(this.width - 2, this.height - 3), new Point(this.width - 2, this.height - 4), new Point(this.width - 3, this.height - 2), new Point(this.width - 4, this.height - 2)];
-      for (_i = 0, _len = positions.length; _i < _len; _i++) {
-        p = positions[_i];
-        this.removeMapData(p.x, p.y);
+      fixedSpaceIndexes = [new Point(1, 1), new Point(1, 2), new Point(1, 3), new Point(2, 1), new Point(3, 1), new Point(this.width - 2, 1), new Point(this.width - 2, 2), new Point(this.width - 2, 3), new Point(this.width - 3, 1), new Point(this.width - 4, 1), new Point(1, this.height - 2), new Point(1, this.height - 3), new Point(1, this.height - 4), new Point(2, this.height - 2), new Point(3, this.height - 2), new Point(this.width - 2, this.height - 2), new Point(this.width - 2, this.height - 3), new Point(this.width - 2, this.height - 4), new Point(this.width - 3, this.height - 2), new Point(this.width - 4, this.height - 2)];
+      for (_i = 0, _len = fixedSpaceIndexes.length; _i < _len; _i++) {
+        index = fixedSpaceIndexes[_i];
+        this.removeMapData(index.x, index.y);
       }
       n = 0;
       _results = [];
-      while (n < 11) {
+      while (n < NUMBER_OF_RANDOM_SPACES) {
         x = this.getRandom(this.width);
         y = this.getRandom(this.height);
         data = this.getMapData(x, y);
@@ -818,6 +821,13 @@
   })(Item);
 
   Bomberman = (function() {
+    var MAX_BOMB_CAPACITY, MAX_POWER, MAX_SPEED;
+
+    MAX_SPEED = 8;
+
+    MAX_POWER = 9;
+
+    MAX_BOMB_CAPACITY = 9;
 
     function Bomberman(field, x, y) {
       this.field = field;
@@ -826,8 +836,7 @@
       this.objectId = this.field.generateId();
       this.width = this.height = this.field.tileSize;
       this.isDestroyed = false;
-      this.speed = 2;
-      this.power = 1;
+      this.speed = this.power = 2;
       this.bombCapacity = 1;
       this.usedBomb = 0;
       this.hasRemocon = false;
@@ -844,15 +853,15 @@
     };
 
     Bomberman.prototype.incrementSpeed = function() {
-      if (this.speed < 8) return this.speed += 1;
+      if (this.speed < MAX_SPEED) return this.speed += 1;
     };
 
     Bomberman.prototype.incrementPower = function() {
-      if (this.power < 9) return this.power += 1;
+      if (this.power < MAX_POWER) return this.power += 1;
     };
 
     Bomberman.prototype.incrementBombCapacity = function() {
-      if (this.bombCapacity < 9) return this.bombCapacity += 1;
+      if (this.bombCapacity < MAX_BOMB_CAPACITY) return this.bombCapacity += 1;
     };
 
     Bomberman.prototype.move = function() {

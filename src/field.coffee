@@ -8,6 +8,15 @@ class Field
   WIDTH      = 15
   TILE_SIZE  = 16
 
+  INITIAL_PLAYER_INDEXES = [
+    new Point(1,  1),
+    new Point(13, 11),
+    new Point(13, 1),
+    new Point(1,  11),
+  ]
+
+  NUMBER_OF_RANDOM_SPACES = 11
+
   constructor: (numberOfPlayers, seed) ->
     @height   = HEIGHT
     @width    = WIDTH
@@ -94,17 +103,10 @@ class Field
     if n < 2 and n > MAX_NUMBER_OF_PLAYERS
       throw Error("Cannot create bombermans")
 
-    positions = [
-      new Point(1,  1),
-      new Point(13, 11),
-      new Point(13, 1),
-      new Point(1,  11),
-    ]
-
     bombermans = []
     for i in [0 ... n]
-      x = positions[i].x
-      y = positions[i].y
+      x = INITIAL_PLAYER_INDEXES[i].x
+      y = INITIAL_PLAYER_INDEXES[i].y
       bombermans.push(new Bomberman(@, @tileSize*x, @tileSize*y))
     bombermans
 
@@ -115,7 +117,7 @@ class Field
         if data.type == FieldObject.TYPE_GROUND
           @setMapData(x, y, new Block(@, new Point(x, y)))
 
-    positions = [
+    fixedSpaceIndexes = [
       new Point(1,        1),
       new Point(1,        2),
       new Point(1,        3),
@@ -138,10 +140,11 @@ class Field
       new Point(@width-4, @height-2),
     ]
 
-    @removeMapData(p.x, p.y) for p in positions
+    for index in fixedSpaceIndexes
+      @removeMapData(index.x, index.y)
 
     n = 0
-    while n < 11
+    while n < NUMBER_OF_RANDOM_SPACES
       x = @getRandom(@width)
       y = @getRandom(@height)
       data = @getMapData(x, y)

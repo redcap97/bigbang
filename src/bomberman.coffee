@@ -1,11 +1,14 @@
 class Bomberman
+  MAX_SPEED = 8
+  MAX_POWER = 9
+  MAX_BOMB_CAPACITY = 9
+
   constructor: (@field, @x, @y) ->
     @objectId = @field.generateId()
     @width = @height = @field.tileSize
     @isDestroyed = false
 
-    @speed = 2
-    @power = 1
+    @speed = @power = 2
     @bombCapacity = 1
     @usedBomb = 0
     @hasRemocon = false
@@ -26,13 +29,13 @@ class Bomberman
     @move()
 
   incrementSpeed: ->
-    @speed += 1 if @speed < 8
+    @speed += 1 if @speed < MAX_SPEED
 
   incrementPower: ->
-    @power += 1 if @power < 9
+    @power += 1 if @power < MAX_POWER
 
   incrementBombCapacity: ->
-    @bombCapacity += 1 if @bombCapacity < 9
+    @bombCapacity += 1 if @bombCapacity < MAX_BOMB_CAPACITY
 
   move: ->
     switch(@inputManager.direction)
