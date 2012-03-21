@@ -668,71 +668,6 @@
 
   })();
 
-  PressureBlockSetter = (function() {
-
-    function PressureBlockSetter(field, interval) {
-      this.field = field;
-      this.interval = interval;
-      this.count = 0;
-      this.indexes = [];
-      this.width = this.field.width;
-      this.height = this.field.height;
-      this.createIndexes();
-    }
-
-    PressureBlockSetter.prototype.set = function(index) {
-      var data, pressureBlock;
-      data = this.field.getMapData(index.x, index.y);
-      data.destroy();
-      pressureBlock = new PressureBlock(this.field, index);
-      return this.field.setMapData(index.x, index.y, pressureBlock);
-    };
-
-    PressureBlockSetter.prototype.update = function() {
-      var index;
-      if (this.count === this.interval) {
-        this.count = 0;
-        index = this.indexes.shift();
-        if (index) this.set(index);
-      }
-      return this.count += 1;
-    };
-
-    PressureBlockSetter.prototype.createIndexes = function() {
-      var i, x, y, _ref, _ref2, _ref3, _ref4, _ref5, _ref6, _results;
-      _results = [];
-      for (i = 0; i <= 1; i++) {
-        for (y = _ref = this.height - 2 - i, _ref2 = 2 + i; _ref <= _ref2 ? y <= _ref2 : y >= _ref2; _ref <= _ref2 ? y++ : y--) {
-          this.addIndex(new Point(1 + i, y));
-        }
-        for (x = _ref3 = 1 + i, _ref4 = this.width - 3 - i; _ref3 <= _ref4 ? x <= _ref4 : x >= _ref4; _ref3 <= _ref4 ? x++ : x--) {
-          this.addIndex(new Point(x, 1 + i));
-        }
-        for (y = _ref5 = 1 + i, _ref6 = this.height - 3 - i; _ref5 <= _ref6 ? y <= _ref6 : y >= _ref6; _ref5 <= _ref6 ? y++ : y--) {
-          this.addIndex(new Point(this.width - 2 - i, y));
-        }
-        _results.push((function() {
-          var _ref7, _ref8, _results2;
-          _results2 = [];
-          for (x = _ref7 = this.width - 2 - i, _ref8 = 2 + i; _ref7 <= _ref8 ? x <= _ref8 : x >= _ref8; _ref7 <= _ref8 ? x++ : x--) {
-            _results2.push(this.addIndex(new Point(x, this.height - 2 - i)));
-          }
-          return _results2;
-        }).call(this));
-      }
-      return _results;
-    };
-
-    PressureBlockSetter.prototype.addIndex = function(index) {
-      var data;
-      data = this.field.getMapData(index.x, index.y);
-      if (data.type !== FieldObject.TYPE_WALL) return this.indexes.push(index);
-    };
-
-    return PressureBlockSetter;
-
-  })();
-
   Field = (function() {
     var FPS, HEIGHT, OUTSIDE_OF_FIELD_ERROR, TILE_SIZE, TIME_LIMIT, WIDTH;
 
@@ -1591,6 +1526,71 @@
     };
 
     return Point;
+
+  })();
+
+  PressureBlockSetter = (function() {
+
+    function PressureBlockSetter(field, interval) {
+      this.field = field;
+      this.interval = interval;
+      this.count = 0;
+      this.indexes = [];
+      this.width = this.field.width;
+      this.height = this.field.height;
+      this.createIndexes();
+    }
+
+    PressureBlockSetter.prototype.set = function(index) {
+      var data, pressureBlock;
+      data = this.field.getMapData(index.x, index.y);
+      data.destroy();
+      pressureBlock = new PressureBlock(this.field, index);
+      return this.field.setMapData(index.x, index.y, pressureBlock);
+    };
+
+    PressureBlockSetter.prototype.update = function() {
+      var index;
+      if (this.count === this.interval) {
+        this.count = 0;
+        index = this.indexes.shift();
+        if (index) this.set(index);
+      }
+      return this.count += 1;
+    };
+
+    PressureBlockSetter.prototype.createIndexes = function() {
+      var i, x, y, _ref, _ref2, _ref3, _ref4, _ref5, _ref6, _results;
+      _results = [];
+      for (i = 0; i <= 1; i++) {
+        for (y = _ref = this.height - 2 - i, _ref2 = 2 + i; _ref <= _ref2 ? y <= _ref2 : y >= _ref2; _ref <= _ref2 ? y++ : y--) {
+          this.addIndex(new Point(1 + i, y));
+        }
+        for (x = _ref3 = 1 + i, _ref4 = this.width - 3 - i; _ref3 <= _ref4 ? x <= _ref4 : x >= _ref4; _ref3 <= _ref4 ? x++ : x--) {
+          this.addIndex(new Point(x, 1 + i));
+        }
+        for (y = _ref5 = 1 + i, _ref6 = this.height - 3 - i; _ref5 <= _ref6 ? y <= _ref6 : y >= _ref6; _ref5 <= _ref6 ? y++ : y--) {
+          this.addIndex(new Point(this.width - 2 - i, y));
+        }
+        _results.push((function() {
+          var _ref7, _ref8, _results2;
+          _results2 = [];
+          for (x = _ref7 = this.width - 2 - i, _ref8 = 2 + i; _ref7 <= _ref8 ? x <= _ref8 : x >= _ref8; _ref7 <= _ref8 ? x++ : x--) {
+            _results2.push(this.addIndex(new Point(x, this.height - 2 - i)));
+          }
+          return _results2;
+        }).call(this));
+      }
+      return _results;
+    };
+
+    PressureBlockSetter.prototype.addIndex = function(index) {
+      var data;
+      data = this.field.getMapData(index.x, index.y);
+      if (data.type !== FieldObject.TYPE_WALL) return this.indexes.push(index);
+    };
+
+    return PressureBlockSetter;
 
   })();
 
