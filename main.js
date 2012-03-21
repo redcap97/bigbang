@@ -1,5 +1,5 @@
 (function() {
-  var BattleField, BattleGame, Blast, BlastRenderer, Block, BlockRenderer, Bomb, BombKick, BombRenderer, BombUp, Bomberman, BombermanRenderer, DataTransport, Direction, ENCHANTJS_IMAGE_PATH, EntryScreen, FieldObject, FieldRenderer, FirePowerUp, GameResult, Ground, InputManager, Item, ItemRenderer, MAX_NUMBER_OF_PLAYERS, Point, RESOURCES, Random, Rectangle, Remocon, Renderer, RenderingQueue, SpeedUp, TimerRenderer, WS_SUBPROTOCOL, Wall, createGameResult,
+  var BattleField, BattleGame, Blast, BlastRenderer, Block, BlockRenderer, Bomb, BombKick, BombRenderer, BombUp, Bomberman, BombermanRenderer, DataTransport, Direction, ENCHANTJS_IMAGE_PATH, EntryScreen, FieldObject, FieldRenderer, FirePowerUp, GameResult, Ground, InitialNoticeRenderer, InputManager, Item, ItemRenderer, MAX_NUMBER_OF_PLAYERS, Point, RESOURCES, Random, Rectangle, Remocon, Renderer, RenderingQueue, SpeedUp, TimerRenderer, WS_SUBPROTOCOL, Wall, createGameResult,
     __slice = Array.prototype.slice,
     __hasProp = Object.prototype.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor; child.__super__ = parent.prototype; return child; };
@@ -305,7 +305,6 @@
       this.dataTransport = dataTransport;
       _ref = this.dataTransport, this.playerId = _ref.playerId, this.numberOfPlayers = _ref.numberOfPlayers;
       this.parity = this.finalCount = 0;
-      this.isStarted = false;
       this.field = new BattleField(this.numberOfPlayers, this.dataTransport.seed);
       this.lowerScene = new enchant.Scene();
       this.upperScene = new enchant.Scene();
@@ -313,19 +312,10 @@
       this.game.pushScene(this.upperScene);
       this.lowerQueue = this.createLowerQueue();
       this.upperQueue = this.createUpperQueue();
-      this.startMessage = this.createStartMessage();
-      this.screenTip = this.createScreenTip();
-      this.upperScene.addChild(this.startMessage);
-      this.upperScene.addChild(this.screenTip);
       this.updateQueue();
     }
 
     BattleGame.prototype.update = function() {
-      if (this.field.getCount() > 0 && !this.isStarted) {
-        this.upperScene.removeChild(this.startMessage);
-        this.upperScene.removeChild(this.screenTip);
-        this.isStarted = true;
-      }
       while (this.dataTransport.getBufferSize() > 0) {
         if (this.field.isFinished()) this.finalCount += 1;
         this.field.update(this.dataTransport.getInput());
@@ -381,30 +371,8 @@
       return _results;
     };
 
-    BattleGame.prototype.createScreenTip = function() {
-      var p, screenTip;
-      screenTip = new enchant.Label();
-      screenTip.className = "screen-tip";
-      screenTip.text = "You";
-      p = [new Point(12, 34), new Point(205, 162), new Point(205, 34), new Point(12, 162)][this.playerId];
-      screenTip.x = p.x;
-      screenTip.y = p.y;
-      screenTip.width = 24;
-      return screenTip;
-    };
-
-    BattleGame.prototype.createStartMessage = function() {
-      var startMessage;
-      startMessage = new enchant.Label();
-      startMessage.className = "start-message";
-      startMessage.text = "START!";
-      startMessage.x = 45;
-      startMessage.y = 80;
-      return startMessage;
-    };
-
     BattleGame.prototype.createUpperQueue = function() {
-      var bomberman, charaIds, i, renderer, timerRenderer, upperQueue, _len, _ref;
+      var bomberman, charaIds, i, initialNoticeRenderer, renderer, timerRenderer, upperQueue, _len, _ref;
       upperQueue = new RenderingQueue(this.game, this.upperScene);
       charaIds = this.generateCharacterIds();
       _ref = this.field.bombermans;
@@ -414,7 +382,9 @@
         upperQueue.store(bomberman.objectId, renderer);
       }
       timerRenderer = new TimerRenderer(upperQueue, this.field);
-      upperQueue.store(timerRenderer.objectId, timerRenderer);
+      upperQueue.store(timerRenderer.id, timerRenderer);
+      initialNoticeRenderer = new InitialNoticeRenderer(upperQueue, this.field, this.playerId);
+      upperQueue.store(initialNoticeRenderer.id, initialNoticeRenderer);
       return upperQueue;
     };
 
@@ -1672,6 +1642,7 @@
       this.queue = queue;
       this.field = field;
       TimerRenderer.__super__.constructor.call(this, this.queue);
+      this.id = this.field.generateId();
       this.timer = new enchant.Label();
       this.timer.color = "white";
       this.timer.x = 4;
@@ -1688,6 +1659,58 @@
     };
 
     return TimerRenderer;
+
+  })(Renderer);
+
+  InitialNoticeRenderer = (function(_super) {
+    var TIP_POSITIONS;
+
+    __extends(InitialNoticeRenderer, _super);
+
+    TIP_POSITIONS = [new Point(12, 34), new Point(205, 162), new Point(205, 34), new Point(12, 162)];
+
+    function InitialNoticeRenderer(queue, field, playerId) {
+      this.queue = queue;
+      this.field = field;
+      InitialNoticeRenderer.__super__.constructor.call(this, this.queue);
+      this.id = this.field.generateId();
+      this.startMessage = this.createStartMessage();
+      this.screenTip = this.createScreenTip(playerId);
+      this.addNode(this.startMessage);
+      this.addNode(this.screenTip);
+    }
+
+    InitialNoticeRenderer.prototype.update = function() {
+      if (this.field.getCount() > 0) {
+        this.removeNode(this.startMessage);
+        this.removeNode(this.screenTip);
+        return this.stopUpdate(this.id);
+      }
+    };
+
+    InitialNoticeRenderer.prototype.createScreenTip = function(playerId) {
+      var p, screenTip;
+      screenTip = new enchant.Label();
+      screenTip.className = "screen-tip";
+      screenTip.text = "You";
+      p = TIP_POSITIONS[playerId];
+      screenTip.x = p.x;
+      screenTip.y = p.y;
+      screenTip.width = 24;
+      return screenTip;
+    };
+
+    InitialNoticeRenderer.prototype.createStartMessage = function() {
+      var startMessage;
+      startMessage = new enchant.Label();
+      startMessage.className = "start-message";
+      startMessage.text = "START!";
+      startMessage.x = 45;
+      startMessage.y = 80;
+      return startMessage;
+    };
+
+    return InitialNoticeRenderer;
 
   })(Renderer);
 

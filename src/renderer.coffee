@@ -36,6 +36,8 @@ class TimerRenderer extends Renderer
   constructor: (@queue, @field) ->
     super(@queue)
 
+    @id = @field.generateId()
+
     @timer = new enchant.Label()
     @timer.color = "white"
     @timer.x = 4
@@ -48,6 +50,50 @@ class TimerRenderer extends Renderer
     sm = if min < 10 then ('0'+String(min)) else String(min)
     ss = if sec < 10 then ('0'+String(sec)) else String(sec)
     @timer.text = "#{sm}:#{ss}"
+
+class InitialNoticeRenderer extends Renderer
+  TIP_POSITIONS = [
+    new Point(12,  34),
+    new Point(205, 162),
+    new Point(205, 34),
+    new Point(12,  162),
+  ]
+
+  constructor: (@queue, @field, playerId) ->
+    super(@queue)
+
+    @id = @field.generateId()
+
+    @startMessage = @createStartMessage()
+    @screenTip = @createScreenTip(playerId)
+
+    @addNode(@startMessage)
+    @addNode(@screenTip)
+
+  update: ->
+    if @field.getCount() > 0
+      @removeNode(@startMessage)
+      @removeNode(@screenTip)
+      @stopUpdate(@id)
+
+  createScreenTip: (playerId) ->
+    screenTip = new enchant.Label()
+    screenTip.className = "screen-tip"
+    screenTip.text = "You"
+
+    p = TIP_POSITIONS[playerId]
+    screenTip.x = p.x
+    screenTip.y = p.y
+    screenTip.width = 24
+    screenTip
+
+  createStartMessage: ->
+    startMessage = new enchant.Label()
+    startMessage.className = "start-message"
+    startMessage.text = "START!"
+    startMessage.x = 45
+    startMessage.y = 80
+    startMessage
 
 class BombermanRenderer extends Renderer
   constructor: (@queue, @bomberman, characterId) ->

@@ -8,7 +8,6 @@ class BattleGame
     } = @dataTransport
 
     @parity = @finalCount = 0
-    @isStarted = false
 
     @field = new BattleField(@numberOfPlayers, @dataTransport.seed)
 
@@ -20,20 +19,9 @@ class BattleGame
     @lowerQueue = @createLowerQueue()
     @upperQueue = @createUpperQueue()
 
-    @startMessage = @createStartMessage()
-    @screenTip = @createScreenTip()
-
-    @upperScene.addChild(@startMessage)
-    @upperScene.addChild(@screenTip)
-
     @updateQueue()
 
   update: ->
-    if @field.getCount() > 0 and !@isStarted
-      @upperScene.removeChild(@startMessage)
-      @upperScene.removeChild(@screenTip)
-      @isStarted = true
-
     while @dataTransport.getBufferSize() > 0
       @finalCount += 1 if @field.isFinished()
 
@@ -72,31 +60,6 @@ class BattleGame
         if data and !@lowerQueue.contains(data.objectId)
           @lowerQueue.store(data.objectId, @createRenderer(data))
 
-  createScreenTip: ->
-    screenTip = new enchant.Label()
-    screenTip.className = "screen-tip"
-    screenTip.text = "You"
-
-    p = ([
-      new Point(12,  34),
-      new Point(205, 162),
-      new Point(205, 34),
-      new Point(12,  162),
-    ])[@playerId]
-
-    screenTip.x = p.x
-    screenTip.y = p.y
-    screenTip.width = 24
-    screenTip
-
-  createStartMessage: ->
-    startMessage = new enchant.Label()
-    startMessage.className = "start-message"
-    startMessage.text = "START!"
-    startMessage.x = 45
-    startMessage.y = 80
-    startMessage
-
   createUpperQueue: ->
     upperQueue = new RenderingQueue(@game, @upperScene)
     charaIds = @generateCharacterIds()
@@ -105,7 +68,10 @@ class BattleGame
       upperQueue.store(bomberman.objectId, renderer)
 
     timerRenderer = new TimerRenderer(upperQueue, @field)
-    upperQueue.store(timerRenderer.objectId, timerRenderer)
+    upperQueue.store(timerRenderer.id, timerRenderer)
+
+    initialNoticeRenderer = new InitialNoticeRenderer(upperQueue, @field, @playerId)
+    upperQueue.store(initialNoticeRenderer.id, initialNoticeRenderer)
 
     upperQueue
 
