@@ -573,10 +573,15 @@
   })(FieldObject);
 
   Bomb = (function(_super) {
+    var KICKED_BOMB_SPEED, TIME_LIMIT, VECTORS;
 
     __extends(Bomb, _super);
 
-    Bomb.prototype.TIME_LIMIT = 80;
+    TIME_LIMIT = 80;
+
+    VECTORS = [new Point(1, 0), new Point(-1, 0), new Point(0, 1), new Point(0, -1)];
+
+    KICKED_BOMB_SPEED = [new Point(-3, 0), new Point(0, -3), new Point(3, 0), new Point(0, 3)];
 
     function Bomb(field, index, bomberman) {
       this.index = index;
@@ -590,7 +595,7 @@
 
     Bomb.prototype.update = function() {
       this.count += 1;
-      if (this.count > this.TIME_LIMIT) {
+      if (this.count > TIME_LIMIT) {
         this.destroy();
         return;
       }
@@ -604,7 +609,7 @@
 
     Bomb.prototype.move = function() {
       var bounds, data, delta, ix, r;
-      delta = [new Point(-3, 0), new Point(0, -3), new Point(3, 0), new Point(0, 3)][this.direction];
+      delta = KICKED_BOMB_SPEED[this.direction];
       this.x += delta.x;
       this.y += delta.y;
       bounds = new Point(this.x, this.y);
@@ -632,14 +637,13 @@
     };
 
     Bomb.prototype.destroy = function() {
-      var data, i, ix, v, vs, _i, _len, _results;
+      var data, i, ix, v, _i, _len, _results;
       this.isDestroyed = true;
       this.bomberman.usedBomb -= 1;
       this.setBlast(this.index);
-      vs = [new Point(1, 0), new Point(-1, 0), new Point(0, 1), new Point(0, -1)];
       _results = [];
-      for (_i = 0, _len = vs.length; _i < _len; _i++) {
-        v = vs[_i];
+      for (_i = 0, _len = VECTORS.length; _i < _len; _i++) {
+        v = VECTORS[_i];
         ix = this.index.clone();
         _results.push((function() {
           var _ref, _results2;

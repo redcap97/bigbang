@@ -47,7 +47,21 @@ class Blast extends FieldObject
     @field.removeMapData(@index.x, @index.y)
 
 class Bomb extends FieldObject
-  TIME_LIMIT: 80
+  TIME_LIMIT = 80
+
+  VECTORS = [
+    new Point(1, 0),
+    new Point(-1, 0),
+    new Point(0, 1),
+    new Point(0, -1),
+  ]
+
+  KICKED_BOMB_SPEED = [
+    new Point(-3, 0),
+    new Point(0, -3),
+    new Point(3, 0),
+    new Point(0, 3),
+  ]
 
   constructor: (field, @index, @bomberman) ->
     super(field, FieldObject.TYPE_BOMB, true)
@@ -60,7 +74,7 @@ class Bomb extends FieldObject
   update: ->
     @count += 1
 
-    if @count > @TIME_LIMIT
+    if @count > TIME_LIMIT
       @destroy()
       return
 
@@ -70,12 +84,7 @@ class Bomb extends FieldObject
     @isKicked = true
 
   move: ->
-    delta = ([
-      new Point(-3, 0),
-      new Point(0, -3),
-      new Point(3, 0),
-      new Point(0, 3)
-    ])[@direction]
+    delta = KICKED_BOMB_SPEED[@direction]
 
     @x += delta.x
     @y += delta.y
@@ -111,14 +120,7 @@ class Bomb extends FieldObject
 
     @setBlast(@index)
 
-    vs = [
-      new Point(1, 0),
-      new Point(-1, 0),
-      new Point(0, 1),
-      new Point(0, -1)
-    ]
-
-    for v in vs
+    for v in VECTORS
       ix = @index.clone()
       for i in [0 ... @bomberman.power]
         ix.x += v.x
