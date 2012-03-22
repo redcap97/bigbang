@@ -1,5 +1,11 @@
 #coding: utf-8
 
+NODE_MODULES = %w{
+  websocket
+  opts
+  coffee-script
+}
+
 SOURCE_FILES = %w{
   src/point.coffee
   src/rectangle.coffee
@@ -22,6 +28,11 @@ SOURCE_FILES = %w{
 }
 
 task :default => 'main.js'
+
+task :install do
+  cd "server"
+  sh "npm install #{NODE_MODULES.join(" ")}"
+end
 
 file 'main.js' => SOURCE_FILES do |t|
   sh "coffee --join #{t.name} --compile #{t.prerequisites.join(' ')}"
