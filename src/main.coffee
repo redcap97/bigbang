@@ -1,5 +1,7 @@
 WS_SUBPROTOCOL = 'bigbang'
 
+MESSAGE_DISCONNECT = "You have been disconnected from the server"
+
 MAX_NUMBER_OF_PLAYERS = 4
 ENCHANTJS_IMAGE_PATH = "enchantjs/images/"
 

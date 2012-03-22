@@ -1,5 +1,5 @@
 (function() {
-  var BattleGame, Blast, BlastRenderer, Block, BlockRenderer, Bomb, BombKick, BombRenderer, BombUp, Bomberman, BombermanRenderer, DataTransport, Direction, ENCHANTJS_IMAGE_PATH, EntryScreen, Field, FieldObject, FieldRenderer, FirePowerUp, GameResult, Ground, InitialNoticeRenderer, InputManager, Item, ItemRenderer, MAX_NUMBER_OF_PLAYERS, Point, PressureBlock, PressureBlockRenderer, PressureBlockSetter, RESOURCES, Random, Rectangle, Remocon, Renderer, RenderingQueue, SpeedUp, TimerRenderer, WS_SUBPROTOCOL, Wall, createGameResult,
+  var BattleGame, Blast, BlastRenderer, Block, BlockRenderer, Bomb, BombKick, BombRenderer, BombUp, Bomberman, BombermanRenderer, DataTransport, Direction, ENCHANTJS_IMAGE_PATH, EntryScreen, Field, FieldObject, FieldRenderer, FirePowerUp, GameResult, Ground, InitialNoticeRenderer, InputManager, Item, ItemRenderer, MAX_NUMBER_OF_PLAYERS, MESSAGE_DISCONNECT, Point, PressureBlock, PressureBlockRenderer, PressureBlockSetter, RESOURCES, Random, Rectangle, Remocon, Renderer, RenderingQueue, SpeedUp, TimerRenderer, WS_SUBPROTOCOL, Wall, createGameResult,
     __slice = Array.prototype.slice,
     __hasProp = Object.prototype.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor; child.__super__ = parent.prototype; return child; };
@@ -1775,7 +1775,7 @@
     }
 
     EntryScreen.prototype.update = function() {
-      var id,
+      var id, _ref,
         _this = this;
       if (this.game.input.a && this.dataTransport === null) {
         this.caption.text = MESSAGE_WAIT;
@@ -1786,7 +1786,7 @@
         this.caption.text = MESSAGE_CANCEL;
         this.dataTransport.release();
         this.isCanceling = true;
-        return id = setInterval(function() {
+        id = setInterval(function() {
           if (_this.dataTransport.isClosed()) {
             _this.caption.text = MESSAGE_ENTRY_GAME;
             _this.caption.x = 8;
@@ -1795,6 +1795,10 @@
             return clearInterval(id);
           }
         }, 2 * 1000);
+      }
+      if (!this.isCanceling && ((_ref = this.dataTransport) != null ? _ref.isClosed() : void 0)) {
+        alert(MESSAGE_DISCONNECT);
+        throw new Error(MESSAGE_DISCONNECT);
       }
     };
 
@@ -1875,6 +1879,10 @@
         this.updateQueue();
       }
       this.storeNewRenderers();
+      if (this.dataTransport.isClosed()) {
+        alert(MESSAGE_DISCONNECT);
+        throw new Error(MESSAGE_DISCONNECT);
+      }
       this.parity = (this.parity + 1) % 2;
       if (this.parity === 0) return this.sendInput(this.game.input);
     };
@@ -2034,6 +2042,8 @@
   })();
 
   WS_SUBPROTOCOL = 'bigbang';
+
+  MESSAGE_DISCONNECT = "You have been disconnected from the server";
 
   MAX_NUMBER_OF_PLAYERS = 4;
 

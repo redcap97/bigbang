@@ -42,6 +42,10 @@ class EntryScreen
           clearInterval(id)
       , 2 * 1000
 
+    if !@isCanceling and @dataTransport?.isClosed()
+      alert(MESSAGE_DISCONNECT)
+      throw new Error(MESSAGE_DISCONNECT)
+
   createTitle: ->
     title = new enchant.Label()
     title.text = "Bigbang"

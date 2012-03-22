@@ -37,6 +37,10 @@ class BattleGame
 
     @storeNewRenderers()
 
+    if @dataTransport.isClosed()
+      alert(MESSAGE_DISCONNECT)
+      throw new Error(MESSAGE_DISCONNECT)
+
     @parity = (@parity+1)%2
     @sendInput(@game.input) if @parity == 0
 
