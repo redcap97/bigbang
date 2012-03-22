@@ -18,6 +18,7 @@ class Field
   NUMBER_OF_RANDOM_SPACES = 11
 
   constructor: (numberOfPlayers, seed) ->
+    @fps      = FPS
     @height   = HEIGHT
     @width    = WIDTH
     @tileSize = TILE_SIZE
@@ -73,7 +74,7 @@ class Field
   update: (inputs) ->
     @count += 1 unless @isFinished()
 
-    if @count > FPS * 60
+    if @count > FPS * 65
       @pressureBlockSetter.update()
 
     @updateBombermans(inputs)

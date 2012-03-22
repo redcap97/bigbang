@@ -1,5 +1,5 @@
 (function() {
-  var BattleGame, Blast, BlastRenderer, Block, BlockRenderer, Bomb, BombKick, BombRenderer, BombUp, Bomberman, BombermanRenderer, DataTransport, Direction, ENCHANTJS_IMAGE_PATH, EntryScreen, Field, FieldObject, FieldRenderer, FirePowerUp, GameResult, Ground, InitialNoticeRenderer, InputManager, Item, ItemRenderer, MAX_NUMBER_OF_PLAYERS, MESSAGE_DISCONNECT, Point, PressureBlock, PressureBlockRenderer, PressureBlockSetter, RESOURCES, Random, Rectangle, Remocon, Renderer, RenderingQueue, SpeedUp, TimerRenderer, WS_SUBPROTOCOL, Wall, createGameResult,
+  var BattleGame, Blast, BlastRenderer, Block, BlockRenderer, Bomb, BombKick, BombRenderer, BombUp, Bomberman, BombermanRenderer, DataTransport, Direction, ENCHANTJS_IMAGE_PATH, EntryScreen, Field, FieldObject, FieldRenderer, FirePowerUp, GameResult, Ground, InitialNoticeRenderer, InputManager, Item, ItemRenderer, MAX_NUMBER_OF_PLAYERS, MESSAGE_DISCONNECT, Point, PressureBlock, PressureBlockRenderer, PressureBlockSetter, RESOURCES, Random, Rectangle, Remocon, Renderer, RenderingQueue, SpeedUp, TimerRenderer, WS_SUBPROTOCOL, Wall, WarningRenderer, createGameResult,
     __slice = Array.prototype.slice,
     __hasProp = Object.prototype.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor; child.__super__ = parent.prototype; return child; };
@@ -198,6 +198,7 @@
 
     function Field(numberOfPlayers, seed) {
       var g, i, j, w;
+      this.fps = FPS;
       this.height = HEIGHT;
       this.width = WIDTH;
       this.tileSize = TILE_SIZE;
@@ -249,7 +250,7 @@
 
     Field.prototype.update = function(inputs) {
       if (!this.isFinished()) this.count += 1;
-      if (this.count > FPS * 60) this.pressureBlockSetter.update();
+      if (this.count > FPS * 65) this.pressureBlockSetter.update();
       this.updateBombermans(inputs);
       return this.updateMap();
     };
@@ -1341,6 +1342,38 @@
 
   })(Renderer);
 
+  WarningRenderer = (function(_super) {
+    var TEXT;
+
+    __extends(WarningRenderer, _super);
+
+    TEXT = "Hurry up!";
+
+    function WarningRenderer(queue, field) {
+      this.queue = queue;
+      this.field = field;
+      WarningRenderer.__super__.constructor.call(this, this.queue);
+      this.id = this.field.generateId();
+      this.label = new enchant.Label();
+      this.label.className = "warning-message";
+      this.label.text = TEXT;
+      this.label.x = -16 * TEXT.length;
+      this.label.y = 80;
+      this.addNode(this.label);
+    }
+
+    WarningRenderer.prototype.update = function() {
+      this.label.x += 4;
+      if (this.label.x > this.field.width * this.field.tileSize) {
+        this.removeNode(this.label);
+        return this.stopUpdate(this.id);
+      }
+    };
+
+    return WarningRenderer;
+
+  })(Renderer);
+
   BombermanRenderer = (function(_super) {
 
     __extends(BombermanRenderer, _super);
@@ -1872,6 +1905,7 @@
       while (this.dataTransport.getBufferSize() > 0) {
         if (this.field.isFinished()) this.finalCount += 1;
         this.field.update(this.dataTransport.getInput());
+        if (this.field.getCount() === this.field.fps * 60) this.showWarning();
         this.updateQueue();
       }
       this.storeNewRenderers();
@@ -1946,6 +1980,12 @@
       fieldRenderer = new FieldRenderer(lowerQueue, this.field);
       fieldRenderer.update();
       return lowerQueue;
+    };
+
+    BattleGame.prototype.showWarning = function() {
+      var warningRenderer;
+      warningRenderer = new WarningRenderer(this.upperQueue, this.field);
+      return this.upperQueue.store(warningRenderer.id, warningRenderer);
     };
 
     BattleGame.prototype.generateCharacterIds = function() {

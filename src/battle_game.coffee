@@ -33,6 +33,8 @@ class BattleGame
       @finalCount += 1 if @field.isFinished()
 
       @field.update(@dataTransport.getInput())
+      @showWarning() if @field.getCount() == @field.fps * 60
+
       @updateQueue()
 
     @storeNewRenderers()
@@ -85,6 +87,10 @@ class BattleGame
     fieldRenderer = new FieldRenderer(lowerQueue, @field)
     fieldRenderer.update()
     lowerQueue
+
+  showWarning: ->
+    warningRenderer = new WarningRenderer(@upperQueue, @field)
+    @upperQueue.store(warningRenderer.id, warningRenderer)
 
   generateCharacterIds: ->
     hash = {}

@@ -95,6 +95,28 @@ class InitialNoticeRenderer extends Renderer
     startMessage.y = 80
     startMessage
 
+class WarningRenderer extends Renderer
+  TEXT = "Hurry up!"
+  constructor: (@queue, @field) ->
+    super(@queue)
+
+    @id = @field.generateId()
+
+    @label = new enchant.Label()
+    @label.className = "warning-message"
+    @label.text = TEXT
+    @label.x = -16 * TEXT.length
+    @label.y = 80
+
+    @addNode(@label)
+
+  update: ->
+    @label.x += 4
+
+    if @label.x > @field.width * @field.tileSize
+      @removeNode(@label)
+      @stopUpdate(@id)
+
 class BombermanRenderer extends Renderer
   constructor: (@queue, @bomberman, characterId) ->
     super(@queue)
