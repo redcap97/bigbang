@@ -145,7 +145,7 @@ class Block extends FieldObject
   destroy: ->
     @isDestroyed = true
 
-    n = @field.getRandom(30)
+    n = @field.getRandom(25)
     if n < 10
       item = @generateItem(n)
       @field.setMapData(@index.x, @index.y, item)

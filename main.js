@@ -691,7 +691,7 @@
     Block.prototype.destroy = function() {
       var item, n;
       this.isDestroyed = true;
-      n = this.field.getRandom(30);
+      n = this.field.getRandom(25);
       if (n < 10) {
         item = this.generateItem(n);
         return this.field.setMapData(this.index.x, this.index.y, item);
