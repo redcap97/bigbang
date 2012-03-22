@@ -688,24 +688,20 @@
     }
 
     Block.prototype.destroy = function() {
-      var item;
+      var item, n;
       this.isDestroyed = true;
-      if (this.hasItem()) {
-        item = this.generateItem();
+      n = this.field.getRandom(30);
+      if (n < 10) {
+        item = this.generateItem(n);
         return this.field.setMapData(this.index.x, this.index.y, item);
       } else {
         return this.field.removeMapData(this.index.x, this.index.y);
       }
     };
 
-    Block.prototype.hasItem = function() {
-      return this.field.getRandom(3) === 0;
-    };
-
-    Block.prototype.generateItem = function() {
-      var cs, klass;
-      cs = [BombUp, FirePowerUp, SpeedUp, BombKick, Remocon];
-      klass = cs[this.field.getRandom(cs.length)];
+    Block.prototype.generateItem = function(n) {
+      var klass;
+      klass = n === 9 ? BombKick : n === 8 ? Remocon : n >= 5 ? FirePowerUp : n >= 2 ? BombUp : SpeedUp;
       return new klass(this.field, this.index);
     };
 

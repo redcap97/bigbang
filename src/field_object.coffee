@@ -145,18 +145,26 @@ class Block extends FieldObject
   destroy: ->
     @isDestroyed = true
 
-    if @hasItem()
-      item = @generateItem()
+    n = @field.getRandom(30)
+    if n < 10
+      item = @generateItem(n)
       @field.setMapData(@index.x, @index.y, item)
     else
       @field.removeMapData(@index.x, @index.y)
 
-  hasItem: ->
-    @field.getRandom(3) == 0
+  generateItem: (n) ->
+    klass =
+      if n == 9
+        BombKick
+      else if n == 8
+        Remocon
+      else if n >= 5
+        FirePowerUp
+      else if n >= 2
+        BombUp
+      else
+        SpeedUp
 
-  generateItem: ->
-    cs = [BombUp, FirePowerUp, SpeedUp, BombKick, Remocon]
-    klass = cs[@field.getRandom(cs.length)]
     new klass(@field, @index)
 
 class Item extends FieldObject
