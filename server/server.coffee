@@ -1,5 +1,5 @@
 BUFFER_LIMIT = 1200
-MAX_CONNECTIONS = 100
+MAX_CONNECTIONS = 28
 FPS = 30
 BATTLE_TIME_LIMIT = FPS * 60 * 3
 MAX_NUMBER_OF_PLAYERS = 4
@@ -161,7 +161,7 @@ webSocketServer.on 'request', (request) ->
     console.log((new Date()) + ' Connection from origin ' + request.origin + ' rejected.')
     return
 
-  if numberOfConnections > MAX_CONNECTIONS
+  if numberOfConnections >= MAX_CONNECTIONS
     request.reject()
     console.log("#{new Date()} MAX_CONNECTIONS limit is exceeded")
     return
