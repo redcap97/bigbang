@@ -1,9 +1,8 @@
 #coding: utf-8
 
 NODE_MODULES = %w{
-  websocket
   opts
-  coffee-script
+  websocket
 }
 
 SOURCE_FILES = %w{
