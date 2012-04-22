@@ -27,7 +27,7 @@ Starting the server
     coffee server --allowed-origin http://akr97.com
 
 If you only use the server in localhost, you don't have to specify the `--allowed-origin` option.
-And if you want to change the server to connect to, please change a constant WS\_URI of index.html.
+And if you want to change the server to connect to, please change a constant `WS_URI` of index.html.
 
 ## Using Libraries and Materials
 
