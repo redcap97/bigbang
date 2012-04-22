@@ -17,7 +17,7 @@ Supported browsers are recent versions of firefox and chrome.
 
 Installing Bigbang
 
-    git clone git@github.com:redcap97/bigbang.git
+    git clone git://github.com/redcap97/bigbang.git
     cd bigbang
     git submodule update --init
     rake install
